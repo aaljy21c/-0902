@@ -5221,9 +5221,7 @@ function renderMediaToContainer(mediaObj, container, onClick) {
       if (onClick) vid.addEventListener('click', onClick);
       FileDB.getFile(mediaObj.fileId).then(f => {
         if (f) {
-           const blobType = f.type || 'video/mp4';
-           const typedBlob = new Blob([f.blob], { type: blobType });
-           vid.src = URL.createObjectURL(typedBlob);
+           vid.src = URL.createObjectURL(f.blob);
            vid.preload = 'metadata';
         }
       });
@@ -6437,9 +6435,7 @@ function showLightboxImage(idx) {
 
       FileDB.getFile(currentImg.fileId).then(f => {
         if (f) {
-          const blobType = f.type || 'video/mp4';
-          const typedBlob = new Blob([f.blob], { type: blobType });
-          const blobUrl = URL.createObjectURL(typedBlob);
+          const blobUrl = URL.createObjectURL(f.blob);
           vid.src = blobUrl;
           if (downloadLink) {
             downloadLink.href = blobUrl;
@@ -8163,7 +8159,7 @@ function renderTodos() {
       viewDrawingContainer.className = 'diary-drawing-container view-mode';
       viewDrawingContainer.style.marginTop = '6px';
       viewDrawingContainer.style.width = '100%';
-      viewDrawingContainer.style.height = '150px'; // Explicit height required
+      viewDrawingContainer.style.height = '300px'; // Explicit height required
       viewDrawingContainer.style.display = 'block'; 
       attachmentsContainer.appendChild(viewDrawingContainer);
 
@@ -8180,7 +8176,7 @@ function renderTodos() {
         e.stopPropagation();
         e.preventDefault();
         openFullscreenDrawing(todo.memoDrawing, (data, isClosing) => {
-          const currentDayTodos = state.todos[dateKey] || [];
+          const currentDayTodos = state.todos[todo.dateKey] || [];
           const currentTodo = currentDayTodos.find(t => t.id === todo.id);
           if (currentTodo) {
             currentTodo.memoDrawing = data ? JSON.parse(JSON.stringify(data)) : [];
