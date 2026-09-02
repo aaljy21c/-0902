@@ -933,13 +933,44 @@ class NeonDrawingBoard {
       }
       this.currentStroke = null;
     } else if (activeTool === 'lasso') {
-      this.applyLassoSelection();
+      if (this.lassoPoints.length < 3) {
+        // It was a tap! Check if we tapped on an image
+        this.checkLassoTap(pos);
+      } else {
+        this.applyLassoSelection();
+      }
       this.lassoPoints = [];
     }
 
     this.points = [];
     this.isTempEraser = false;
     this.render();
+  }
+
+  checkLassoTap(pt) {
+    const strokes = this.getCurrentStrokes();
+    for (let i = strokes.length - 1; i >= 0; i--) {
+      const stroke = strokes[i];
+      if (stroke.tool === 'image') {
+        const minX = Math.min(...stroke.points.map(p => p.x));
+        const maxX = Math.max(...stroke.points.map(p => p.x));
+        const minY = Math.min(...stroke.points.map(p => p.y));
+        const maxY = Math.max(...stroke.points.map(p => p.y));
+        if (pt.x >= minX && pt.x <= maxX && pt.y >= minY && pt.y <= maxY) {
+          strokes.splice(i, 1);
+          this.activeImage = {
+            imgData: stroke.imgData,
+            cx: (minX + maxX) / 2,
+            cy: (minY + maxY) / 2,
+            w: maxX - minX,
+            h: maxY - minY
+          };
+          this.buildImageOverlay();
+          this.render();
+          return;
+        }
+      }
+    }
   }
 
   startHoldTimer() {
@@ -1018,10 +1049,41 @@ class NeonDrawingBoard {
       stroke.points.forEach(p => {
         if (this.isPointInPolygon(p, this.lassoPoints)) insideCount++;
       });
-      if (insideCount > stroke.points.length / 3 || insideCount > 5) {
-        this.selectedStrokes.push(stroke);
+      
+      if (stroke.tool === 'image') {
+        if (insideCount > 0) this.selectedStrokes.push(stroke);
+      } else {
+        if (insideCount > stroke.points.length / 3 || insideCount > 5) {
+          this.selectedStrokes.push(stroke);
+        }
       }
     });
+
+    // If exactly one image is selected and nothing else, convert it back to activeImage!
+    if (this.selectedStrokes.length === 1 && this.selectedStrokes[0].tool === 'image') {
+      const imgStroke = this.selectedStrokes[0];
+      const currentStrokes = this.getCurrentStrokes();
+      const index = currentStrokes.indexOf(imgStroke);
+      if (index !== -1) {
+        currentStrokes.splice(index, 1);
+        this.clearSelection();
+
+        const minX = Math.min(...imgStroke.points.map(p => p.x));
+        const maxX = Math.max(...imgStroke.points.map(p => p.x));
+        const minY = Math.min(...imgStroke.points.map(p => p.y));
+        const maxY = Math.max(...imgStroke.points.map(p => p.y));
+
+        this.activeImage = {
+          imgData: imgStroke.imgData,
+          cx: (minX + maxX) / 2,
+          cy: (minY + maxY) / 2,
+          w: maxX - minX,
+          h: maxY - minY
+        };
+        this.buildImageOverlay();
+        this.render();
+      }
+    }
   }
 
   clearSelection() {
@@ -1264,6 +1326,7 @@ class NeonDrawingBoard {
     };
 
     const onPointerDown = (e) => {
+      if (e.target === btnConfirm || e.target === btnCancel) return;
       e.preventDefault();
       e.stopPropagation();
       const coords = getEvtCoords(e);
@@ -1610,6 +1673,10 @@ class NeonDrawingBoard {
 
 
   getData() {
+    if (this.activeImage) {
+      this.commitActiveImage();
+    }
+    
     if (this.isMultiPage) {
       return {
         type: 'pdf_drawing',
@@ -1629,27 +1696,46 @@ class NeonDrawingBoard {
 
 
   fitContent() {
-    let strokes = this.getCurrentStrokes();
-    if (!strokes || strokes.length === 0) return;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    let hasStrokes = false;
-    strokes.forEach(s => {
-      if (s.isBg) return;
-      if (!s.points || s.points.length === 0) return;
-      const size = s.size || 2;
-      hasStrokes = true;
-      s.points.forEach(p => {
-        if (p.x - size < minX) minX = p.x - size;
-        if (p.y - size < minY) minY = p.y - size;
-        if (p.x + size > maxX) maxX = p.x + size;
-        if (p.y + size > maxY) maxY = p.y + size;
-      });
-    });
-    if (!hasStrokes) return;
-
+    let contentWidth = 0;
+    let contentHeight = 0;
+    let minX = 0, minY = 0;
     const padding = 20;
-    const contentWidth = maxX - minX + padding * 2;
-    const contentHeight = maxY - minY + padding * 2;
+
+    if (this.isMultiPage && this._pages && this._pages.length > 0) {
+      const page = this._pages[this.currentPageIndex];
+      if (page && page.width && page.height) {
+        contentWidth = page.width + padding * 2;
+        contentHeight = page.height + padding * 2;
+        minX = 0;
+        minY = 0;
+      }
+    }
+
+    if (contentWidth === 0) {
+      let strokes = this.getCurrentStrokes();
+      if (!strokes || strokes.length === 0) return;
+      let sMinX = Infinity, sMinY = Infinity, sMaxX = -Infinity, sMaxY = -Infinity;
+      let hasStrokes = false;
+      strokes.forEach(s => {
+        if (s.isBg) return;
+        if (!s.points || s.points.length === 0) return;
+        const size = s.size || 2;
+        hasStrokes = true;
+        s.points.forEach(p => {
+          if (p.x - size < sMinX) sMinX = p.x - size;
+          if (p.y - size < sMinY) sMinY = p.y - size;
+          if (p.x + size > sMaxX) sMaxX = p.x + size;
+          if (p.y + size > sMaxY) sMaxY = p.y + size;
+        });
+      });
+      if (!hasStrokes) return;
+      
+      minX = sMinX;
+      minY = sMinY;
+      contentWidth = sMaxX - sMinX + padding * 2;
+      contentHeight = sMaxY - sMinY + padding * 2;
+    }
+
     if (contentWidth <= 0 || contentHeight <= 0) return;
 
     const rect = this.canvasContainer.getBoundingClientRect();
@@ -1659,10 +1745,12 @@ class NeonDrawingBoard {
     const scaleY = rect.height / contentHeight;
     this.viewScale = Math.min(scaleX, scaleY, 1);
 
-    const scaledWidth = (maxX - minX + padding * 2) * this.viewScale;
-    const scaledHeight = (maxY - minY + padding * 2) * this.viewScale;
+    const scaledWidth = contentWidth * this.viewScale;
+    
+    // Always align to top instead of centering vertically to avoid the "empty toolbar space" illusion
     this.panX = (rect.width - scaledWidth) / 2 - (minX - padding) * this.viewScale;
-    this.panY = (rect.height - scaledHeight) / 2 - (minY - padding) * this.viewScale;
+    this.panY = - (minY - padding) * this.viewScale;
+    
     this.updateZoomIndicator();
   }
 
