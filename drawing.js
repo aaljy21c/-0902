@@ -1426,9 +1426,8 @@ class NeonDrawingBoard {
       isShape: false
     };
     this.getCurrentStrokes().push(imgStroke);
-    this.saveState();
-    
     this.cancelActiveImage();
+    this.saveState();
     this.render();
   }
 
