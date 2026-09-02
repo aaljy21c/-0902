@@ -99,7 +99,10 @@ class NeonDrawingBoard {
     this.resizeObserver.observe(this.wrapper);
 
     // Initial render
-    setTimeout(() => this.resize(), 0);
+    setTimeout(() => {
+      this.resize();
+      if (!this.readOnly) this.saveState(); // push initial state
+    }, 0);
   }
 
   initDOM() {
@@ -1072,30 +1075,55 @@ class NeonDrawingBoard {
   }
 
   saveState() {
-    this.undoStack.push(JSON.parse(JSON.stringify(this.getCurrentStrokes())));
+    const currentState = {
+      isMultiPage: this.isMultiPage,
+      pdfFileId: this.pdfFileId,
+      currentPageIndex: this.currentPageIndex,
+      pages: this._pages.map(p => ({ ...p, _strokes: JSON.parse(JSON.stringify(p._strokes)) }))
+    };
+    
+    // Only push if there's an actual change (or it's the first state)
+    // We avoid pushing the exact same state twice to fix the off-by-one issue
+    this.undoStack.push(currentState);
     if (this.undoStack.length > 50) this.undoStack.shift();
     this.redoStack = [];
     if (this.onChange) this.onChange(this.getData());
   }
 
   undo() {
-    if (this.undoStack.length > 0) {
-      this.redoStack.push(JSON.parse(JSON.stringify(this.getCurrentStrokes())));
-      this.setCurrentStrokes(this.undoStack.pop());
+    if (this.undoStack.length > 1) { // Need at least 2 states (current + previous)
+      const currentState = this.undoStack.pop();
+      this.redoStack.push(currentState);
+      
+      const previousState = this.undoStack[this.undoStack.length - 1];
+      this._applyState(previousState);
+      
       this.clearSelection();
       this.render();
+      this.updateSidebar();
       if (this.onChange) this.onChange(this.getData());
     }
   }
 
   redo() {
     if (this.redoStack.length > 0) {
-      this.undoStack.push(JSON.parse(JSON.stringify(this.getCurrentStrokes())));
-      this.setCurrentStrokes(this.redoStack.pop());
+      const nextState = this.redoStack.pop();
+      this.undoStack.push(nextState);
+      
+      this._applyState(nextState);
+      
       this.clearSelection();
       this.render();
+      this.updateSidebar();
       if (this.onChange) this.onChange(this.getData());
     }
+  }
+
+  _applyState(state) {
+    this.isMultiPage = state.isMultiPage;
+    this.pdfFileId = state.pdfFileId;
+    this.currentPageIndex = state.currentPageIndex;
+    this._pages = state.pages.map(p => ({ ...p, _strokes: JSON.parse(JSON.stringify(p._strokes)) }));
   }
 
   clearAll() {
@@ -1154,28 +1182,199 @@ class NeonDrawingBoard {
           displayHeight *= ratio;
         }
 
-        const imgStroke = {
-          tool: 'image',
+        this.activeImage = {
           imgData: dataUrl,
-          opacity: 1,
-          points: [
-            { x: centerX - displayWidth / 2, y: centerY - displayHeight / 2 },
-            { x: centerX + displayWidth / 2, y: centerY - displayHeight / 2 },
-            { x: centerX + displayWidth / 2, y: centerY + displayHeight / 2 },
-            { x: centerX - displayWidth / 2, y: centerY + displayHeight / 2 }
-          ],
-          isShape: false
+          cx: centerX,
+          cy: centerY,
+          w: displayWidth,
+          h: displayHeight,
+          img: img
         };
-
-        this.getCurrentStrokes().push(imgStroke);
-
-        this.saveState();
+        this.buildImageOverlay();
         this.render();
       };
       img.src = event.target.result;
     };
     reader.readAsDataURL(file);
     e.target.value = '';
+  }
+
+  buildImageOverlay() {
+    if (!this.activeImage) return;
+    if (this.imageOverlay) this.imageOverlay.remove();
+    
+    this.imageOverlay = document.createElement('div');
+    this.imageOverlay.style.position = 'absolute';
+    this.imageOverlay.style.border = '2px dashed #4da6ff';
+    this.imageOverlay.style.cursor = 'move';
+    this.imageOverlay.style.boxSizing = 'border-box';
+    this.imageOverlay.style.zIndex = '1000';
+    this.imageOverlay.style.backgroundImage = `url(${this.activeImage.imgData})`;
+    this.imageOverlay.style.backgroundSize = '100% 100%';
+    this.imageOverlay.style.touchAction = 'none'; // Prevent browser scrolling while dragging
+
+    const resizeHandle = document.createElement('div');
+    resizeHandle.style.position = 'absolute';
+    resizeHandle.style.right = '-8px';
+    resizeHandle.style.bottom = '-8px';
+    resizeHandle.style.width = '16px';
+    resizeHandle.style.height = '16px';
+    resizeHandle.style.backgroundColor = '#4da6ff';
+    resizeHandle.style.borderRadius = '50%';
+    resizeHandle.style.cursor = 'nwse-resize';
+    resizeHandle.style.touchAction = 'none';
+
+    const btnConfirm = document.createElement('button');
+    btnConfirm.innerHTML = '✔ 적용';
+    btnConfirm.style.position = 'absolute';
+    btnConfirm.style.right = '-60px';
+    btnConfirm.style.top = '0px';
+    btnConfirm.style.background = '#50c878';
+    btnConfirm.style.color = '#fff';
+    btnConfirm.style.border = 'none';
+    btnConfirm.style.borderRadius = '4px';
+    btnConfirm.style.padding = '4px 8px';
+    btnConfirm.style.cursor = 'pointer';
+
+    const btnCancel = document.createElement('button');
+    btnCancel.innerHTML = '❌ 취소';
+    btnCancel.style.position = 'absolute';
+    btnCancel.style.right = '-60px';
+    btnCancel.style.top = '34px';
+    btnCancel.style.background = '#ff4d4d';
+    btnCancel.style.color = '#fff';
+    btnCancel.style.border = 'none';
+    btnCancel.style.borderRadius = '4px';
+    btnCancel.style.padding = '4px 8px';
+    btnCancel.style.cursor = 'pointer';
+
+    this.imageOverlay.appendChild(resizeHandle);
+    this.imageOverlay.appendChild(btnConfirm);
+    this.imageOverlay.appendChild(btnCancel);
+    this.canvasContainer.appendChild(this.imageOverlay);
+
+    let isDragging = false;
+    let isResizing = false;
+    let startX, startY;
+    let startCx, startCy, startW, startH;
+
+    const getEvtCoords = (e) => {
+      if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      return { x: e.clientX, y: e.clientY };
+    };
+
+    const onPointerDown = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const coords = getEvtCoords(e);
+      startX = coords.x;
+      startY = coords.y;
+      startCx = this.activeImage.cx;
+      startCy = this.activeImage.cy;
+      startW = this.activeImage.w;
+      startH = this.activeImage.h;
+
+      if (e.target === resizeHandle) {
+        isResizing = true;
+      } else {
+        isDragging = true;
+      }
+      
+      const moveEvent = e.type === 'touchstart' ? 'touchmove' : 'pointermove';
+      const upEvent = e.type === 'touchstart' ? 'touchend' : 'pointerup';
+      
+      const onMove = (ev) => {
+        ev.preventDefault();
+        const c = getEvtCoords(ev);
+        const dx = (c.x - startX) / this.viewScale;
+        const dy = (c.y - startY) / this.viewScale;
+        
+        if (isDragging) {
+          this.activeImage.cx = startCx + dx;
+          this.activeImage.cy = startCy + dy;
+        } else if (isResizing) {
+          const newRight = (startCx + startW/2) + dx;
+          const newBottom = (startCy + startH/2) + dy;
+          const left = startCx - startW/2;
+          const top = startCy - startH/2;
+          
+          this.activeImage.w = Math.max(20, newRight - left);
+          this.activeImage.h = Math.max(20, newBottom - top);
+          this.activeImage.cx = left + this.activeImage.w / 2;
+          this.activeImage.cy = top + this.activeImage.h / 2;
+        }
+        this.updateImageOverlay();
+      };
+
+      const onUp = () => {
+        isDragging = false;
+        isResizing = false;
+        document.removeEventListener(moveEvent, onMove);
+        document.removeEventListener(upEvent, onUp);
+      };
+
+      document.addEventListener(moveEvent, onMove, { passive: false });
+      document.addEventListener(upEvent, onUp);
+    };
+
+    this.imageOverlay.addEventListener('pointerdown', onPointerDown);
+    this.imageOverlay.addEventListener('touchstart', onPointerDown, { passive: false });
+
+    btnConfirm.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.commitActiveImage();
+    });
+
+    btnCancel.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.cancelActiveImage();
+    });
+
+    this.updateImageOverlay();
+  }
+
+  updateImageOverlay() {
+    if (!this.activeImage || !this.imageOverlay) return;
+    const ai = this.activeImage;
+    const screenX = (ai.cx - ai.w/2) * this.viewScale + this.panX;
+    const screenY = (ai.cy - ai.h/2) * this.viewScale + this.panY;
+    const screenW = ai.w * this.viewScale;
+    const screenH = ai.h * this.viewScale;
+
+    this.imageOverlay.style.left = `${screenX}px`;
+    this.imageOverlay.style.top = `${screenY}px`;
+    this.imageOverlay.style.width = `${screenW}px`;
+    this.imageOverlay.style.height = `${screenH}px`;
+  }
+
+  commitActiveImage() {
+    if (!this.activeImage) return;
+    const ai = this.activeImage;
+    const imgStroke = {
+      tool: 'image',
+      imgData: ai.imgData,
+      opacity: 1,
+      points: [
+        { x: ai.cx - ai.w / 2, y: ai.cy - ai.h / 2 },
+        { x: ai.cx + ai.w / 2, y: ai.cy - ai.h / 2 },
+        { x: ai.cx + ai.w / 2, y: ai.cy + ai.h / 2 },
+        { x: ai.cx - ai.w / 2, y: ai.cy + ai.h / 2 }
+      ],
+      isShape: false
+    };
+    this.getCurrentStrokes().push(imgStroke);
+    this.saveState();
+    
+    this.cancelActiveImage();
+    this.render();
+  }
+
+  cancelActiveImage() {
+    if (this.imageOverlay) {
+      this.imageOverlay.remove();
+      this.imageOverlay = null;
+    }
+    this.activeImage = null;
   }
 
   async handlePdfImport(e) {
@@ -1192,15 +1391,24 @@ class NeonDrawingBoard {
       const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
       this.pdfFileId = await FileDB.saveFile(blob, 'pdf', file.name);
 
+      const scale = 2.0; // High resolution rendering
+      const firstPagePdf = await pdf.getPage(1);
+      const firstViewport = firstPagePdf.getViewport({ scale });
+
       if (!this.isMultiPage) {
         this.isMultiPage = true;
         const currentStrokes = this._pages[0] ? this._pages[0]._strokes : this.strokes;
-        this._pages = [{ type: 'blank', _strokes: currentStrokes, bgCanvas: null }];
+        this._pages = [{ 
+          type: 'blank', 
+          _strokes: currentStrokes, 
+          bgCanvas: null,
+          width: firstViewport.width,
+          height: firstViewport.height
+        }];
       }
       
       const startIdx = this._pages.length;
 
-      const scale = 2.0; // High resolution rendering
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const viewport = page.getViewport({ scale });
@@ -1227,6 +1435,7 @@ class NeonDrawingBoard {
       this.sidebar.classList.remove('hidden');
       const expBtn = this.toolbar.querySelector("#btn-export-pdf"); if (expBtn) expBtn.style.display = "inline-block";
       this.resetViewToPage();
+      this.saveState();
       if (this.onChange) this.onChange(this.getData());
     } catch (err) {
       console.error("PDF Import Error:", err);
@@ -1476,6 +1685,7 @@ class NeonDrawingBoard {
   }
 
   render() {
+    if (this.activeImage) this.updateImageOverlay();
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.save();
