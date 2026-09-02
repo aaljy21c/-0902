@@ -8031,6 +8031,8 @@ function renderTodos() {
     attachmentsContainer.style.backgroundColor = 'var(--panel-bg, rgba(255,255,255,0.03))';
     attachmentsContainer.style.borderRadius = '6px';
     attachmentsContainer.style.border = '1px solid var(--panel-border)';
+    attachmentsContainer.style.width = '100%';
+    attachmentsContainer.style.boxSizing = 'border-box';
 
     let onExpandCallbacks = [];
 
@@ -9464,8 +9466,13 @@ window.openFullscreenDrawing = function(initialData, onSaveCallback) {
     onClose: (data) => {
       // 닫기 버튼 클릭 시: 진행 중인 자동저장 취소 후 즉시 저장 및 UI 갱신
       clearTimeout(autoSaveTimer);
-      if (onSaveCallback) onSaveCallback(data, true);
-      window.closeFullscreenDrawing();
+      try {
+        if (onSaveCallback) onSaveCallback(data, true);
+      } catch (e) {
+        console.error("Error saving drawing:", e);
+      } finally {
+        window.closeFullscreenDrawing();
+      }
     }
   });
 };
