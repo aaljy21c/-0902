@@ -1326,7 +1326,8 @@ class NeonDrawingBoard {
     };
 
     const onPointerDown = (e) => {
-      if (e.target === btnConfirm || e.target === btnCancel) return;
+      const targetBtn = e.target.closest('button');
+      if (targetBtn === btnConfirm || targetBtn === btnCancel) return;
       e.preventDefault();
       e.stopPropagation();
       const coords = getEvtCoords(e);
@@ -1342,9 +1343,6 @@ class NeonDrawingBoard {
       } else {
         isDragging = true;
       }
-      
-      const moveEvent = e.type === 'touchstart' ? 'touchmove' : 'pointermove';
-      const upEvent = e.type === 'touchstart' ? 'touchend' : 'pointerup';
       
       const onMove = (ev) => {
         ev.preventDefault();
@@ -1372,16 +1370,15 @@ class NeonDrawingBoard {
       const onUp = () => {
         isDragging = false;
         isResizing = false;
-        document.removeEventListener(moveEvent, onMove);
-        document.removeEventListener(upEvent, onUp);
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
       };
 
-      document.addEventListener(moveEvent, onMove, { passive: false });
-      document.addEventListener(upEvent, onUp);
+      document.addEventListener('pointermove', onMove, { passive: false });
+      document.addEventListener('pointerup', onUp);
     };
 
     this.imageOverlay.addEventListener('pointerdown', onPointerDown);
-    this.imageOverlay.addEventListener('touchstart', onPointerDown, { passive: false });
 
     btnConfirm.addEventListener('click', (e) => {
       e.stopPropagation();
