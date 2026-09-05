@@ -12,6 +12,7 @@ class NeonDrawingBoard {
     this.pdfFileId = null;
     this._pages = [{ type: 'blank', _strokes: [], bgCanvas: null }];
     this.currentPageIndex = 0;
+    this.isCalligraphyMode = false;
     this.layoutMode = localStorage.getItem('planeer_drawing_mode') || 'paged';
     this.pageHeight = 1130; // Virtual page height
 
@@ -261,6 +262,16 @@ class NeonDrawingBoard {
     // Action buttons
     this.toolbar.querySelector('#btn-undo').addEventListener('click', (e) => { e.preventDefault(); this.undo(); });
     this.toolbar.querySelector('#btn-redo').addEventListener('click', (e) => { e.preventDefault(); this.redo(); });
+    
+    const calliBtn = this.toolbar.querySelector('#btn-toggle-calligraphy');
+    if (calliBtn) {
+      calliBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.isCalligraphyMode = !this.isCalligraphyMode;
+        if (this.isCalligraphyMode) calliBtn.classList.add('active');
+        else calliBtn.classList.remove('active');
+      });
+    }
     this.toolbar.querySelector('#btn-clear').addEventListener('click', () => {
       if (confirm('그림을 모두 지우시겠습니까?')) this.clearAll();
     });
@@ -746,7 +757,8 @@ class NeonDrawingBoard {
     const rect = this.canvas.getBoundingClientRect();
     return {
       x: ((e.clientX - rect.left) - this.panX) / this.viewScale,
-      y: ((e.clientY - rect.top) - this.panY) / this.viewScale
+      y: ((e.clientY - rect.top) - this.panY) / this.viewScale,
+      t: Date.now()
     };
   }
 
@@ -1016,35 +1028,86 @@ class NeonDrawingBoard {
     const end = points[points.length - 1];
     const distStartEnd = Math.hypot(start.x - end.x, start.y - end.y);
     const diag = Math.hypot(maxX - minX, maxY - minY);
+    const w = maxX - minX;
+    const h = maxY - minY;
+    const cx = minX + w/2;
+    const cy = minY + h/2;
 
-    // If start and end are far apart, it's just a line
     if (distStartEnd > diag * 0.3) {
       return { type: 'line', points: [start, end] };
     }
 
-    // Closed shape
-    const simplified = this.simplifyPoints(points, diag * 0.08);
-    const vertices = simplified.length - 1; // Since it's closed, first ≈ last
+    // 1. Check for Heart
+    let lowestP = points[0];
+    let highestLeft = points[0];
+    let highestRight = points[0];
+    let topMid = { x: cx, y: maxY };
+    
+    points.forEach(p => {
+      if (p.y > lowestP.y) lowestP = p;
+      if (p.x < cx && p.y < highestLeft.y) highestLeft = p;
+      if (p.x > cx && p.y < highestRight.y) highestRight = p;
+      if (Math.abs(p.x - cx) < w * 0.2 && p.y < cy) {
+        if (p.y > highestLeft.y && p.y > highestRight.y) {
+           if (p.y < topMid.y) topMid = p;
+        }
+      }
+    });
+
+    const isDip = topMid.y > highestLeft.y + h*0.05 && topMid.y > highestRight.y + h*0.05;
+    const isPointyBottom = Math.abs(lowestP.x - cx) < w * 0.25 && lowestP.y > cy + h*0.2;
+    if (isDip && isPointyBottom) {
+      return { type: 'heart', rect: { x: minX, y: minY, w, h } };
+    }
+
+    // 2. Polygonal detection via Douglas-Peucker simplification
+    let epsilon = diag * 0.06;
+    let simplified = this.simplifyPoints(points, epsilon);
+    
+    let uniqueVerts = [simplified[0]];
+    for (let i = 1; i < simplified.length; i++) {
+       const dist = Math.hypot(simplified[i].x - uniqueVerts[uniqueVerts.length-1].x, simplified[i].y - uniqueVerts[uniqueVerts.length-1].y);
+       if (dist > diag * 0.08) uniqueVerts.push(simplified[i]);
+    }
+    if (uniqueVerts.length > 2) {
+      const endDist = Math.hypot(uniqueVerts[0].x - uniqueVerts[uniqueVerts.length-1].x, uniqueVerts[0].y - uniqueVerts[uniqueVerts.length-1].y);
+      if (endDist < diag * 0.15) uniqueVerts.pop();
+    }
+    
+    const vertices = uniqueVerts.length;
+
+    // Check Convexity
+    let isConvex = true;
+    let sign = 0;
+    for (let i = 0; i < vertices; i++) {
+       const p1 = uniqueVerts[i];
+       const p2 = uniqueVerts[(i+1)%vertices];
+       const p3 = uniqueVerts[(i+2)%vertices];
+       const cross = (p2.x - p1.x)*(p3.y - p2.y) - (p2.y - p1.y)*(p3.x - p2.x);
+       if (Math.abs(cross) > diag * diag * 0.01) { // ignore small colinearity
+          if (sign === 0) sign = cross > 0 ? 1 : -1;
+          else if ((cross > 0 ? 1 : -1) !== sign) {
+             isConvex = false;
+             break;
+          }
+       }
+    }
 
     if (vertices === 3) {
-      // Triangle
-      return { type: 'triangle', points: [
-        simplified[0], simplified[1], simplified[2]
-      ]};
+      return { type: 'triangle', points: [uniqueVerts[0], uniqueVerts[1], uniqueVerts[2]] };
     } else if (vertices === 4) {
-      // Rectangle (axis-aligned for cleaner look)
-      return { type: 'rectangle', rect: { x: minX, y: minY, w: maxX - minX, h: maxY - minY } };
+      return { type: 'rectangle', rect: { x: minX, y: minY, w, h } };
+    } else if (vertices === 5) {
+      if (isConvex) return { type: 'polygon', points: uniqueVerts };
+      else return { type: 'star', rect: { x: minX, y: minY, w, h } };
+    } else if (vertices === 6) {
+      return { type: 'polygon', points: uniqueVerts };
+    } else if (vertices >= 9 && vertices <= 11 && !isConvex) {
+      return { type: 'star', rect: { x: minX, y: minY, w, h } };
     } else {
       // Circle or Ellipse
-      const w = maxX - minX;
-      const h = maxY - minY;
-      const cx = minX + w/2;
-      const cy = minY + h/2;
-      
-      // If width and height are close, make it a perfect circle
       if (Math.abs(w - h) < Math.max(w, h) * 0.2) {
-        const r = (w + h) / 4;
-        return { type: 'circle', center: { x: cx, y: cy }, radius: r };
+        return { type: 'circle', center: { x: cx, y: cy }, radius: (w + h) / 4 };
       }
       return { type: 'ellipse', center: { x: cx, y: cy }, rx: w/2, ry: h/2 };
     }
@@ -1060,9 +1123,9 @@ class NeonDrawingBoard {
         this.currentStroke.isShape = true;
         this.currentStroke.shapeType = shape.type;
         
-        if (shape.type === 'line' || shape.type === 'triangle') {
+        if (shape.type === 'line' || shape.type === 'triangle' || shape.type === 'polygon') {
           this.currentStroke.points = shape.points;
-        } else if (shape.type === 'rectangle') {
+        } else if (['rectangle', 'star', 'heart'].includes(shape.type)) {
           this.currentStroke.rect = shape.rect;
         } else if (shape.type === 'circle') {
           this.currentStroke.center = shape.center;
@@ -2002,10 +2065,9 @@ class NeonDrawingBoard {
         this.ctx.stroke();
       } else if (stroke.shapeType === 'rectangle') {
         this.ctx.strokeRect(stroke.rect.x, stroke.rect.y, stroke.rect.w, stroke.rect.h);
-      } else if (stroke.shapeType === 'triangle') {
+      } else if (stroke.shapeType === 'triangle' || stroke.shapeType === 'polygon') {
         this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-        this.ctx.lineTo(stroke.points[1].x, stroke.points[1].y);
-        this.ctx.lineTo(stroke.points[2].x, stroke.points[2].y);
+        for(let i=1; i<stroke.points.length; i++) this.ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
         this.ctx.closePath();
         this.ctx.stroke();
       } else if (stroke.shapeType === 'circle') {
@@ -2013,6 +2075,32 @@ class NeonDrawingBoard {
         this.ctx.stroke();
       } else if (stroke.shapeType === 'ellipse') {
         this.ctx.ellipse(stroke.center.x, stroke.center.y, stroke.rx, stroke.ry, 0, 0, Math.PI * 2);
+        this.ctx.stroke();
+      } else if (stroke.shapeType === 'star') {
+        const cx = stroke.rect.x + stroke.rect.w/2;
+        const cy = stroke.rect.y + stroke.rect.h/2;
+        const outerR = Math.min(stroke.rect.w, stroke.rect.h) / 2;
+        const innerR = outerR * 0.4;
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? outerR : innerR;
+          const angle = -Math.PI / 2 + (i * Math.PI / 5);
+          const px = cx + r * Math.cos(angle);
+          const py = cy + r * Math.sin(angle);
+          if (i === 0) this.ctx.moveTo(px, py);
+          else this.ctx.lineTo(px, py);
+        }
+        this.ctx.closePath();
+        this.ctx.stroke();
+      } else if (stroke.shapeType === 'heart') {
+        const x = stroke.rect.x;
+        const y = stroke.rect.y;
+        const w = stroke.rect.w;
+        const h = stroke.rect.h;
+        this.ctx.moveTo(x + w/2, y + h*0.25);
+        this.ctx.bezierCurveTo(x + w/2, y, x, y, x, y + h*0.35);
+        this.ctx.bezierCurveTo(x, y + h*0.6, x + w/2, y + h*0.85, x + w/2, y + h);
+        this.ctx.bezierCurveTo(x + w/2, y + h*0.85, x + w, y + h*0.6, x + w, y + h*0.35);
+        this.ctx.bezierCurveTo(x + w, y, x + w/2, y, x + w/2, y + h*0.25);
         this.ctx.stroke();
       }
     } else {
