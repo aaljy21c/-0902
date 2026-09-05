@@ -973,20 +973,109 @@ class NeonDrawingBoard {
     }
   }
 
+  simplifyPoints(points, epsilon) {
+    if (points.length < 3) return points;
+    const findPerpendicularDistance = (p, p1, p2) => {
+      let area = Math.abs(0.5 * (p1.x * p2.y + p2.x * p.y + p.x * p1.y - p2.x * p1.y - p.x * p2.y - p1.x * p.y));
+      let bottom = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      return bottom === 0 ? Math.hypot(p.x - p1.x, p.y - p1.y) : area / bottom * 2.0;
+    };
+    
+    let dmax = 0;
+    let index = 0;
+    const end = points.length - 1;
+    for (let i = 1; i < end; i++) {
+      let d = findPerpendicularDistance(points[i], points[0], points[end]);
+      if (d > dmax) {
+        index = i;
+        dmax = d;
+      }
+    }
+    
+    if (dmax > epsilon) {
+      let recResults1 = this.simplifyPoints(points.slice(0, index + 1), epsilon);
+      let recResults2 = this.simplifyPoints(points.slice(index), epsilon);
+      return recResults1.slice(0, -1).concat(recResults2);
+    } else {
+      return [points[0], points[end]];
+    }
+  }
+
+  detectShape(points) {
+    if (points.length < 5) return { type: 'line', points: [points[0], points[points.length-1]] };
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    points.forEach(p => {
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y > maxY) maxY = p.y;
+    });
+
+    const start = points[0];
+    const end = points[points.length - 1];
+    const distStartEnd = Math.hypot(start.x - end.x, start.y - end.y);
+    const diag = Math.hypot(maxX - minX, maxY - minY);
+
+    // If start and end are far apart, it's just a line
+    if (distStartEnd > diag * 0.3) {
+      return { type: 'line', points: [start, end] };
+    }
+
+    // Closed shape
+    const simplified = this.simplifyPoints(points, diag * 0.08);
+    const vertices = simplified.length - 1; // Since it's closed, first ≈ last
+
+    if (vertices === 3) {
+      // Triangle
+      return { type: 'triangle', points: [
+        simplified[0], simplified[1], simplified[2]
+      ]};
+    } else if (vertices === 4) {
+      // Rectangle (axis-aligned for cleaner look)
+      return { type: 'rectangle', rect: { x: minX, y: minY, w: maxX - minX, h: maxY - minY } };
+    } else {
+      // Circle or Ellipse
+      const w = maxX - minX;
+      const h = maxY - minY;
+      const cx = minX + w/2;
+      const cy = minY + h/2;
+      
+      // If width and height are close, make it a perfect circle
+      if (Math.abs(w - h) < Math.max(w, h) * 0.2) {
+        const r = (w + h) / 4;
+        return { type: 'circle', center: { x: cx, y: cy }, radius: r };
+      }
+      return { type: 'ellipse', center: { x: cx, y: cy }, rx: w/2, ry: h/2 };
+    }
+  }
+
   startHoldTimer() {
     this.clearHoldTimer();
     this.holdTimer = setTimeout(() => {
       if (this.isDrawing && this.points.length > 5) {
-        // Snap to line
         this.isSnapped = true;
-        const start = this.points[0];
-        const end = this.points[this.points.length - 1];
-        this.currentStroke.points = [start, end];
+        const shape = this.detectShape(this.points);
+        
         this.currentStroke.isShape = true;
-        this.currentStroke.shapeType = 'line';
+        this.currentStroke.shapeType = shape.type;
+        
+        if (shape.type === 'line' || shape.type === 'triangle') {
+          this.currentStroke.points = shape.points;
+        } else if (shape.type === 'rectangle') {
+          this.currentStroke.rect = shape.rect;
+        } else if (shape.type === 'circle') {
+          this.currentStroke.center = shape.center;
+          this.currentStroke.radius = shape.radius;
+        } else if (shape.type === 'ellipse') {
+          this.currentStroke.center = shape.center;
+          this.currentStroke.rx = shape.rx;
+          this.currentStroke.ry = shape.ry;
+        }
+        
         this.render();
       }
-    }, 1000);
+    }, 800); // slightly faster snap feel
   }
 
   resetHoldTimer() {
@@ -1907,9 +1996,25 @@ class NeonDrawingBoard {
       this.ctx.arc(stroke.points[0].x, stroke.points[0].y, stroke.size / 2, 0, Math.PI * 2);
       this.ctx.fill();
     } else if (stroke.isShape) {
-      this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      this.ctx.lineTo(stroke.points[1].x, stroke.points[1].y);
-      this.ctx.stroke();
+      if (stroke.shapeType === 'line' || stroke.shapeType === undefined) {
+        this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        this.ctx.lineTo(stroke.points[1].x, stroke.points[1].y);
+        this.ctx.stroke();
+      } else if (stroke.shapeType === 'rectangle') {
+        this.ctx.strokeRect(stroke.rect.x, stroke.rect.y, stroke.rect.w, stroke.rect.h);
+      } else if (stroke.shapeType === 'triangle') {
+        this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        this.ctx.lineTo(stroke.points[1].x, stroke.points[1].y);
+        this.ctx.lineTo(stroke.points[2].x, stroke.points[2].y);
+        this.ctx.closePath();
+        this.ctx.stroke();
+      } else if (stroke.shapeType === 'circle') {
+        this.ctx.arc(stroke.center.x, stroke.center.y, stroke.radius, 0, Math.PI * 2);
+        this.ctx.stroke();
+      } else if (stroke.shapeType === 'ellipse') {
+        this.ctx.ellipse(stroke.center.x, stroke.center.y, stroke.rx, stroke.ry, 0, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
     } else {
       this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
       for (let i = 1; i < stroke.points.length - 1; i++) {
