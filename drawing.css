@@ -320,6 +320,13 @@
   .neon-drawing-toolbar {
     gap: 4px;
     padding: 4px 5px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+  }
+  .neon-drawing-toolbar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
   }
   .tool-btn, .action-btn {
     width: 28px;

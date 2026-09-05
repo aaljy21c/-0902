@@ -3884,6 +3884,10 @@ function setupEventListeners() {
         saveClientId();
       }
     });
+    gdriveClientIdInput.addEventListener('input', () => {
+      state.gdriveClientId = gdriveClientIdInput.value.trim();
+      localStorage.setItem('neon_planner_gdrive_client_id', state.gdriveClientId);
+    });
   }
 
   if (gdriveClientIdSaveBtn) {
@@ -3892,6 +3896,11 @@ function setupEventListeners() {
 
   if (gdriveLoginBtn) {
     gdriveLoginBtn.addEventListener('click', () => {
+      if (gdriveClientIdInput && gdriveClientIdInput.value.trim()) {
+        state.gdriveClientId = gdriveClientIdInput.value.trim();
+        localStorage.setItem('neon_planner_gdrive_client_id', state.gdriveClientId);
+      }
+      
       let clientId = (state.gdriveClientId || '').trim();
       if (clientId && !clientId.endsWith('.apps.googleusercontent.com')) {
         clientId += '.apps.googleusercontent.com';
@@ -4445,13 +4454,15 @@ function openTodoEditModal(todoId) {
     modal.classList.remove('hidden');
   }
 
-  // Focus Input
+  // Focus Input (Disabled per user request)
+  /*
   if (textInput) {
     setTimeout(() => {
       textInput.focus();
       textInput.select();
     }, 100);
   }
+  */
   
   renderTodoEditPreviews();
 
