@@ -10,7 +10,7 @@ let state = {
   selectedCategory: 'health', // Default selected category for new todo
   todoFilterCategory: 'all', // Category filter for Todo list ('all' or specific category ID)
   categories: {}, // Combined default and custom categories
-  device: 'pc', // 'pc' or 'phone'
+  device: 'phone', // 'pc' or 'phone'
   fontSize: 16, // Font size in px (10-28)
   dateSize: 14, // Date number font size in px (10-28)
   showCalendar: true, // Calendar visibility toggle
