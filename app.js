@@ -47,17 +47,17 @@ let state = {
   accentTheme: 'indigo', // Custom active buttons accent theme ('indigo', 'purple', 'teal', 'emerald', 'amber', 'rose', 'pink')
   accentIntensity: 100, // Custom active buttons accent intensity (0-100)
   searchQuery: '', // Global search query text
-  appTitle: '플래너', // Custom app header title
+  appTitle: '?뚮옒??, // Custom app header title
   tabIcons: { // Custom tab icon emojis
-    search: '🔍',
-    calendar: '📅',
-    todos: '🎯',
-    records: '📝',
-    routines: '🔄',
-    timeline: '⏳',
-    ddays: '🎉',
-    analytics: '📊',
-    settings: '⚙️'
+    search: '?뵇',
+    calendar: '?뱟',
+    todos: '?렞',
+    records: '?뱷',
+    routines: '?봽',
+    timeline: '??,
+    ddays: '?럦',
+    analytics: '?뱤',
+    settings: '?숋툘'
   }
 };
 
@@ -93,23 +93,23 @@ let currentSelectedTime = '';
 
 // Default Categories Mapping
 const DEFAULT_CATEGORIES = {
-  health: { label: '건강', color: '#10b981', class: 'cat-health-style' },
-  family: { label: '가정', color: '#f43f5e', class: 'cat-family-style' },
-  school: { label: '학교', color: '#0ea5e9', class: 'cat-school-style' },
-  dev: { label: '자기개발', color: '#a855f7', class: 'cat-dev-style' },
-  exercise: { label: '운동', color: '#f59e0b', class: 'cat-exercise-style' },
-  other: { label: '기타', color: '#6b7280', class: 'cat-other-style' }
+  health: { label: '嫄닿컯', color: '#10b981', class: 'cat-health-style' },
+  family: { label: '媛??, color: '#f43f5e', class: 'cat-family-style' },
+  school: { label: '?숆탳', color: '#0ea5e9', class: 'cat-school-style' },
+  dev: { label: '?먭린媛쒕컻', color: '#a855f7', class: 'cat-dev-style' },
+  exercise: { label: '?대룞', color: '#f59e0b', class: 'cat-exercise-style' },
+  other: { label: '湲고?', color: '#6b7280', class: 'cat-other-style' }
 };
 
 // Recommended Emoji presets for each Tab Icon
 const RECOMMENDED_EMOJIS = {
-  search: ['🔍', '🔎', '⚡', '🔮', '👀', '🔎', '👁️', '🕵️', '🦁', '🔥'],
-  calendar: ['📅', '📆', '🗓️', '🌙', '⭐', '⏰', '⏳', '☀️', '🍀', '🎈'],
-  todos: ['🎯', '✅', '📋', '📌', '🔔', '🚀', '🏆', '💯', '⭐', '💫'],
-  records: ['📝', '✍️', '📔', '📓', '💭', '✏️', '🎨', '💌', '📸', '🧸'],
-  routines: ['🔄', '♾️', '♻️', '🔁', '💪', '🎯', '⚙️', '✨', '🔥', '📆'],
-  analytics: ['📊', '📈', '💡', '🍀', '🔥', '📉', '🧬', '💎', '👑', '🎯'],
-  settings: ['⚙️', '🔧', '🛠️', '🧩', '🎨', '🔑', '🔒', '🔋', '🌐', '🛸']
+  search: ['?뵇', '?뵊', '??, '?뵰', '??', '?뵊', '?몓截?, '?빑截?, '?쫨', '?뵦'],
+  calendar: ['?뱟', '?뱠', '?뿎截?, '?뙔', '狩?, '??, '??, '?截?, '??', '?럥'],
+  todos: ['?렞', '??, '?뱥', '?뱦', '?뵒', '??', '?룇', '?뮣', '狩?, '?뮟'],
+  records: ['?뱷', '?랃툘', '?뱮', '?뱭', '?뮡', '?륅툘', '?렓', '?뭽', '?벝', '?㎏'],
+  routines: ['?봽', '?억툘', '?삼툘', '?봺', '?뮞', '?렞', '?숋툘', '??, '?뵦', '?뱠'],
+  analytics: ['?뱤', '?뱢', '?뮕', '??', '?뵦', '?뱣', '?㎚', '?뭿', '?몣', '?렞'],
+  settings: ['?숋툘', '?뵩', '?썱截?, '?㎥', '?렓', '?뵎', '?뵏', '?뵅', '?뙋', '?쎑']
 };
 
 // Preset colors for new categories
@@ -136,13 +136,13 @@ function getCategory(categoryId) {
   }
   // Fallback names for default categories if they are deleted
   const defaultLabels = {
-    health: '건강',
-    family: '가정',
-    school: '학교',
-    dev: '자기개발',
-    exercise: '운동'
+    health: '嫄닿컯',
+    family: '媛??,
+    school: '?숆탳',
+    dev: '?먭린媛쒕컻',
+    exercise: '?대룞'
   };
-  const label = defaultLabels[categoryId] ? `${defaultLabels[categoryId]}(삭제됨)` : '없음';
+  const label = defaultLabels[categoryId] ? `${defaultLabels[categoryId]}(??젣??` : '?놁쓬';
   return { label: label, color: '#ffffff', isDeleted: true };
 }
 
@@ -334,13 +334,13 @@ function init() {
       
       const badge = document.getElementById('gdrive-status-badge');
       if (badge) {
-        badge.textContent = '연결 완료 (자동 동기화)';
+        badge.textContent = '?곌껐 ?꾨즺 (?먮룞 ?숆린??';
         badge.style.background = 'rgba(16, 185, 129, 0.15)';
         badge.style.color = '#10b981';
         badge.style.borderColor = '#10b981';
       }
       const info = document.getElementById('gdrive-user-info');
-      if (info) info.textContent = '구글 드라이브 실시간 동기화 상태';
+      if (info) info.textContent = '援ш? ?쒕씪?대툕 ?ㅼ떆媛??숆린???곹깭';
     }
 
     if (savedToken && savedExpiry > Date.now() + 60000) {
@@ -696,8 +696,8 @@ function loadFromLocalStorage() {
   const savedAppTitle = localStorage.getItem('neon_planner_app_title');
   if (savedAppTitle) {
     if (savedAppTitle === 'NEON PLANNER') {
-      state.appTitle = '플래너';
-      localStorage.setItem('neon_planner_app_title', '플래너');
+      state.appTitle = '?뚮옒??;
+      localStorage.setItem('neon_planner_app_title', '?뚮옒??);
     } else {
       state.appTitle = savedAppTitle;
     }
@@ -1158,7 +1158,7 @@ function applyLayoutSectionOrder() {
     }
   });
 
-  if (state.device === 'phone' || window.innerWidth <= 900) {
+  if (state.device === 'phone') {
     // --- PHONE MODE or SQUEEZED PC VIEWPORT ---
     [calendarSection, todoSection, recordsWrapper, routinesPanel, analyticsPanel].forEach(el => {
       el.style.borderLeft = '';
@@ -1270,13 +1270,13 @@ function autoRefreshGDriveToken() {
 
         const badge = document.getElementById('gdrive-status-badge');
         if (badge) {
-          badge.textContent = '연결 완료 (자동 동기화)';
+          badge.textContent = '?곌껐 ?꾨즺 (?먮룞 ?숆린??';
           badge.style.background = 'rgba(16, 185, 129, 0.15)';
           badge.style.color = '#10b981';
           badge.style.borderColor = '#10b981';
         }
         const info = document.getElementById('gdrive-user-info');
-        if (info) info.textContent = '구글 드라이브 실시간 동기화 상태';
+        if (info) info.textContent = '援ш? ?쒕씪?대툕 ?ㅼ떆媛??숆린???곹깭';
         
         scheduleGDriveTokenRefresh(expiryTime);
         if (gdrivePollInterval) clearInterval(gdrivePollInterval);
@@ -1309,7 +1309,7 @@ function triggerGDriveAutoSync() {
   gdriveSyncTimeout = setTimeout(async () => {
     const statusBadge = document.getElementById('gdrive-status-badge');
     if (statusBadge) {
-      statusBadge.textContent = '🔄 동기화 중...';
+      statusBadge.textContent = '?봽 ?숆린??以?..';
       statusBadge.style.background = 'rgba(59, 130, 246, 0.15)';
       statusBadge.style.color = '#3b82f6';
       statusBadge.style.borderColor = '#3b82f6';
@@ -1350,7 +1350,7 @@ function triggerGDriveAutoSync() {
       
       if (searchRes.status === 401 || searchRes.status === 403) {
         if (statusBadge) {
-          statusBadge.innerHTML = '⚠️ 세션 만료 <span style="text-decoration:underline;">(클릭하여 연장)</span>';
+          statusBadge.innerHTML = '?좑툘 ?몄뀡 留뚮즺 <span style="text-decoration:underline;">(?대┃?섏뿬 ?곗옣)</span>';
           statusBadge.style.background = 'rgba(239, 68, 68, 0.15)';
           statusBadge.style.color = '#ef4444';
           statusBadge.style.borderColor = '#ef4444';
@@ -1377,7 +1377,7 @@ function triggerGDriveAutoSync() {
           },
           body: JSON.stringify(backupData)
         });
-        if (!updateRes.ok) throw new Error('파일 덮어쓰기 실패');
+        if (!updateRes.ok) throw new Error('?뚯씪 ??뼱?곌린 ?ㅽ뙣');
         const updateData = await updateRes.json();
         if (updateData.modifiedTime) {
           localStorage.setItem('neon_planner_gdrive_file_modifiedTime', updateData.modifiedTime);
@@ -1416,7 +1416,7 @@ function triggerGDriveAutoSync() {
         });
         if (!createRes.ok) {
           const errText = await createRes.text();
-          throw new Error('새 파일 업로드 실패: ' + createRes.status + ' - ' + errText);
+          throw new Error('???뚯씪 ?낅줈???ㅽ뙣: ' + createRes.status + ' - ' + errText);
         }
         const createData = await createRes.json();
         if (createData.id) {
@@ -1428,7 +1428,7 @@ function triggerGDriveAutoSync() {
       }
 
       if (statusBadge) {
-        statusBadge.textContent = '연결 완료 (자동 동기화)';
+        statusBadge.textContent = '?곌껐 ?꾨즺 (?먮룞 ?숆린??';
         statusBadge.style.background = 'rgba(16, 185, 129, 0.15)';
         statusBadge.style.color = '#10b981';
         statusBadge.style.borderColor = '#10b981';
@@ -1436,13 +1436,13 @@ function triggerGDriveAutoSync() {
     } catch (err) {
       console.error('Google Drive Auto-sync failed:', err);
       if (statusBadge) {
-        statusBadge.textContent = '⚠️ 동기화 실패';
+        statusBadge.textContent = '?좑툘 ?숆린???ㅽ뙣';
         statusBadge.style.background = 'rgba(239, 68, 68, 0.15)';
         statusBadge.style.color = '#ef4444';
         statusBadge.style.borderColor = '#ef4444';
       }
     }
-  }, 500); // 0.5초 디바운스로 즉각적인 업로드 반영
+  }, 500); // 0.5珥??붾컮?댁뒪濡?利됯컖?곸씤 ?낅줈??諛섏쁺
 }
 
 async function performAutoRestoreAndBackup() {
@@ -1465,7 +1465,7 @@ async function performAutoRestoreAndBackup() {
         let shouldRestore = true;
         
         if (localModified > driveModified && driveModified > 0) {
-          shouldRestore = confirm("클라우드와 현재 기기의 데이터에 차이가 있습니다.\n\n[확인] 클라우드 데이터로 기기를 덮어씁니다 (현재 기기의 최근 변경사항 삭제)\n[취소] 현재 기기의 데이터로 클라우드를 덮어씁니다 (백업 진행)");
+          shouldRestore = confirm("?대씪?곕뱶? ?꾩옱 湲곌린???곗씠?곗뿉 李⑥씠媛 ?덉뒿?덈떎.\n\n[?뺤씤] ?대씪?곕뱶 ?곗씠?곕줈 湲곌린瑜???뼱?곷땲??(?꾩옱 湲곌린??理쒓렐 蹂寃쎌궗????젣)\n[痍⑥냼] ?꾩옱 湲곌린???곗씠?곕줈 ?대씪?곕뱶瑜???뼱?곷땲??(諛깆뾽 吏꾪뻾)");
         } else if (localModified > driveModified && driveModified === 0) {
           shouldRestore = false; // Drive has no valid timestamp, just backup local
         }
@@ -1507,13 +1507,13 @@ async function performAutoRestoreAndBackup() {
     triggerGDriveAutoSync();
     
     setTimeout(() => {
-      alert('구글 연동 및 동기화가 완료되었습니다. 변경사항 적용을 위해 새로고침합니다.');
+      alert('援ш? ?곕룞 諛??숆린?붽? ?꾨즺?섏뿀?듬땲?? 蹂寃쎌궗???곸슜???꾪빐 ?덈줈怨좎묠?⑸땲??');
       window.location.reload();
     }, 1500);
 
   } catch (e) {
     console.error('Auto restore/backup failed:', e);
-    alert('구글 연동은 완료되었으나 자동 동기화 중 오류가 발생했습니다.');
+    alert('援ш? ?곕룞? ?꾨즺?섏뿀?쇰굹 ?먮룞 ?숆린??以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.');
     window.location.reload();
   }
 }
@@ -1539,7 +1539,7 @@ function showSyncToast() {
     toast.style.pointerEvents = 'none';
     document.body.appendChild(toast);
   }
-  toast.innerHTML = '✨ 다른 기기의 변경사항이 화면에 반영되었습니다.';
+  toast.innerHTML = '???ㅻⅨ 湲곌린??蹂寃쎌궗??씠 ?붾㈃??諛섏쁺?섏뿀?듬땲??';
   toast.style.opacity = '0';
   toast.style.transform = 'translateX(-50%) translateY(20px)';
   
@@ -1593,7 +1593,7 @@ async function autoSyncWithDrive() {
 
       if (searchRes.status === 401 || searchRes.status === 403) {
         if (statusBadge) {
-          statusBadge.innerHTML = '⚠️ 세션 만료 <span style="text-decoration:underline;">(클릭하여 연장)</span>';
+          statusBadge.innerHTML = '?좑툘 ?몄뀡 留뚮즺 <span style="text-decoration:underline;">(?대┃?섏뿬 ?곗옣)</span>';
           statusBadge.style.background = 'rgba(239, 68, 68, 0.15)';
           statusBadge.style.color = '#ef4444';
           statusBadge.style.borderColor = '#ef4444';
@@ -1620,8 +1620,8 @@ async function autoSyncWithDrive() {
 
     const lastSeenTime = localStorage.getItem('neon_planner_gdrive_file_modifiedTime');
     if (existingFile.modifiedTime && existingFile.modifiedTime === lastSeenTime) {
-      if (statusBadge && statusBadge.textContent !== '✨ 자동 복원 완료 (최신화)') {
-        statusBadge.textContent = '연결 완료 (자동 동기화)';
+      if (statusBadge && statusBadge.textContent !== '???먮룞 蹂듭썝 ?꾨즺 (理쒖떊??') {
+        statusBadge.textContent = '?곌껐 ?꾨즺 (?먮룞 ?숆린??';
         statusBadge.style.background = 'rgba(16, 185, 129, 0.15)';
         statusBadge.style.color = '#10b981';
         statusBadge.style.borderColor = '#10b981';
@@ -1638,7 +1638,7 @@ async function autoSyncWithDrive() {
       cache: 'no-store'
     });
 
-    if (!contentRes.ok) throw new Error('백업 데이터 읽기 실패');
+    if (!contentRes.ok) throw new Error('諛깆뾽 ?곗씠???쎄린 ?ㅽ뙣');
     const restoreData = await contentRes.json();
     
     if (existingFile.modifiedTime) {
@@ -1682,19 +1682,19 @@ async function autoSyncWithDrive() {
       showSyncToast();
       
       if (statusBadge) {
-        statusBadge.textContent = '✨ 자동 복원 완료 (최신화)';
+        statusBadge.textContent = '???먮룞 蹂듭썝 ?꾨즺 (理쒖떊??';
         statusBadge.style.background = 'rgba(16, 185, 129, 0.15)';
         statusBadge.style.color = '#10b981';
         statusBadge.style.borderColor = '#10b981';
         setTimeout(() => {
-          statusBadge.textContent = '연결 완료 (자동 동기화)';
+          statusBadge.textContent = '?곌껐 ?꾨즺 (?먮룞 ?숆린??';
         }, 5000);
       }
     } else if (localModified > driveModified) {
       triggerGDriveAutoSync();
     } else {
       if (statusBadge) {
-        statusBadge.textContent = '연결 완료 (자동 동기화)';
+        statusBadge.textContent = '?곌껐 ?꾨즺 (?먮룞 ?숆린??';
         statusBadge.style.background = 'rgba(16, 185, 129, 0.15)';
         statusBadge.style.color = '#10b981';
         statusBadge.style.borderColor = '#10b981';
@@ -1703,7 +1703,7 @@ async function autoSyncWithDrive() {
   } catch (err) {
     console.error('Auto sync check failed:', err);
     if (statusBadge) {
-      statusBadge.textContent = '⚠️ 자동 동기화 확인 실패';
+      statusBadge.textContent = '?좑툘 ?먮룞 ?숆린???뺤씤 ?ㅽ뙣';
     }
   }
 }
@@ -1905,7 +1905,7 @@ function updateDrilldownPanel() {
 
     const rateLabel = document.createElement('span');
     rateLabel.classList.add('drilldown-category-rate');
-    rateLabel.innerHTML = `성취율: <strong>${rate}%</strong> (${catCompleted}/${catTotal}개 완료)`;
+    rateLabel.innerHTML = `?깆랬?? <strong>${rate}%</strong> (${catCompleted}/${catTotal}媛??꾨즺)`;
     header.appendChild(rateLabel);
 
     row.appendChild(header);
@@ -1915,7 +1915,7 @@ function updateDrilldownPanel() {
       const empty = document.createElement('div');
       empty.classList.add('empty-state');
       empty.style.fontSize = '0.75rem';
-      empty.textContent = '기록된 할 일이 없습니다.';
+      empty.textContent = '湲곕줉?????쇱씠 ?놁뒿?덈떎.';
       row.appendChild(empty);
     } else {
       Array.from(catTasks).sort().forEach(taskText => {
@@ -1950,7 +1950,7 @@ function updateDrilldownPanel() {
 
         const taskRateSpan = document.createElement('span');
         taskRateSpan.classList.add('drilldown-task-rate');
-        taskRateSpan.innerHTML = `성공률: <strong>${taskRate}%</strong> (${completedCount}/${occurrences.length}회 완료)`;
+        taskRateSpan.innerHTML = `?깃났瑜? <strong>${taskRate}%</strong> (${completedCount}/${occurrences.length}???꾨즺)`;
         taskInfo.appendChild(taskRateSpan);
 
         taskRow.appendChild(taskInfo);
@@ -1974,13 +1974,13 @@ function updateDrilldownPanel() {
 
           const statusSpan = document.createElement('span');
           statusSpan.classList.add('tracker-tile-status');
-          statusSpan.textContent = occ.completed ? '완료' : '미완료';
+          statusSpan.textContent = occ.completed ? '?꾨즺' : '誘몄셿猷?;
 
           tile.appendChild(dateSpan);
           tile.appendChild(statusSpan);
 
           tile.style.cursor = 'pointer';
-          tile.title = `${formatDateKeyToMonthDay(occ.dateKey)} 일정 관리로 이동`;
+          tile.title = `${formatDateKeyToMonthDay(occ.dateKey)} ?쇱젙 愿由щ줈 ?대룞`;
           tile.addEventListener('click', () => {
             state.selectedDate = occ.dateKey;
             populateRoutinesForDate(occ.dateKey);
@@ -2043,7 +2043,7 @@ function updateCompletedDrilldownList() {
   const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
   if (sortedDates.length === 0) {
-    listContainer.innerHTML = '<div class="empty-state">완료한 할 일이 아직 없습니다. 일정을 완수해 보세요!</div>';
+    listContainer.innerHTML = '<div class="empty-state">?꾨즺?????쇱씠 ?꾩쭅 ?놁뒿?덈떎. ?쇱젙???꾩닔??蹂댁꽭??</div>';
     return;
   }
 
@@ -2072,10 +2072,10 @@ function updateCompletedDrilldownList() {
 
       const statusSpan = document.createElement('span');
       statusSpan.classList.add('drilldown-task-item-status');
-      statusSpan.textContent = '완료 ✓';
+      statusSpan.textContent = '?꾨즺 ??;
       item.appendChild(statusSpan);
 
-      item.title = `${formatDateKeyToMonthDay(dk)} 일정 관리로 이동`;
+      item.title = `${formatDateKeyToMonthDay(dk)} ?쇱젙 愿由щ줈 ?대룞`;
       item.addEventListener('click', () => {
         state.selectedDate = dk;
         populateRoutinesForDate(dk);
@@ -2110,7 +2110,7 @@ function updatePendingDrilldownList() {
   const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
   if (sortedDates.length === 0) {
-    listContainer.innerHTML = '<div class="empty-state">남아있는 할 일이 없습니다! 대단해요.</div>';
+    listContainer.innerHTML = '<div class="empty-state">?⑥븘?덈뒗 ???쇱씠 ?놁뒿?덈떎! ??⑦빐??</div>';
     return;
   }
 
@@ -2139,10 +2139,10 @@ function updatePendingDrilldownList() {
 
       const statusSpan = document.createElement('span');
       statusSpan.classList.add('drilldown-task-item-status');
-      statusSpan.textContent = '남음';
+      statusSpan.textContent = '?⑥쓬';
       item.appendChild(statusSpan);
 
-      item.title = `${formatDateKeyToMonthDay(dk)} 일정 관리로 이동`;
+      item.title = `${formatDateKeyToMonthDay(dk)} ?쇱젙 愿由щ줈 ?대룞`;
       item.addEventListener('click', () => {
         state.selectedDate = dk;
         populateRoutinesForDate(dk);
@@ -2162,7 +2162,7 @@ function updatePendingDrilldownList() {
 // Get Korean weekday text from date string
 function getDayOfWeek(dateKey) {
   const d = new Date(dateKey);
-  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  const weekdays = ['??, '??, '??, '??, '紐?, '湲?, '??];
   return weekdays[d.getDay()] || '';
 }
 
@@ -2252,7 +2252,7 @@ function updateAnalytics() {
 
       const valLabel = document.createElement('div');
       valLabel.classList.add('chart-bar-value');
-      valLabel.textContent = `${rate}% (${comp}/${tot}개)`;
+      valLabel.textContent = `${rate}% (${comp}/${tot}媛?`;
       row.appendChild(valLabel);
 
       categoryBarChart.appendChild(row);
@@ -2283,7 +2283,7 @@ function updateAnalytics() {
     });
 
     if (state.routines.length === 0) {
-      routineStatsContainer.innerHTML = '<div style="color:var(--text-muted); font-size: 0.85rem; font-style: italic;">아직 등록된 루틴이 없습니다.</div>';
+      routineStatsContainer.innerHTML = '<div style="color:var(--text-muted); font-size: 0.85rem; font-style: italic;">?꾩쭅 ?깅줉??猷⑦떞???놁뒿?덈떎.</div>';
     } else {
       Object.keys(routineCounts).forEach(rText => {
         const stats = routineCounts[rText];
@@ -2321,7 +2321,7 @@ function updateAnalytics() {
         right.style.fontWeight = '700';
         right.style.color = 'var(--accent-color)';
         right.style.fontSize = '1rem';
-        right.textContent = `총 ${stats.completed}회 완료`;
+        right.textContent = `珥?${stats.completed}???꾨즺`;
         
         row.appendChild(left);
         row.appendChild(right);
@@ -2341,12 +2341,12 @@ function updateAnalytics() {
     if (sortedTodos.length === 0) {
       const opt = document.createElement('option');
       opt.value = '';
-      opt.textContent = '(등록된 할 일이 없습니다)';
+      opt.textContent = '(?깅줉?????쇱씠 ?놁뒿?덈떎)';
       trackerSelect.appendChild(opt);
     } else {
       const defaultOpt = document.createElement('option');
       defaultOpt.value = '';
-      defaultOpt.textContent = '-- 할 일을 선택하세요 --';
+      defaultOpt.textContent = '-- ???쇱쓣 ?좏깮?섏꽭??--';
       trackerSelect.appendChild(defaultOpt);
 
       sortedTodos.forEach(text => {
@@ -2377,7 +2377,7 @@ function updateSelectedTodoTracker() {
 
   const selectedText = trackerSelect.value;
   if (!selectedText) {
-    summaryText.textContent = '할 일을 선택하시면 완료 기록 분석이 나타납니다.';
+    summaryText.textContent = '???쇱쓣 ?좏깮?섏떆硫??꾨즺 湲곕줉 遺꾩꽍???섑??⑸땲??';
     historyGrid.innerHTML = '';
     return;
   }
@@ -2402,11 +2402,11 @@ function updateSelectedTodoTracker() {
   const totalOccur = occurrences.length;
   const todoRate = totalOccur > 0 ? Math.round((completedOccur / totalOccur) * 100) : 0;
 
-  summaryText.innerHTML = `🎯 <strong>"${selectedText}"</strong> 성취율: <span style="color:var(--accent-color); text-shadow:0 0 5px var(--accent-glow)">${todoRate}%</span> (총 ${totalOccur}회 중 ${completedOccur}회 완료)`;
+  summaryText.innerHTML = `?렞 <strong>"${selectedText}"</strong> ?깆랬?? <span style="color:var(--accent-color); text-shadow:0 0 5px var(--accent-glow)">${todoRate}%</span> (珥?${totalOccur}??以?${completedOccur}???꾨즺)`;
 
   historyGrid.innerHTML = '';
   if (occurrences.length === 0) {
-    historyGrid.innerHTML = '<div class="empty-state">해당 항목에 매칭되는 이력이 없습니다.</div>';
+    historyGrid.innerHTML = '<div class="empty-state">?대떦 ??ぉ??留ㅼ묶?섎뒗 ?대젰???놁뒿?덈떎.</div>';
     return;
   }
 
@@ -2426,13 +2426,13 @@ function updateSelectedTodoTracker() {
 
     const statusSpan = document.createElement('span');
     statusSpan.classList.add('tracker-tile-status');
-    statusSpan.textContent = occ.completed ? '완료' : '미완료';
+    statusSpan.textContent = occ.completed ? '?꾨즺' : '誘몄셿猷?;
 
     tile.appendChild(dateSpan);
     tile.appendChild(statusSpan);
 
     tile.style.cursor = 'pointer';
-    tile.title = `${formatDateKeyToMonthDay(occ.dateKey)} 일정 관리로 이동`;
+    tile.title = `${formatDateKeyToMonthDay(occ.dateKey)} ?쇱젙 愿由щ줈 ?대룞`;
     tile.addEventListener('click', () => {
       state.selectedDate = occ.dateKey;
       populateRoutinesForDate(occ.dateKey);
@@ -2898,7 +2898,7 @@ function setupEventListeners() {
   const headerControls = document.getElementById('header-buttons-list');
   if (headerLogo && headerControls) {
     headerLogo.style.cursor = 'pointer';
-    headerLogo.title = '메뉴 열기/닫기';
+    headerLogo.title = '硫붾돱 ?닿린/?リ린';
     headerLogo.addEventListener('click', () => {
       headerControls.classList.toggle('show');
     });
@@ -3330,7 +3330,7 @@ function setupEventListeners() {
       const audioVal = state.diaryDraftAudio ? JSON.parse(JSON.stringify(state.diaryDraftAudio)) : [];
 
       if (!textVal && imagesVal.length === 0 && drawingVal.length === 0 && audioVal.length === 0) {
-        alert('내용이나 사진, 그림, 음성 중 하나를 입력해 주세요.');
+        alert('?댁슜?대굹 ?ъ쭊, 洹몃┝, ?뚯꽦 以??섎굹瑜??낅젰??二쇱꽭??');
         return;
       }
 
@@ -3362,7 +3362,7 @@ function setupEventListeners() {
 
       const statusSpan = document.getElementById('new-record-save-status');
       if (statusSpan) {
-        statusSpan.textContent = '파일 처리 중... (대용량은 시간이 걸립니다)';
+        statusSpan.textContent = '?뚯씪 泥섎━ 以?.. (??⑸웾? ?쒓컙??嫄몃┰?덈떎)';
         statusSpan.style.opacity = '1';
       }
 
@@ -3384,7 +3384,7 @@ function setupEventListeners() {
             if (processed === files.length) {
               renderDiary();
               if (statusSpan) {
-                statusSpan.textContent = '파일 추가 완료';
+                statusSpan.textContent = '?뚯씪 異붽? ?꾨즺';
                 statusSpan.style.opacity = '0.7';
               }
             }
@@ -3401,7 +3401,7 @@ function setupEventListeners() {
             if (processed === files.length) {
               renderDiary();
               if (statusSpan) {
-                statusSpan.textContent = '사진 추가 완료';
+                statusSpan.textContent = '?ъ쭊 異붽? ?꾨즺';
                 statusSpan.style.opacity = '0.7';
               }
             }
@@ -3645,7 +3645,7 @@ function setupEventListeners() {
 
   if (btnTodoDelete) {
     btnTodoDelete.addEventListener('click', () => {
-      if (editingTodoId && confirm('이 할 일을 삭제하시겠습니까?')) {
+      if (editingTodoId && confirm('?????쇱쓣 ??젣?섏떆寃좎뒿?덇퉴?')) {
         const dateKey = state.selectedDate;
         const todo = state.todos[dateKey].find(t => t.id === editingTodoId);
         if (todo) {
@@ -3675,7 +3675,7 @@ function setupEventListeners() {
       
       const statusSpan = document.getElementById('todo-edit-modal-photo-status');
       if (statusSpan) {
-        statusSpan.textContent = '파일 처리 중... (대용량은 시간이 걸립니다)';
+        statusSpan.textContent = '?뚯씪 泥섎━ 以?.. (??⑸웾? ?쒓컙??嫄몃┰?덈떎)';
         statusSpan.style.opacity = '1';
       }
       
@@ -3821,13 +3821,13 @@ function setupEventListeners() {
       if (hourVal && minVal) {
         currentSelectedTime = convertTo24h(addFormSelectedAmpm, hourVal, minVal);
         if (btnTimeTrigger) {
-          btnTimeTrigger.textContent = `⏰ ${formatTimeKorean(currentSelectedTime)}`;
+          btnTimeTrigger.textContent = `??${formatTimeKorean(currentSelectedTime)}`;
         }
       } else {
         // If incomplete, clear the selection
         currentSelectedTime = '';
         if (btnTimeTrigger) {
-          btnTimeTrigger.textContent = '⏰ 시간 설정';
+          btnTimeTrigger.textContent = '???쒓컙 ?ㅼ젙';
         }
       }
       if (timeDropdown) timeDropdown.classList.add('hidden');
@@ -3846,7 +3846,7 @@ function setupEventListeners() {
       if (selectMin) selectMin.value = '00';
       currentSelectedTime = '00:00';
       if (btnTimeTrigger) {
-        btnTimeTrigger.textContent = `⏰ ${formatTimeKorean(currentSelectedTime)}`;
+        btnTimeTrigger.textContent = `??${formatTimeKorean(currentSelectedTime)}`;
       }
       if (timeDropdown) timeDropdown.classList.add('hidden');
     });
@@ -3860,7 +3860,7 @@ function setupEventListeners() {
       if (selectMin) selectMin.value = '00';
       currentSelectedTime = '12:00';
       if (btnTimeTrigger) {
-        btnTimeTrigger.textContent = `⏰ ${formatTimeKorean(currentSelectedTime)}`;
+        btnTimeTrigger.textContent = `??${formatTimeKorean(currentSelectedTime)}`;
       }
       if (timeDropdown) timeDropdown.classList.add('hidden');
     });
@@ -3874,7 +3874,7 @@ function setupEventListeners() {
       if (selectMin) selectMin.value = '';
       updateAddFormAmpm('AM');
       if (btnTimeTrigger) {
-        btnTimeTrigger.textContent = '⏰ 시간 설정';
+        btnTimeTrigger.textContent = '???쒓컙 ?ㅼ젙';
       }
       if (timeDropdown) timeDropdown.classList.add('hidden');
     });
@@ -3892,7 +3892,7 @@ function setupEventListeners() {
     if (gdriveClientIdInput) {
       state.gdriveClientId = gdriveClientIdInput.value.trim();
       localStorage.setItem('neon_planner_gdrive_client_id', state.gdriveClientId);
-      alert('🔑 구글 Client ID가 안전하게 등록되었습니다!');
+      alert('?뵎 援ш? Client ID媛 ?덉쟾?섍쾶 ?깅줉?섏뿀?듬땲??');
     }
   };
 
@@ -3924,12 +3924,12 @@ function setupEventListeners() {
         clientId += '.apps.googleusercontent.com';
       }
       if (!clientId) {
-        alert('구글 드라이브 연동을 진행하려면 먼저 발급받으신 "구글 Client ID"를 아래 상자에 입력해주셔야 합니다.');
+        alert('援ш? ?쒕씪?대툕 ?곕룞??吏꾪뻾?섎젮硫?癒쇱? 諛쒓툒諛쏆쑝??"援ш? Client ID"瑜??꾨옒 ?곸옄???낅젰?댁＜?붿빞 ?⑸땲??');
         return;
       }
 
       if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-        alert('구글 로그인 라이브러리가 로드되지 않았습니다.\n\n인터넷 연결을 확인하시거나, 브라우저의 광고 차단 프로그램(AdBlock, Brave Shield 등)이 구글 인증 스크립트를 차단하고 있는지 확인한 뒤 새로고침하여 다시 시도해 주세요!');
+        alert('援ш? 濡쒓렇???쇱씠釉뚮윭由ш? 濡쒕뱶?섏? ?딆븯?듬땲??\n\n?명꽣???곌껐???뺤씤?섏떆嫄곕굹, 釉뚮씪?곗???愿묎퀬 李⑤떒 ?꾨줈洹몃옩(AdBlock, Brave Shield ????援ш? ?몄쬆 ?ㅽ겕由쏀듃瑜?李⑤떒?섍퀬 ?덈뒗吏 ?뺤씤?????덈줈怨좎묠?섏뿬 ?ㅼ떆 ?쒕룄??二쇱꽭??');
         return;
       }
 
@@ -3939,7 +3939,7 @@ function setupEventListeners() {
           scope: 'https://www.googleapis.com/auth/drive.appdata',
           callback: (tokenResponse) => {
             if (tokenResponse.error !== undefined) {
-              alert('구글 인증에 실패했습니다: ' + tokenResponse.error);
+              alert('援ш? ?몄쬆???ㅽ뙣?덉뒿?덈떎: ' + tokenResponse.error);
               return;
             }
             gdriveAccessToken = tokenResponse.access_token;
@@ -3960,14 +3960,14 @@ function setupEventListeners() {
 
             const badge = document.getElementById('gdrive-status-badge');
             if (badge) {
-              badge.textContent = '연결 완료';
+              badge.textContent = '?곌껐 ?꾨즺';
               badge.style.background = 'rgba(16, 185, 129, 0.15)';
               badge.style.color = '#10b981';
               badge.style.borderColor = '#10b981';
             }
             const info = document.getElementById('gdrive-user-info');
             if (info) {
-              info.textContent = '구글 연동 활성화 (실시간 자동 동기화)';
+              info.textContent = '援ш? ?곕룞 ?쒖꽦??(?ㅼ떆媛??먮룞 ?숆린??';
             }
             performAutoRestoreAndBackup();
           }
@@ -3976,7 +3976,7 @@ function setupEventListeners() {
         gdriveTokenClient.requestAccessToken({ prompt: 'consent' });
       } catch (err) {
         console.error(err);
-        alert('구글 로그인 클라이언트 생성 실패: ' + err.message + '\nClient ID 형식이 올바른지 재차 확인해주세요.');
+        alert('援ш? 濡쒓렇???대씪?댁뼵???앹꽦 ?ㅽ뙣: ' + err.message + '\nClient ID ?뺤떇???щ컮瑜몄? ?ъ감 ?뺤씤?댁＜?몄슂.');
       }
     });
   }
@@ -3998,15 +3998,15 @@ function setupEventListeners() {
 
       const badge = document.getElementById('gdrive-status-badge');
       if (badge) {
-        badge.textContent = '연결 안 됨';
+        badge.textContent = '?곌껐 ????;
         badge.style.background = 'rgba(239, 68, 68, 0.15)';
         badge.style.color = '#ef4444';
         badge.style.borderColor = '#ef4444';
       }
       const info = document.getElementById('gdrive-user-info');
-      if (info) info.textContent = '구글 로그인 시 클라우드 실시간 동기화';
+      if (info) info.textContent = '援ш? 濡쒓렇?????대씪?곕뱶 ?ㅼ떆媛??숆린??;
 
-      alert('구글 계정 연동을 정상적으로 해제했습니다.');
+      alert('援ш? 怨꾩젙 ?곕룞???뺤긽?곸쑝濡??댁젣?덉뒿?덈떎.');
     });
   }
 
@@ -4029,12 +4029,12 @@ function setupEventListeners() {
   if (gdriveBackupBtn) {
     gdriveBackupBtn.addEventListener('click', async () => {
       if (!gdriveAccessToken) {
-        alert('구글 연동 만료 또는 미연결 상태입니다. 구글 로그인 버튼을 다시 눌러주세요.');
+        alert('援ш? ?곕룞 留뚮즺 ?먮뒗 誘몄뿰寃??곹깭?낅땲?? 援ш? 濡쒓렇??踰꾪듉???ㅼ떆 ?뚮윭二쇱꽭??');
         return;
       }
 
       gdriveBackupBtn.disabled = true;
-      gdriveBackupBtn.textContent = '📤 백업 중...';
+      gdriveBackupBtn.textContent = '?뱾 諛깆뾽 以?..';
 
       try {
         const backupData = {
@@ -4067,10 +4067,10 @@ function setupEventListeners() {
           headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
         });
         if (searchRes.status === 401 || searchRes.status === 403) {
-          alert('구글 로그인 세션이 만료되었습니다. 인증 창이 뜹니다.');
+          alert('援ш? 濡쒓렇???몄뀡??留뚮즺?섏뿀?듬땲?? ?몄쬆 李쎌씠 ?밸땲??');
           const loginBtn = document.getElementById('btn-gdrive-login');
           if (loginBtn) loginBtn.click();
-          throw new Error('인증 만료 (재로그인 진행)');
+          throw new Error('?몄쬆 留뚮즺 (?щ줈洹몄씤 吏꾪뻾)');
         }
         const searchData = await searchRes.json();
         const existingFile = searchData.files && searchData.files[0];
@@ -4085,7 +4085,7 @@ function setupEventListeners() {
             },
             body: JSON.stringify(backupData)
           });
-          if (!updateRes.ok) throw new Error('파일 덮어쓰기 실패');
+          if (!updateRes.ok) throw new Error('?뚯씪 ??뼱?곌린 ?ㅽ뙣');
         } else {
           const boundary = 'neon_planner_multipart_boundary';
           const delimiter = `--${boundary}\r\n`;
@@ -4120,17 +4120,17 @@ function setupEventListeners() {
           });
           if (!createRes.ok) {
             const errText = await createRes.text();
-            throw new Error('새 파일 업로드 실패: ' + createRes.status + ' - ' + errText);
+            throw new Error('???뚯씪 ?낅줈???ㅽ뙣: ' + createRes.status + ' - ' + errText);
           }
         }
 
-        alert('구글 드라이브 백업이 완료되었습니다! (neon_planner_backup.json 파일로 저장됨)');
+        alert('援ш? ?쒕씪?대툕 諛깆뾽???꾨즺?섏뿀?듬땲?? (neon_planner_backup.json ?뚯씪濡???λ맖)');
       } catch (err) {
         console.error(err);
-        alert('백업 업로드 중 오류가 발생했습니다: ' + err.message);
+        alert('諛깆뾽 ?낅줈??以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎: ' + err.message);
       } finally {
         gdriveBackupBtn.disabled = false;
-        gdriveBackupBtn.textContent = '📤 드라이브 백업';
+        gdriveBackupBtn.textContent = '?뱾 ?쒕씪?대툕 諛깆뾽';
       }
     });
   }
@@ -4138,16 +4138,16 @@ function setupEventListeners() {
   if (gdriveRestoreBtn) {
     gdriveRestoreBtn.addEventListener('click', async () => {
       if (!gdriveAccessToken) {
-        alert('구글 연동 만료 또는 미연결 상태입니다. 구글 로그인 버튼을 다시 눌러주세요.');
+        alert('援ш? ?곕룞 留뚮즺 ?먮뒗 誘몄뿰寃??곹깭?낅땲?? 援ш? 濡쒓렇??踰꾪듉???ㅼ떆 ?뚮윭二쇱꽭??');
         return;
       }
 
-      if (!confirm('정말로 구글 드라이브에서 백업 데이터를 받아와 덮어씌우시겠습니까?\n현재 로컬 데이터는 모두 유실됩니다.')) {
+      if (!confirm('?뺣쭚濡?援ш? ?쒕씪?대툕?먯꽌 諛깆뾽 ?곗씠?곕? 諛쏆븘? ??뼱?뚯슦?쒓쿋?듬땲源?\n?꾩옱 濡쒖뺄 ?곗씠?곕뒗 紐⑤몢 ?좎떎?⑸땲??')) {
         return;
       }
 
       gdriveRestoreBtn.disabled = true;
-      gdriveRestoreBtn.textContent = '📥 복원 중...';
+      gdriveRestoreBtn.textContent = '?뱿 蹂듭썝 以?..';
 
       try {
         const searchUrl = "https://www.googleapis.com/drive/v3/files?q=name='neon_planner_backup.json'+and+trashed=false&spaces=appDataFolder&fields=files(id)";
@@ -4155,16 +4155,16 @@ function setupEventListeners() {
           headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
         });
         if (searchRes.status === 401 || searchRes.status === 403) {
-          alert('구글 로그인 세션이 만료되었습니다. 인증 창이 뜹니다.');
+          alert('援ш? 濡쒓렇???몄뀡??留뚮즺?섏뿀?듬땲?? ?몄쬆 李쎌씠 ?밸땲??');
           const loginBtn = document.getElementById('btn-gdrive-login');
           if (loginBtn) loginBtn.click();
-          throw new Error('인증 만료 (재로그인 진행)');
+          throw new Error('?몄쬆 留뚮즺 (?щ줈洹몄씤 吏꾪뻾)');
         }
         const searchData = await searchRes.json();
         const existingFile = searchData.files && searchData.files[0];
 
         if (!existingFile) {
-          alert('구글 드라이브 내에 백업된 파일(neon_planner_backup.json)을 발견할 수 없습니다.');
+          alert('援ш? ?쒕씪?대툕 ?댁뿉 諛깆뾽???뚯씪(neon_planner_backup.json)??諛쒓껄?????놁뒿?덈떎.');
           return;
         }
 
@@ -4173,7 +4173,7 @@ function setupEventListeners() {
           headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
         });
 
-        if (!contentRes.ok) throw new Error('백업 데이터 파일 읽기 실패');
+        if (!contentRes.ok) throw new Error('諛깆뾽 ?곗씠???뚯씪 ?쎄린 ?ㅽ뙣');
         const restoreData = await contentRes.json();
 
         if (restoreData.todos) localStorage.setItem('neon_planner_todos', JSON.stringify(restoreData.todos));
@@ -4202,14 +4202,14 @@ function setupEventListeners() {
 
         localStorage.setItem('neon_planner_last_modified', restoreData.lastModified ? restoreData.lastModified.toString() : Date.now().toString());
 
-        alert('구글 드라이브 백업 데이터 복원에 성공했습니다! 변경사항 적용을 위해 화면을 새로고침합니다.');
+        alert('援ш? ?쒕씪?대툕 諛깆뾽 ?곗씠??蹂듭썝???깃났?덉뒿?덈떎! 蹂寃쎌궗???곸슜???꾪빐 ?붾㈃???덈줈怨좎묠?⑸땲??');
         window.location.reload();
       } catch (err) {
         console.error(err);
-        alert('복원 다운로드 중 오류가 발생했습니다: ' + err.message);
+        alert('蹂듭썝 ?ㅼ슫濡쒕뱶 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎: ' + err.message);
       } finally {
         gdriveRestoreBtn.disabled = false;
-        gdriveRestoreBtn.textContent = '📥 드라이브 복원';
+        gdriveRestoreBtn.textContent = '?뱿 ?쒕씪?대툕 蹂듭썝';
       }
     });
   }
@@ -4324,7 +4324,7 @@ function handleAddTodo() {
   addFormSelectedAmpm = 'AM';
   const btnTimeTrigger = document.getElementById('btn-todo-time-trigger');
   if (btnTimeTrigger) {
-    btnTimeTrigger.textContent = '⏰ 시간 설정';
+    btnTimeTrigger.textContent = '???쒓컙 ?ㅼ젙';
   }
   const selectHour = document.getElementById('todo-custom-hour');
   const selectMin = document.getElementById('todo-custom-min');
@@ -4436,7 +4436,7 @@ function openTodoEditModal(todoId) {
     const noneBtn = document.createElement('button');
     noneBtn.type = 'button';
     noneBtn.className = 'todo-modal-cat-btn';
-    noneBtn.innerHTML = `<div class="todo-modal-cat-dot" style="background-color: #888;"></div>없음`;
+    noneBtn.innerHTML = `<div class="todo-modal-cat-dot" style="background-color: #888;"></div>?놁쓬`;
     if (modalSelectedCategory === 'none') {
       noneBtn.classList.add('active');
     }
@@ -4519,7 +4519,7 @@ function openTodoEditModal(todoId) {
     if (deleteBtn) {
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (confirm('첨부된 그림을 지우시겠습니까?')) {
+        if (confirm('泥⑤???洹몃┝??吏?곗떆寃좎뒿?덇퉴?')) {
           todoEditDraftDrawing = [];
           updateThumb();
         }
@@ -4530,7 +4530,7 @@ function openTodoEditModal(todoId) {
     const drawContainer = document.getElementById('todo-edit-modal-drawing-container');
     if (drawContainer) {
       drawContainer.style.cursor = 'pointer';
-      drawContainer.title = '클릭하여 곧바로 그림 수정하기';
+      drawContainer.title = '?대┃?섏뿬 怨㏓컮濡?洹몃┝ ?섏젙?섍린';
       drawContainer.addEventListener('click', openTodoDrawingEditor);
     }
   }
@@ -4634,7 +4634,7 @@ function saveCategories() {
 }
 
 function handleDeleteCategory(catId) {
-  if (!confirm(`'${state.categories[catId].label}' 카테고리를 삭제하시겠습니까?\n기존 할 일들의 글씨는 유지되며, 달력의 도트는 흰색으로 변경됩니다.`)) {
+  if (!confirm(`'${state.categories[catId].label}' 移댄뀒怨좊━瑜???젣?섏떆寃좎뒿?덇퉴?\n湲곗〈 ???쇰뱾??湲?⑤뒗 ?좎??섎ŉ, ?щ젰???꾪듃???곗깋?쇰줈 蹂寃쎈맗?덈떎.`)) {
     return;
   }
   
@@ -4680,21 +4680,21 @@ function renderSearchResultsSection() {
 
   // 1. Search Tabs
   const tabs = [
-    { name: '달력', id: 'btn-toggle-calendar' },
-    { name: '할일', id: 'btn-toggle-todos' },
-    { name: '기록', id: 'btn-toggle-records' },
-    { name: '타임라인', id: 'btn-toggle-timeline' },
-    { name: '디데이', id: 'btn-toggle-ddays' },
-    { name: '분석', id: 'btn-toggle-analytics' },
-    { name: '설정', id: 'btn-toggle-control-panel' }
+    { name: '?щ젰', id: 'btn-toggle-calendar' },
+    { name: '?좎씪', id: 'btn-toggle-todos' },
+    { name: '湲곕줉', id: 'btn-toggle-records' },
+    { name: '??꾨씪??, id: 'btn-toggle-timeline' },
+    { name: '?붾뜲??, id: 'btn-toggle-ddays' },
+    { name: '遺꾩꽍', id: 'btn-toggle-analytics' },
+    { name: '?ㅼ젙', id: 'btn-toggle-control-panel' }
   ];
 
   tabs.forEach(tab => {
     if (tab.name.includes(query)) {
       results.push({
-        type: '⚙️ 이동',
-        dateText: '시스템 기능',
-        text: `${tab.name} 탭 보기`,
+        type: '?숋툘 ?대룞',
+        dateText: '?쒖뒪??湲곕뒫',
+        text: `${tab.name} ??蹂닿린`,
         action: () => {
           let section = '';
           if (tab.id === 'btn-toggle-calendar') section = 'calendar';
@@ -4740,7 +4740,7 @@ function renderSearchResultsSection() {
       const catLabel = cat && cat.label ? String(cat.label).toLowerCase() : '';
       if (todo.text.toLowerCase().includes(query) || catLabel.includes(query)) {
         results.push({
-          type: '📅 할일',
+          type: '?뱟 ?좎씪',
           dateText: formatDateKeyToMonthDay(dateKey),
           text: todo.text,
           action: () => {
@@ -4779,7 +4779,7 @@ function renderSearchResultsSection() {
     state.diaries[dateKey].forEach(record => {
       if (record.text && record.text.toLowerCase().includes(query)) {
         results.push({
-          type: '📝 기록',
+          type: '?뱷 湲곕줉',
           dateText: formatDateKeyToMonthDay(dateKey),
           text: record.text,
           action: () => {
@@ -4817,7 +4817,7 @@ function renderSearchResultsSection() {
     const empty = document.createElement('div');
     empty.className = 'search-dropdown-empty';
     empty.style.gridColumn = '1 / -1';
-    empty.textContent = '검색 결과가 없습니다.';
+    empty.textContent = '寃??寃곌낵媛 ?놁뒿?덈떎.';
     grid.appendChild(empty);
     return;
   }
@@ -4871,38 +4871,38 @@ function updateUI() {
 
   const logoText = document.querySelector('.logo-text');
   if (logoText) {
-    let titleStr = state.appTitle || '플래너';
-    titleStr = titleStr.replace(/📁/g, '').trim(); // Remove any folder emoji user might have added
+    let titleStr = state.appTitle || '?뚮옒??;
+    titleStr = titleStr.replace(/?뱚/g, '').trim(); // Remove any folder emoji user might have added
     logoText.textContent = titleStr;
   }
 
   if (btnToggleSearch) {
-    btnToggleSearch.innerHTML = `${state.tabIcons.search || '🔍'} <span class="btn-text">${highlightMarkup('검색', state.searchQuery)}</span>`;
+    btnToggleSearch.innerHTML = `${state.tabIcons.search || '?뵇'} <span class="btn-text">${highlightMarkup('寃??, state.searchQuery)}</span>`;
   }
   if (btnToggleCalendar) {
-    btnToggleCalendar.innerHTML = `${state.tabIcons.calendar || '📅'} <span class="btn-text">${highlightMarkup('달력', state.searchQuery)}</span>`;
+    btnToggleCalendar.innerHTML = `${state.tabIcons.calendar || '?뱟'} <span class="btn-text">${highlightMarkup('?щ젰', state.searchQuery)}</span>`;
   }
   if (btnToggleTodos) {
-    btnToggleTodos.innerHTML = `${state.tabIcons.todos || '🎯'} <span class="btn-text">${highlightMarkup('할일', state.searchQuery)}</span>`;
+    btnToggleTodos.innerHTML = `${state.tabIcons.todos || '?렞'} <span class="btn-text">${highlightMarkup('?좎씪', state.searchQuery)}</span>`;
   }
   if (btnToggleRecords) {
-    btnToggleRecords.innerHTML = `${state.tabIcons.records || '📝'} <span class="btn-text">${highlightMarkup('기록', state.searchQuery)}</span>`;
+    btnToggleRecords.innerHTML = `${state.tabIcons.records || '?뱷'} <span class="btn-text">${highlightMarkup('湲곕줉', state.searchQuery)}</span>`;
   }
   if (btnToggleRoutines) {
-    btnToggleRoutines.innerHTML = `${state.tabIcons.routines || '🔄'} <span class="btn-text">${highlightMarkup('루틴', state.searchQuery)}</span>`;
+    btnToggleRoutines.innerHTML = `${state.tabIcons.routines || '?봽'} <span class="btn-text">${highlightMarkup('猷⑦떞', state.searchQuery)}</span>`;
   }
   if (btnToggleTimeline) {
-    btnToggleTimeline.innerHTML = `${state.tabIcons.timeline || '⏳'} <span class="btn-text">${highlightMarkup('타임라인', state.searchQuery)}</span>`;
+    btnToggleTimeline.innerHTML = `${state.tabIcons.timeline || '??} <span class="btn-text">${highlightMarkup('??꾨씪??, state.searchQuery)}</span>`;
   }
   const btnToggleDdays = document.getElementById('btn-toggle-ddays');
   if (btnToggleDdays) {
-    btnToggleDdays.innerHTML = `${state.tabIcons.ddays || '🎉'} <span class="btn-text">${highlightMarkup('디데이', state.searchQuery)}</span>`;
+    btnToggleDdays.innerHTML = `${state.tabIcons.ddays || '?럦'} <span class="btn-text">${highlightMarkup('?붾뜲??, state.searchQuery)}</span>`;
   }
   if (btnToggleAnalytics) {
-    btnToggleAnalytics.innerHTML = `${state.tabIcons.analytics || '📊'} <span class="btn-text">${highlightMarkup('분석', state.searchQuery)}</span>`;
+    btnToggleAnalytics.innerHTML = `${state.tabIcons.analytics || '?뱤'} <span class="btn-text">${highlightMarkup('遺꾩꽍', state.searchQuery)}</span>`;
   }
   if (btnToggleControlPanel) {
-    btnToggleControlPanel.innerHTML = `${state.tabIcons.settings || '⚙️'} <span class="btn-text">${highlightMarkup('설정', state.searchQuery)}</span>`;
+    btnToggleControlPanel.innerHTML = `${state.tabIcons.settings || '?숋툘'} <span class="btn-text">${highlightMarkup('?ㅼ젙', state.searchQuery)}</span>`;
   }
 
   renderCalendar();
@@ -4956,16 +4956,16 @@ function renderCategoryFilterTabs() {
 
   const tabElements = {};
 
-  // 1. "전체" (All) Tab
+  // 1. "?꾩껜" (All) Tab
   const allTab = document.createElement('button');
   allTab.type = 'button';
   allTab.className = `todo-cat-filter-tab ${activeFilter === 'all' ? 'active' : ''}`;
   allTab.dataset.category = 'all';
   allTab.setAttribute('role', 'tab');
   allTab.setAttribute('aria-selected', activeFilter === 'all' ? 'true' : 'false');
-  allTab.title = '전체 할 일 보기';
+  allTab.title = '?꾩껜 ????蹂닿린';
   allTab.innerHTML = `
-    <span class="tab-label">전체</span>
+    <span class="tab-label">?꾩껜</span>
     <span class="tab-badge">${totalCount}</span>
   `;
   allTab.addEventListener('click', () => {
@@ -4973,14 +4973,14 @@ function renderCategoryFilterTabs() {
   });
   tabElements['all'] = allTab;
 
-  // 2. "루틴" (Routine) Tab
+  // 2. "猷⑦떞" (Routine) Tab
   const routineTab = document.createElement('button');
   routineTab.type = 'button';
   routineTab.className = `todo-cat-filter-tab ${activeFilter === 'routine' ? 'active' : ''}`;
   routineTab.dataset.category = 'routine';
   routineTab.setAttribute('role', 'tab');
   routineTab.setAttribute('aria-selected', activeFilter === 'routine' ? 'true' : 'false');
-  routineTab.title = '루틴(매일 반복) 할 일만 보기 (클릭 시 토글)';
+  routineTab.title = '猷⑦떞(留ㅼ씪 諛섎났) ???쇰쭔 蹂닿린 (?대┃ ???좉?)';
   
   const routineDot = document.createElement('span');
   routineDot.className = 'cat-filter-dot';
@@ -4991,7 +4991,7 @@ function renderCategoryFilterTabs() {
 
   const routineLabelSpan = document.createElement('span');
   routineLabelSpan.className = 'tab-label';
-  routineLabelSpan.innerHTML = '🔄 루틴';
+  routineLabelSpan.innerHTML = '?봽 猷⑦떞';
 
   const routineBadgeSpan = document.createElement('span');
   routineBadgeSpan.className = 'tab-badge';
@@ -5018,7 +5018,7 @@ function renderCategoryFilterTabs() {
     tab.dataset.category = catId;
     tab.setAttribute('role', 'tab');
     tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-    tab.title = `${cat.label} 탭의 할 일만 보기 (클릭 시 토글)`;
+    tab.title = `${cat.label} ??쓽 ???쇰쭔 蹂닿린 (?대┃ ???좉?)`;
 
     if (cat.color) {
       tab.style.setProperty('--cat-color', cat.color);
@@ -5130,8 +5130,8 @@ function renderCategorySelector() {
       // Edit button
       const editBtn = document.createElement('span');
       editBtn.className = 'edit-cat-btn';
-      editBtn.innerHTML = '✏️';
-      editBtn.title = '카테고리 수정';
+      editBtn.innerHTML = '?륅툘';
+      editBtn.title = '移댄뀒怨좊━ ?섏젙';
       editBtn.addEventListener('click', (e) => {
         e.stopPropagation(); // Avoid triggering selection
         startEditCategory(catId);
@@ -5142,7 +5142,7 @@ function renderCategorySelector() {
       const deleteBtn = document.createElement('span');
       deleteBtn.className = 'delete-cat-btn';
       deleteBtn.innerHTML = '&times;';
-      deleteBtn.title = '카테고리 삭제';
+      deleteBtn.title = '移댄뀒怨좊━ ??젣';
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation(); // Avoid triggering selection
         handleDeleteCategory(catId);
@@ -5154,7 +5154,7 @@ function renderCategorySelector() {
         e.stopPropagation();
         startEditCategory(catId);
       });
-      option.title = '더블클릭하여 카테고리 수정 (모바일: 길게 누르기)';
+      option.title = '?붾툝?대┃?섏뿬 移댄뀒怨좊━ ?섏젙 (紐⑤컮?? 湲멸쾶 ?꾨Ⅴ湲?';
 
       // Long press support (Mouse + Touch) for editing category in phone mode
       let catPressTimer = null;
@@ -5219,8 +5219,8 @@ function renderCategorySelector() {
   // Render "+" trigger pill
   const addTrigger = document.createElement('span');
   addTrigger.className = 'cat-option add-cat-trigger';
-  addTrigger.textContent = '+ 추가';
-  addTrigger.title = '새 카테고리 추가';
+  addTrigger.textContent = '+ 異붽?';
+  addTrigger.title = '??移댄뀒怨좊━ 異붽?';
   addTrigger.addEventListener('click', () => {
     toggleCategoryForm(true);
   });
@@ -5267,7 +5267,7 @@ function renderMediaToContainer(mediaObj, container, onClick) {
       pdfIcon.style.color = '#ef4444';
       pdfIcon.style.cursor = onClick ? 'pointer' : 'default';
       pdfIcon.style.borderRadius = '4px';
-      pdfIcon.innerHTML = '<span style="font-size:24px;">📄</span><span style="font-size:12px; margin-top:4px;">PDF</span>';
+      pdfIcon.innerHTML = '<span style="font-size:24px;">?뱞</span><span style="font-size:12px; margin-top:4px;">PDF</span>';
       if (onClick) pdfIcon.addEventListener('click', onClick);
       container.appendChild(pdfIcon);
     }
@@ -5346,8 +5346,8 @@ function renderDiary() {
     const emptyState = document.createElement('div');
     emptyState.className = 'diary-empty-state';
     emptyState.innerHTML = query !== '' 
-      ? `<p>검색 결과가 없습니다.</p>` 
-      : `<p>아직 기록된 내용이 없습니다. 오늘 하루를 기록해 보세요!</p>`;
+      ? `<p>寃??寃곌낵媛 ?놁뒿?덈떎.</p>` 
+      : `<p>?꾩쭅 湲곕줉???댁슜???놁뒿?덈떎. ?ㅻ뒛 ?섎（瑜?湲곕줉??蹂댁꽭??</p>`;
     listContainer.appendChild(emptyState);
   } else {
     records.forEach(record => {
@@ -5358,8 +5358,8 @@ function renderDiary() {
       if (query !== '') {
         const dateHeader = document.createElement('div');
         dateHeader.className = 'record-search-header';
-        dateHeader.textContent = `📅 ${formatDateKeyToMonthDay(record.dateKey)}`;
-        dateHeader.title = `${record.dateKey}로 이동`;
+        dateHeader.textContent = `?뱟 ${formatDateKeyToMonthDay(record.dateKey)}`;
+        dateHeader.title = `${record.dateKey}濡??대룞`;
         dateHeader.addEventListener('click', () => {
           state.selectedDate = record.dateKey;
           state.searchQuery = '';
@@ -5382,7 +5382,7 @@ function renderDiary() {
         textarea.className = 'diary-textarea';
         textarea.id = `edit-record-text-${record.id}`;
         textarea.value = record.text;
-        textarea.placeholder = '기록 내용을 수정해 보세요...';
+        textarea.placeholder = '湲곕줉 ?댁슜???섏젙??蹂댁꽭??..';
         textarea.style.paddingRight = '36px';
         textContainer.appendChild(textarea);
 
@@ -5390,9 +5390,9 @@ function renderDiary() {
         dictateBtn.type = 'button';
         dictateBtn.className = 'dictation-btn';
         dictateBtn.id = `btn-dictate-edit-${record.id}`;
-        dictateBtn.title = '음성 녹음 및 텍스트 변환(STT)';
+        dictateBtn.title = '?뚯꽦 ?뱀쓬 諛??띿뒪??蹂??STT)';
         dictateBtn.style.top = '8px';
-        dictateBtn.innerHTML = '🎙️';
+        dictateBtn.innerHTML = '?럺截?;
         textContainer.appendChild(dictateBtn);
         card.appendChild(textContainer);
 
@@ -5436,7 +5436,7 @@ function renderDiary() {
           
           const statusSpan = e.target.parentElement.nextElementSibling;
           if (statusSpan) {
-            statusSpan.textContent = '파일 처리 중... (대용량은 시간이 걸립니다)';
+            statusSpan.textContent = '?뚯씪 泥섎━ 以?.. (??⑸웾? ?쒓컙??嫄몃┰?덈떎)';
             statusSpan.style.opacity = '1';
           }
           let processed = 0;
@@ -5449,7 +5449,7 @@ function renderDiary() {
             }
             state.diaryDraftImages.push({ fileId: id, type: file.type.startsWith('video/') ? 'video' : 'pdf', name: file.name, poster: posterDataUrl });
             processed++;
-            if (processed === files.length) { renderDiary(); if (statusSpan) statusSpan.textContent = '파일 추가 완료'; }
+            if (processed === files.length) { renderDiary(); if (statusSpan) statusSpan.textContent = '?뚯씪 異붽? ?꾨즺'; }
           }).catch(err => console.error(err));
         } else {
           compressAndSaveImage(file, (dataUrl) => {
@@ -5469,12 +5469,12 @@ function renderDiary() {
       });
 
       label.appendChild(fileInput);
-        label.appendChild(document.createTextNode('📷 사진 선택 (여러장 가능)'));
+        label.appendChild(document.createTextNode('?벜 ?ъ쭊 ?좏깮 (?щ윭??媛??'));
         mediaRow.appendChild(label);
 
         const statusSpan = document.createElement('span');
         statusSpan.className = 'diary-save-status';
-        statusSpan.textContent = '수정 중...';
+        statusSpan.textContent = '?섏젙 以?..';
         mediaRow.appendChild(statusSpan);
         card.appendChild(mediaRow);
 
@@ -5515,11 +5515,11 @@ function renderDiary() {
         drawingLabel.style.background = 'transparent';
         drawingLabel.style.border = 'none';
         drawingLabel.style.cursor = 'pointer';
-        drawingLabel.innerHTML = '<span class="upload-icon">🎨</span> 손그림 그리기 (열기/닫기)';
+        drawingLabel.innerHTML = '<span class="upload-icon">?렓</span> ?먭렇由?洹몃━湲?(?닿린/?リ린)';
         
         const deleteDrawingBtn = document.createElement('button');
         deleteDrawingBtn.type = 'button';
-        deleteDrawingBtn.innerHTML = '🗑️ 삭제';
+        deleteDrawingBtn.innerHTML = '?뿊截???젣';
         deleteDrawingBtn.style.cssText = 'display:none; margin-top:10px; padding:6px 12px; background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid #ef4444; border-radius:6px; cursor:pointer; font-size:0.8rem;';
         
         drawingHeader.appendChild(drawingLabel);
@@ -5554,7 +5554,7 @@ function renderDiary() {
         
         deleteDrawingBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (confirm('첨부된 그림을 지우시겠습니까?')) {
+          if (confirm('泥⑤???洹몃┝??吏?곗떆寃좎뒿?덇퉴?')) {
             state.diaryDraftDrawing = [];
             drawingContainer.innerHTML = '';
             drawingContainer.style.display = 'none';
@@ -5563,7 +5563,7 @@ function renderDiary() {
         });
         
         drawingContainer.style.cursor = 'pointer';
-        drawingContainer.title = '클릭하여 곧바로 그림 수정하기';
+        drawingContainer.title = '?대┃?섏뿬 怨㏓컮濡?洹몃┝ ?섏젙?섍린';
         drawingContainer.addEventListener('click', openDiaryDrawingEditor);
         
         // Initial thumbnail render
@@ -5581,7 +5581,7 @@ function renderDiary() {
         const saveBtn = document.createElement('button');
         saveBtn.type = 'button';
         saveBtn.className = 'record-btn save';
-        saveBtn.innerHTML = '💾 저장완료';
+        saveBtn.innerHTML = '?뮶 ??μ셿猷?;
         saveBtn.addEventListener('click', () => {
           record.text = textarea.value;
           record.images = state.diaryDraftImages ? JSON.parse(JSON.stringify(state.diaryDraftImages)) : [];
@@ -5599,7 +5599,7 @@ function renderDiary() {
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
         cancelBtn.className = 'record-btn cancel';
-        cancelBtn.innerHTML = '취소';
+        cancelBtn.innerHTML = '痍⑥냼';
         cancelBtn.addEventListener('click', () => {
           state.editingRecordId = null;
           state.diaryDraftImages = [];
@@ -5637,7 +5637,7 @@ function renderDiary() {
         if (hasDrawingData(record.drawing)) {
           const drawingToggleBtn = document.createElement('div');
           drawingToggleBtn.className = 'record-drawing-toggle';
-          drawingToggleBtn.innerHTML = '🖼️ 첨부된 그림 보기 (클릭하여 펼치기)';
+          drawingToggleBtn.innerHTML = '?뼹截?泥⑤???洹몃┝ 蹂닿린 (?대┃?섏뿬 ?쇱튂湲?';
           drawingToggleBtn.style.cssText = 'cursor:pointer; color:#3b82f6; font-size:0.9rem; margin-top:8px; padding:8px; background:var(--panel-bg, rgba(255,255,255,0.05)); border-radius:4px; text-align:center; border: 1px dashed var(--panel-border, #333);';
           card.appendChild(drawingToggleBtn);
           
@@ -5657,7 +5657,7 @@ function renderDiary() {
           });
           
           viewDrawingContainer.style.cursor = 'pointer';
-          viewDrawingContainer.title = '클릭하여 곧바로 그림 수정하기';
+          viewDrawingContainer.title = '?대┃?섏뿬 怨㏓컮濡?洹몃┝ ?섏젙?섍린';
           const openDirectEdit = (e) => {
             e.stopPropagation();
             e.preventDefault();
@@ -5691,7 +5691,7 @@ function renderDiary() {
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.className = 'record-btn edit';
-        editBtn.innerHTML = '✏️ 수정';
+        editBtn.innerHTML = '?륅툘 ?섏젙';
         editBtn.addEventListener('click', () => {
           state.editingRecordId = record.id;
           state.diaryDraftImages = [...(record.images || [])];
@@ -5704,14 +5704,14 @@ function renderDiary() {
         const exportBtn = document.createElement('button');
         exportBtn.type = 'button';
         exportBtn.className = 'record-btn';
-        exportBtn.innerHTML = '💾 저장';
-        exportBtn.title = '이 일기를 파일(HTML)로 저장합니다';
+        exportBtn.innerHTML = '?뮶 ???;
+        exportBtn.title = '???쇨린瑜??뚯씪(HTML)濡???ν빀?덈떎';
         exportBtn.addEventListener('click', () => {
           let htmlContent = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>일기 기록 - ${dateKey}</title>
+<title>?쇨린 湲곕줉 - ${dateKey}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; line-height: 1.6; background: #fafafa; color: #333; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -5724,17 +5724,17 @@ function renderDiary() {
 </style>
 </head>
 <body>
-  <h2>📅 일기 기록 (${dateKey})</h2>
+  <h2>?뱟 ?쇨린 湲곕줉 (${dateKey})</h2>
   <div class="text-content">${(record.text || '').replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
 `;
           if (record.images && record.images.length > 0) {
-             htmlContent += `<h3>📷 사진</h3>`;
+             htmlContent += `<h3>?벜 ?ъ쭊</h3>`;
              record.images.forEach(img => {
                 htmlContent += `<img src="${img.src || img}">`;
              });
           }
           if (record.audio && record.audio.length > 0) {
-             htmlContent += `<h3>🎙️ 음성 녹음</h3>`;
+             htmlContent += `<h3>?럺截??뚯꽦 ?뱀쓬</h3>`;
              record.audio.forEach(a => {
                 htmlContent += `<audio controls src="${a.src || a}"></audio>`;
              });
@@ -5749,7 +5749,7 @@ function renderDiary() {
                 ctx.fillStyle = '#1e1e1e';
                 ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
                 ctx.drawImage(canvas, 0, 0);
-                htmlContent += `<h3>🎨 손그림</h3><img class="drawing-img" src="${tempCanvas.toDataURL('image/png')}">`;
+                htmlContent += `<h3>?렓 ?먭렇由?/h3><img class="drawing-img" src="${tempCanvas.toDataURL('image/png')}">`;
              }
           }
           htmlContent += `</body></html>`;
@@ -5768,9 +5768,9 @@ function renderDiary() {
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'record-btn delete';
-        deleteBtn.innerHTML = '❌ 삭제';
+        deleteBtn.innerHTML = '????젣';
         deleteBtn.addEventListener('click', () => {
-          if (confirm('이 기록을 삭제하시겠습니까?')) {
+          if (confirm('??湲곕줉????젣?섏떆寃좎뒿?덇퉴?')) {
             state.diaries[dateKey] = state.diaries[dateKey].filter(r => r.id !== record.id);
             if (state.diaries[dateKey].length === 0) {
               delete state.diaries[dateKey];
@@ -5846,7 +5846,7 @@ function renderDiary() {
       const drawContainer = document.getElementById('new-record-drawing-container');
       if (drawContainer) {
         drawContainer.style.cursor = 'pointer';
-        drawContainer.title = '클릭하여 곧바로 그림 수정하기';
+        drawContainer.title = '?대┃?섏뿬 怨㏓컮濡?洹몃┝ ?섏젙?섍린';
         drawContainer.addEventListener('click', openNewRecordDrawingEditor);
       }
     }
@@ -5885,16 +5885,16 @@ function renderTimeline() {
   if (sortedDates.length === 0) {
     const placeholder = document.createElement('div');
     placeholder.style = 'text-align: center; padding: 40px; color: var(--text-secondary); font-size: 0.95rem; font-weight: 600;';
-    placeholder.textContent = '아직 기록된 할 일이나 일기가 없습니다. 할 일을 등록하거나 일기를 써보세요!';
+    placeholder.textContent = '?꾩쭅 湲곕줉?????쇱씠???쇨린媛 ?놁뒿?덈떎. ???쇱쓣 ?깅줉?섍굅???쇨린瑜??⑤낫?몄슂!';
     timelineList.appendChild(placeholder);
     return;
   }
 
-  const weekdays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+  const weekdays = ['?쇱슂??, '?붿슂??, '?붿슂??, '?섏슂??, '紐⑹슂??, '湲덉슂??, '?좎슂??];
 
   sortedDates.forEach(dateKey => {
     const dateObj = new Date(dateKey);
-    const formattedDateText = `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일 (${weekdays[dateObj.getDay()]})`;
+    const formattedDateText = `${dateObj.getFullYear()}??${dateObj.getMonth() + 1}??${dateObj.getDate()}??(${weekdays[dateObj.getDay()]})`;
 
     const card = document.createElement('div');
     card.className = 'timeline-card';
@@ -5915,7 +5915,7 @@ function renderTimeline() {
     
     const todoTitle = document.createElement('div');
     todoTitle.className = 'timeline-section-title';
-    todoTitle.innerHTML = '🎯 할 일';
+    todoTitle.innerHTML = '?렞 ????;
     todoSec.appendChild(todoTitle);
 
     const todoContent = document.createElement('div');
@@ -5925,7 +5925,7 @@ function renderTimeline() {
     if (todos.length === 0) {
       const emptyMsg = document.createElement('div');
       emptyMsg.style = 'color: var(--text-muted); font-size: 0.8rem; font-style: italic;';
-      emptyMsg.textContent = '등록된 할 일이 없습니다.';
+      emptyMsg.textContent = '?깅줉?????쇱씠 ?놁뒿?덈떎.';
       todoContent.appendChild(emptyMsg);
     } else {
       const todoListContainer = document.createElement('div');
@@ -6023,7 +6023,7 @@ function renderTimeline() {
         if (todo.isImportant) {
           const impBadge = document.createElement('span');
           impBadge.className = 'important-badge';
-          impBadge.innerHTML = '⭐ 중요';
+          impBadge.innerHTML = '狩?以묒슂';
           metaDiv.appendChild(impBadge);
         }
 
@@ -6047,7 +6047,7 @@ function renderTimeline() {
         if (todo.time) {
           const timeBadge = document.createElement('span');
           timeBadge.className = 'todo-time-badge';
-          timeBadge.innerHTML = `⏰ ${formatTimeKorean(todo.time)}`;
+          timeBadge.innerHTML = `??${formatTimeKorean(todo.time)}`;
           metaDiv.appendChild(timeBadge);
         }
         itemLeft.appendChild(metaDiv);
@@ -6069,11 +6069,11 @@ function renderTimeline() {
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
         delBtn.className = 'delete-btn';
-        delBtn.innerHTML = '✖';
-        delBtn.title = '할 일 삭제';
+        delBtn.innerHTML = '??;
+        delBtn.title = '??????젣';
         delBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (confirm('이 할 일을 삭제하시겠습니까?')) {
+          if (confirm('?????쇱쓣 ??젣?섏떆寃좎뒿?덇퉴?')) {
             deleteTodo(todo.id, todo.text, todo.isRoutine, dateKey);
             renderTimeline();
           }
@@ -6095,7 +6095,7 @@ function renderTimeline() {
 
     const diaryTitle = document.createElement('div');
     diaryTitle.className = 'timeline-section-title';
-    diaryTitle.innerHTML = '📝 오늘의 기록';
+    diaryTitle.innerHTML = '?뱷 ?ㅻ뒛??湲곕줉';
     diarySec.appendChild(diaryTitle);
 
     const diaryContent = document.createElement('div');
@@ -6105,7 +6105,7 @@ function renderTimeline() {
     if (records.length === 0) {
       const emptyMsg = document.createElement('div');
       emptyMsg.style = 'color: var(--text-muted); font-size: 0.8rem; font-style: italic;';
-      emptyMsg.textContent = '작성된 기록이 없습니다.';
+      emptyMsg.textContent = '?묒꽦??湲곕줉???놁뒿?덈떎.';
       diaryContent.appendChild(emptyMsg);
     } else {
       records.forEach(record => {
@@ -6126,7 +6126,7 @@ function renderTimeline() {
           const saveBtn = document.createElement('button');
           saveBtn.type = 'button';
           saveBtn.className = 'timeline-action-btn-safe';
-          saveBtn.innerHTML = '💾 저장';
+          saveBtn.innerHTML = '?뮶 ???;
           saveBtn.addEventListener('click', () => {
             pushToHistory();
             record.text = editArea.value;
@@ -6140,7 +6140,7 @@ function renderTimeline() {
           const cancelBtn = document.createElement('button');
           cancelBtn.type = 'button';
           cancelBtn.className = 'timeline-action-btn-danger';
-          cancelBtn.innerHTML = '취소';
+          cancelBtn.innerHTML = '痍⑥냼';
           cancelBtn.addEventListener('click', () => {
             state.editingTimelineRecordId = null;
             renderTimeline();
@@ -6167,7 +6167,7 @@ function renderTimeline() {
           toggleIcon.style.fontSize = '0.8rem';
           toggleIcon.style.color = 'var(--text-muted)';
           toggleIcon.style.paddingTop = '4px';
-          toggleIcon.innerHTML = '▼';
+          toggleIcon.innerHTML = '??;
 
           const renderText = () => {
             textBlock.innerHTML = '';
@@ -6200,7 +6200,7 @@ function renderTimeline() {
           indicatorsSpan.style.marginLeft = '6px';
           indicatorsSpan.style.opacity = '0.8';
           if (record.images && record.images.length > 0) {
-            indicatorsSpan.innerHTML = '🖼️';
+            indicatorsSpan.innerHTML = '?뼹截?;
             textBlock.appendChild(indicatorsSpan);
           }
 
@@ -6231,7 +6231,7 @@ function renderTimeline() {
           const editBtn = document.createElement('button');
           editBtn.type = 'button';
           editBtn.className = 'timeline-action-btn-safe';
-          editBtn.innerHTML = '✏️ 수정';
+          editBtn.innerHTML = '?륅툘 ?섏젙';
           editBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             state.editingTimelineRecordId = record.id;
@@ -6242,10 +6242,10 @@ function renderTimeline() {
           const delBtn = document.createElement('button');
           delBtn.type = 'button';
           delBtn.className = 'timeline-action-btn-danger';
-          delBtn.innerHTML = '❌ 삭제';
+          delBtn.innerHTML = '????젣';
           delBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (confirm('이 기록을 삭제하시겠습니까?')) {
+            if (confirm('??湲곕줉????젣?섏떆寃좎뒿?덇퉴?')) {
               pushToHistory();
               state.diaries[dateKey] = state.diaries[dateKey].filter(r => r.id !== record.id);
               if (state.diaries[dateKey].length === 0) {
@@ -6267,7 +6267,7 @@ function renderTimeline() {
             if (!isExpanded && record.images && record.images.length > 0) {
               textBlock.appendChild(indicatorsSpan);
             }
-            toggleIcon.innerHTML = isExpanded ? '▲' : '▼';
+            toggleIcon.innerHTML = isExpanded ? '?? : '??;
             detailsContainer.style.display = isExpanded ? 'block' : 'none';
           });
         }
@@ -6459,7 +6459,7 @@ function showLightboxImage(idx) {
       hint.style.fontSize = '0.85rem';
       hint.style.marginTop = '10px';
       hint.style.opacity = '0.7';
-      hint.innerHTML = '⚠️ 검은 화면만 나올 경우, 브라우저가 지원하지 않는 형식입니다.<br>하단의 <b>[원본 영상 다운로드]</b>를 눌러 PC에서 재생하세요.';
+      hint.innerHTML = '?좑툘 寃? ?붾㈃留??섏삱 寃쎌슦, 釉뚮씪?곗?媛 吏?먰븯吏 ?딅뒗 ?뺤떇?낅땲??<br>?섎떒??<b>[?먮낯 ?곸긽 ?ㅼ슫濡쒕뱶]</b>瑜??뚮윭 PC?먯꽌 ?ъ깮?섏꽭??';
       hint.style.textAlign = 'center';
 
       FileDB.getFile(currentImg.fileId).then(f => {
@@ -6502,13 +6502,13 @@ function showLightboxImage(idx) {
 
   if (downloadLink) {
     if (isVideo) {
-      downloadLink.innerHTML = '📥 원본 영상 다운로드';
+      downloadLink.innerHTML = '?뱿 ?먮낯 ?곸긽 ?ㅼ슫濡쒕뱶';
     } else if (isPdf) {
-      downloadLink.innerHTML = '📥 문서 다운로드';
+      downloadLink.innerHTML = '?뱿 臾몄꽌 ?ㅼ슫濡쒕뱶';
     } else {
       downloadLink.href = src;
       downloadLink.download = `record-photo-${state.selectedDate || 'date'}-${lightboxIndex + 1}.jpg`;
-      downloadLink.innerHTML = '📥 사진 다운로드';
+      downloadLink.innerHTML = '?뱿 ?ъ쭊 ?ㅼ슫濡쒕뱶';
     }
   }
 
@@ -6585,8 +6585,8 @@ function toggleCategoryForm(show) {
 
     if (state.editingCategoryId) {
       // EDIT MODE
-      if (headerSpan) headerSpan.textContent = '카테고리 수정';
-      if (saveBtn) saveBtn.textContent = '수정';
+      if (headerSpan) headerSpan.textContent = '移댄뀒怨좊━ ?섏젙';
+      if (saveBtn) saveBtn.textContent = '?섏젙';
 
       const cat = state.categories[state.editingCategoryId];
       if (nameInput) {
@@ -6602,8 +6602,8 @@ function toggleCategoryForm(show) {
       }
     } else {
       // ADD MODE
-      if (headerSpan) headerSpan.textContent = '새 카테고리 추가';
-      if (saveBtn) saveBtn.textContent = '추가';
+      if (headerSpan) headerSpan.textContent = '??移댄뀒怨좊━ 異붽?';
+      if (saveBtn) saveBtn.textContent = '異붽?';
 
       if (nameInput) {
         nameInput.value = '';
@@ -6639,7 +6639,7 @@ function updateCategoryPreview() {
   const picker = document.getElementById('new-cat-color');
   if (!preview || !nameInput || !picker) return;
 
-  const label = nameInput.value.trim() || '미리보기';
+  const label = nameInput.value.trim() || '誘몃━蹂닿린';
   const color = picker.value;
 
   preview.textContent = label;
@@ -6668,7 +6668,7 @@ function handleSaveCategory() {
 
   const label = nameInput.value.trim();
   if (!label) {
-    alert('카테고리 이름을 입력해주세요.');
+    alert('移댄뀒怨좊━ ?대쫫???낅젰?댁＜?몄슂.');
     nameInput.focus();
     return;
   }
@@ -6680,7 +6680,7 @@ function handleSaveCategory() {
   });
 
   if (isDuplicate) {
-    alert('이미 존재하는 카테고리 이름입니다.');
+    alert('?대? 議댁옱?섎뒗 移댄뀒怨좊━ ?대쫫?낅땲??');
     nameInput.focus();
     return;
   }
@@ -6725,7 +6725,7 @@ function renderCalendar() {
   const year = state.currentMonth.getFullYear();
   const month = state.currentMonth.getMonth();
 
-  monthYearDisplay.textContent = `${year}년 ${month + 1}월`;
+  monthYearDisplay.textContent = `${year}??${month + 1}??;
 
   const firstDayIndex = new Date(year, month, 1).getDay();
   const totalDays = new Date(year, month + 1, 0).getDate();
@@ -6829,7 +6829,7 @@ function createCell(day, dateKey, isOtherMonth = false, isToday = false) {
       
       const isAnniv = activeDdays[0].type === 'anniversary';
       const ddayInfo = calculateDday(activeDdays[0].date, activeDdays[0].type);
-      ddayPill.textContent = isAnniv ? '기념일' : ddayInfo.label;
+      ddayPill.textContent = isAnniv ? '湲곕뀗?? : ddayInfo.label;
       cell.appendChild(ddayPill);
     }
   }
@@ -6950,11 +6950,10 @@ window.handleLinkClick = function(event) {
   }
 };
 
-// Convert YYYY-MM-DD to M월 D일
-function formatDateKeyToMonthDay(dateKey) {
+// Convert YYYY-MM-DD to M??D??function formatDateKeyToMonthDay(dateKey) {
   const parts = dateKey.split('-');
   if (parts.length === 3) {
-    return `${parseInt(parts[1], 10)}월 ${parseInt(parts[2], 10)}일`;
+    return `${parseInt(parts[1], 10)}??${parseInt(parts[2], 10)}??;
   }
   return dateKey;
 }
@@ -6985,7 +6984,7 @@ function applyCopyModeBanner() {
     });
     const spanText = banner.querySelector('span');
     if (spanText) {
-      spanText.innerHTML = `🎯 달력에서 날짜를 클릭하면 <strong>"${todoText}"</strong> 할 일이 해당 날짜에 복사됩니다.`;
+      spanText.innerHTML = `?렞 ?щ젰?먯꽌 ?좎쭨瑜??대┃?섎㈃ <strong>"${todoText}"</strong> ???쇱씠 ?대떦 ?좎쭨??蹂듭궗?⑸땲??`;
     }
   } else {
     banner.classList.add('hidden');
@@ -7033,19 +7032,19 @@ function calculateDday(targetDateStr, type) {
     const yearsCount = targetYear - birthYear;
 
     if (diffDays === 0) {
-      return { label: '오늘 기념일!', sub: `${yearsCount}주년` };
+      return { label: '?ㅻ뒛 湲곕뀗??', sub: `${yearsCount}二쇰뀈` };
     } else {
-      return { label: `D-${diffDays}`, sub: `${yearsCount}주년 (${nextOccurrence.getMonth() + 1}/${nextOccurrence.getDate()})` };
+      return { label: `D-${diffDays}`, sub: `${yearsCount}二쇰뀈 (${nextOccurrence.getMonth() + 1}/${nextOccurrence.getDate()})` };
     }
   } else {
     const diffMs = target - today;
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     if (diffDays > 0) {
-      return { label: `D-${diffDays}`, sub: '남음' };
+      return { label: `D-${diffDays}`, sub: '?⑥쓬' };
     } else if (diffDays === 0) {
-      return { label: 'D-Day', sub: '오늘!' };
+      return { label: 'D-Day', sub: '?ㅻ뒛!' };
     } else {
-      return { label: `D+${Math.abs(diffDays)}`, sub: '지남' };
+      return { label: `D+${Math.abs(diffDays)}`, sub: '吏?? };
     }
   }
 }
@@ -7062,7 +7061,7 @@ function renderDdays() {
     const emptyState = document.createElement('div');
     emptyState.className = 'empty-state';
     emptyState.style = 'grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-style: italic; padding: 40px;';
-    emptyState.textContent = '등록된 디데이나 기념일이 없습니다. 오른쪽 위의 "디데이 추가" 버튼을 눌러 등록해 보세요!';
+    emptyState.textContent = '?깅줉???붾뜲?대굹 湲곕뀗?쇱씠 ?놁뒿?덈떎. ?ㅻⅨ履??꾩쓽 "?붾뜲??異붽?" 踰꾪듉???뚮윭 ?깅줉??蹂댁꽭??';
     listContainer.appendChild(emptyState);
     return;
   }
@@ -7122,11 +7121,11 @@ function renderDdays() {
     const delBtn = document.createElement('button');
     delBtn.type = 'button';
     delBtn.className = 'dday-card-delete-btn';
-    delBtn.innerHTML = '✕';
-    delBtn.title = '디데이 삭제';
+    delBtn.innerHTML = '??;
+    delBtn.title = '?붾뜲????젣';
     delBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (confirm(`"${dday.title}" 디데이를 정말로 삭제하시겠습니까?`)) {
+      if (confirm(`"${dday.title}" ?붾뜲?대? ?뺣쭚濡???젣?섏떆寃좎뒿?덇퉴?`)) {
         deleteDday(dday.id);
       }
     });
@@ -7171,7 +7170,7 @@ function openDdayModal(ddayId = null) {
   }
 
   if (ddayId) {
-    modalTitle.textContent = '🎉 디데이 수정';
+    modalTitle.textContent = '?럦 ?붾뜲???섏젙';
     const dday = state.ddays.find(d => d.id === ddayId);
     if (dday) {
       titleInput.value = dday.title;
@@ -7197,7 +7196,7 @@ function openDdayModal(ddayId = null) {
       });
     }
   } else {
-    modalTitle.textContent = '🎉 디데이 추가';
+    modalTitle.textContent = '?럦 ?붾뜲??異붽?';
   }
 
   modal.classList.remove('hidden');
@@ -7225,11 +7224,11 @@ function saveDdayData() {
   const color = activeDot ? activeDot.dataset.color : '#6366f1';
 
   if (!title) {
-    alert('디데이 제목을 입력해 주세요.');
+    alert('?붾뜲???쒕ぉ???낅젰??二쇱꽭??');
     return;
   }
   if (!date) {
-    alert('목표 날짜를 선택해 주세요.');
+    alert('紐⑺몴 ?좎쭨瑜??좏깮??二쇱꽭??');
     return;
   }
 
@@ -7274,7 +7273,7 @@ function renderRoutinesPanel() {
   container.innerHTML = '';
 
   if (!state.routines || state.routines.length === 0) {
-    container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px; font-size: 0.9rem;">등록된 루틴이 없습니다. 새로운 루틴을 추가해 보세요.</div>';
+    container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px; font-size: 0.9rem;">?깅줉??猷⑦떞???놁뒿?덈떎. ?덈줈??猷⑦떞??異붽???蹂댁꽭??</div>';
     return;
   }
 
@@ -7303,7 +7302,7 @@ function renderRoutinesPanel() {
     text.className = 'routine-card-text';
     text.textContent = routine.text;
     text.style.cursor = 'pointer';
-    text.title = '클릭/더블클릭/길게 누르기: 루틴 수정';
+    text.title = '?대┃/?붾툝?대┃/湲멸쾶 ?꾨Ⅴ湲? 猷⑦떞 ?섏젙';
     
     // Add long press and click logic
     let pressTimer = null;
@@ -7351,7 +7350,7 @@ function renderRoutinesPanel() {
       dateMeta.style.fontSize = '0.75rem';
       dateMeta.style.color = 'var(--text-secondary)';
       dateMeta.style.paddingLeft = '22px';
-      dateMeta.textContent = `🗓️ ${routine.startDate || '계속'} ~ ${routine.endDate || '계속'}`;
+      dateMeta.textContent = `?뿎截?${routine.startDate || '怨꾩냽'} ~ ${routine.endDate || '怨꾩냽'}`;
       left.appendChild(dateMeta);
     }
 
@@ -7360,7 +7359,7 @@ function renderRoutinesPanel() {
 
     const delBtn = document.createElement('button');
     delBtn.className = 'routine-del-btn';
-    delBtn.textContent = '삭제';
+    delBtn.textContent = '??젣';
     delBtn.onclick = () => deleteRoutine(routine.id);
 
     right.appendChild(delBtn);
@@ -7371,7 +7370,7 @@ function renderRoutinesPanel() {
 }
 
 function deleteRoutine(routineId) {
-  if (confirm('이 루틴을 삭제하시겠습니까?\\n(이미 등록된 과거/오늘의 할 일은 삭제되지 않습니다)')) {
+  if (confirm('??猷⑦떞????젣?섏떆寃좎뒿?덇퉴?\\n(?대? ?깅줉??怨쇨굅/?ㅻ뒛?????쇱? ??젣?섏? ?딆뒿?덈떎)')) {
     pushToHistory();
     state.routines = state.routines.filter(r => r.id !== routineId);
     saveRoutines();
@@ -7406,7 +7405,7 @@ function openRoutineEditModal(routineId) {
     const otherBtn = document.createElement('button');
     otherBtn.type = 'button';
     otherBtn.className = 'todo-modal-cat-btn';
-    otherBtn.innerHTML = `<div class="todo-modal-cat-dot" style="background-color: #888;"></div>없음/기본`;
+    otherBtn.innerHTML = `<div class="todo-modal-cat-dot" style="background-color: #888;"></div>?놁쓬/湲곕낯`;
     if (editRoutineModalCategory === 'other' || editRoutineModalCategory === 'none') {
       otherBtn.classList.add('active');
     }
@@ -7557,7 +7556,7 @@ function initRoutinesPanel() {
   }
 }
 
-// Parse natural language date (e.g. 7월20일, 7/20) and time (e.g. 오전 1시 20분, 자정 30분, 14:30)
+// Parse natural language date (e.g. 7??0?? 7/20) and time (e.g. ?ㅼ쟾 1??20遺? ?먯젙 30遺? 14:30)
 function parseNaturalLanguageTodo(inputText) {
   let text = inputText.trim();
   
@@ -7566,28 +7565,28 @@ function parseNaturalLanguageTodo(inputText) {
   let parsedDateKey = state.selectedDate; // default fallback
   let parsedTime = '';
 
-  // 1. Relative Dates (오늘, 내일, 모레, 어제, 그제)
-  const relativeDateRegex = /(그제|그저께|어제|오늘|내일|모레|글피)/i;
+  // 1. Relative Dates (?ㅻ뒛, ?댁씪, 紐⑤젅, ?댁젣, 洹몄젣)
+  const relativeDateRegex = /(洹몄젣|洹몄?猿??댁젣|?ㅻ뒛|?댁씪|紐⑤젅|湲??/i;
   const relMatch = text.match(relativeDateRegex);
   if (relMatch) {
     const keyword = relMatch[1];
     const todayDate = new Date();
     let offset = 0;
-    if (keyword === '그제' || keyword === '그저께') offset = -2;
-    else if (keyword === '어제') offset = -1;
-    else if (keyword === '오늘') offset = 0;
-    else if (keyword === '내일') offset = 1;
-    else if (keyword === '모레') offset = 2;
-    else if (keyword === '글피') offset = 3;
+    if (keyword === '洹몄젣' || keyword === '洹몄?猿?) offset = -2;
+    else if (keyword === '?댁젣') offset = -1;
+    else if (keyword === '?ㅻ뒛') offset = 0;
+    else if (keyword === '?댁씪') offset = 1;
+    else if (keyword === '紐⑤젅') offset = 2;
+    else if (keyword === '湲??) offset = 3;
     
     todayDate.setDate(todayDate.getDate() + offset);
     parsedDateKey = formatDateString(todayDate);
     text = text.replace(relativeDateRegex, '').trim();
   } else {
     // 1-1. Regex for Exact Date:
-    // Matches "7월 20일", "7월20일", "7/20", "12/25", "12월25일"
+    // Matches "7??20??, "7??0??, "7/20", "12/25", "12??5??
     const dateRegexes = [
-      /(\d{1,2})\s*월\s*(\d{1,2})\s*일?/i,
+      /(\d{1,2})\s*??s*(\d{1,2})\s*??/i,
       /(?:^|\s)(\d{1,2})\s*\/\s*(\d{1,2})(?=$|\s)/
     ];
 
@@ -7609,13 +7608,13 @@ function parseNaturalLanguageTodo(inputText) {
   }
 
   // 2. Regex for Time:
-  // A. "자정 20분", "자정", "정오 15분", "정오"
-  const midnightNoonRegex = /(자정|정오)(?:\s*(\d{1,2})\s*분)?/i;
+  // A. "?먯젙 20遺?, "?먯젙", "?뺤삤 15遺?, "?뺤삤"
+  const midnightNoonRegex = /(?먯젙|?뺤삤)(?:\s*(\d{1,2})\s*遺??/i;
   let timeMatch = text.match(midnightNoonRegex);
   if (timeMatch) {
     const keyword = timeMatch[1];
     const minStr = timeMatch[2] || '00';
-    const hour = keyword === '자정' ? 0 : 12;
+    const hour = keyword === '?먯젙' ? 0 : 12;
     const minute = parseInt(minStr, 10);
     if (minute >= 0 && minute <= 59) {
       parsedTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -7623,9 +7622,9 @@ function parseNaturalLanguageTodo(inputText) {
     }
   }
 
-  // B. "오전 1시 20분", "오후 12시 5분", "오전 1시", "오후 3시"
+  // B. "?ㅼ쟾 1??20遺?, "?ㅽ썑 12??5遺?, "?ㅼ쟾 1??, "?ㅽ썑 3??
   if (!parsedTime) {
-    const ampmRegex = /(오전|오후)\s*(\d{1,2})\s*시(?:\s*(\d{1,2})\s*분)?/i;
+    const ampmRegex = /(?ㅼ쟾|?ㅽ썑)\s*(\d{1,2})\s*???:\s*(\d{1,2})\s*遺??/i;
     timeMatch = text.match(ampmRegex);
     if (timeMatch) {
       const ampm = timeMatch[1];
@@ -7634,9 +7633,9 @@ function parseNaturalLanguageTodo(inputText) {
       const minute = parseInt(minStr, 10);
 
       if (hour >= 1 && hour <= 12 && minute >= 0 && minute <= 59) {
-        if (ampm === '오후' && hour < 12) {
+        if (ampm === '?ㅽ썑' && hour < 12) {
           hour += 12;
-        } else if (ampm === '오전' && hour === 12) {
+        } else if (ampm === '?ㅼ쟾' && hour === 12) {
           hour = 0;
         }
         parsedTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -7659,9 +7658,9 @@ function parseNaturalLanguageTodo(inputText) {
     }
   }
 
-  // 3. Importance keywords (⭐, ★, [중요], 중요:)
+  // 3. Importance keywords (狩? ?? [以묒슂], 以묒슂:)
   let isImportant = false;
-  const importantRegex = /(?:^|\s)(?:⭐|★|\[중요\]|중요:)\s*/i;
+  const importantRegex = /(?:^|\s)(?:狩???\[以묒슂\]|以묒슂:)\s*/i;
   if (importantRegex.test(text)) {
     isImportant = true;
     text = text.replace(importantRegex, ' ').trim();
@@ -7706,7 +7705,7 @@ function parse24h(timeStr) {
   return { ampm, hour: formattedHour, minute: minVal };
 }
 
-// Format HH:MM 24h string into Korean AM/PM Hour/Minute with Midnight (자정) & Noon (정오) conversions
+// Format HH:MM 24h string into Korean AM/PM Hour/Minute with Midnight (?먯젙) & Noon (?뺤삤) conversions
 function formatTimeKorean(timeStr) {
   if (!timeStr) return '';
   const parts = timeStr.split(':');
@@ -7715,36 +7714,36 @@ function formatTimeKorean(timeStr) {
   const minVal = parts[1];
 
   if (hour24 === 0) {
-    if (minVal === '00') return '자정';
-    return `자정 ${parseInt(minVal, 10)}분`;
+    if (minVal === '00') return '?먯젙';
+    return `?먯젙 ${parseInt(minVal, 10)}遺?;
   }
   if (hour24 === 12) {
-    if (minVal === '00') return '정오';
-    return `정오 ${parseInt(minVal, 10)}분`;
+    if (minVal === '00') return '?뺤삤';
+    return `?뺤삤 ${parseInt(minVal, 10)}遺?;
   }
 
-  const ampm = hour24 >= 12 ? '오후' : '오전';
+  const ampm = hour24 >= 12 ? '?ㅽ썑' : '?ㅼ쟾';
   let hour12 = hour24 % 12;
   if (hour12 === 0) hour12 = 12;
-  return `${ampm} ${hour12}시 ${minVal}분`;
+  return `${ampm} ${hour12}??${minVal}遺?;
 }
 
 // Render Todo Items for the selected date
 function renderTodos() {
   
   const dateObj = new Date(state.selectedDate);
-  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-  const formattedText = `${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일 (${weekdays[dateObj.getDay()]})`;
+  const weekdays = ['??, '??, '??, '??, '紐?, '湲?, '??];
+  const formattedText = `${dateObj.getMonth() + 1}??${dateObj.getDate()}??(${weekdays[dateObj.getDay()]})`;
   
   const todayStr = formatDateString(new Date());
   if (state.selectedDate === todayStr) {
-    selectedDateDisplay.textContent = `${formattedText} - 오늘`;
+    selectedDateDisplay.textContent = `${formattedText} - ?ㅻ뒛`;
   } else {
     selectedDateDisplay.textContent = formattedText;
   }
 
   if (todoInputField) {
-    todoInputField.placeholder = `${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일의 새로운 할 일을 입력해 보세요...`;
+    todoInputField.placeholder = `${dateObj.getMonth() + 1}??${dateObj.getDate()}?쇱쓽 ?덈줈?????쇱쓣 ?낅젰??蹂댁꽭??..`;
   }
 
   const inputContainer = document.querySelector('.todo-input-container');
@@ -7804,7 +7803,7 @@ function renderTodos() {
   if (dayTodos.length === 0) {
     const emptyDiv = document.createElement('div');
     emptyDiv.classList.add('empty-state');
-    emptyDiv.textContent = query !== '' ? '검색 결과가 없습니다.' : '할 일이 없습니다. 새로운 할 일을 추가해 보세요!';
+    emptyDiv.textContent = query !== '' ? '寃??寃곌낵媛 ?놁뒿?덈떎.' : '???쇱씠 ?놁뒿?덈떎. ?덈줈?????쇱쓣 異붽???蹂댁꽭??';
     todoItemsList.appendChild(emptyDiv);
     return;
   }
@@ -7815,15 +7814,15 @@ function renderTodos() {
       emptyDiv.className = 'todo-filter-empty-state';
       emptyDiv.innerHTML = `
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 1.1rem;">🔄</span>
-          <span>선택한 날짜에 등록된 <strong>루틴</strong> 할 일이 없습니다.</span>
+          <span style="font-size: 1.1rem;">?봽</span>
+          <span>?좏깮???좎쭨???깅줉??<strong>猷⑦떞</strong> ???쇱씠 ?놁뒿?덈떎.</span>
         </div>
         <div class="empty-actions">
           <button type="button" class="empty-btn primary" id="btn-quick-add-routine">
-            ➕ 새 루틴 할 일 추가하기
+            ????猷⑦떞 ????異붽??섍린
           </button>
           <button type="button" class="empty-btn" id="btn-show-all-todos-filter">
-            📋 전체 할 일 보기
+            ?뱥 ?꾩껜 ????蹂닿린
           </button>
         </div>
       `;
@@ -7854,20 +7853,20 @@ function renderTodos() {
     }
 
     const activeCatObj = state.categories[filterCat];
-    const activeCatLabel = activeCatObj ? activeCatObj.label : '선택한 카테고리';
+    const activeCatLabel = activeCatObj ? activeCatObj.label : '?좏깮??移댄뀒怨좊━';
     const emptyDiv = document.createElement('div');
     emptyDiv.className = 'todo-filter-empty-state';
     emptyDiv.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 1.1rem;">🎯</span>
-        <span><strong>'${escapeHtml(activeCatLabel)}'</strong> 탭에 등록된 할 일이 없습니다.</span>
+        <span style="font-size: 1.1rem;">?렞</span>
+        <span><strong>'${escapeHtml(activeCatLabel)}'</strong> ??뿉 ?깅줉?????쇱씠 ?놁뒿?덈떎.</span>
       </div>
       <div class="empty-actions">
         <button type="button" class="empty-btn primary" id="btn-quick-add-to-cat">
-          ➕ '${escapeHtml(activeCatLabel)}' 할 일 추가하기
+          ??'${escapeHtml(activeCatLabel)}' ????異붽??섍린
         </button>
         <button type="button" class="empty-btn" id="btn-show-all-todos-filter">
-          📋 전체 할 일 보기
+          ?뱥 ?꾩껜 ????蹂닿린
         </button>
       </div>
     `;
@@ -7937,13 +7936,13 @@ function renderTodos() {
     
     // Add indicators if attachments exist
     let indicators = '';
-    if (todo.memo && todo.memo.trim() !== '') indicators += '📝';
-    if ((todo.memoImages && todo.memoImages.length > 0) || (todo.memoVideos && todo.memoVideos.length > 0)) indicators += '🖼️';
-    if (hasDrawingData(todo.memoDrawing)) indicators += '🎨';
-    if (todo.memoAudio && todo.memoAudio.length > 0) indicators += '🎙️';
+    if (todo.memo && todo.memo.trim() !== '') indicators += '?뱷';
+    if ((todo.memoImages && todo.memoImages.length > 0) || (todo.memoVideos && todo.memoVideos.length > 0)) indicators += '?뼹截?;
+    if (hasDrawingData(todo.memoDrawing)) indicators += '?렓';
+    if (todo.memoAudio && todo.memoAudio.length > 0) indicators += '?럺截?;
     
     if (indicators) {
-      titleHtml += ` <span class="todo-attachment-indicators" style="font-size: 0.85em; margin-left: 6px; opacity: 0.8;" title="첨부됨">${indicators}</span>`;
+      titleHtml += ` <span class="todo-attachment-indicators" style="font-size: 0.85em; margin-left: 6px; opacity: 0.8;" title="泥⑤???>${indicators}</span>`;
     }
     
     textSpan.innerHTML = titleHtml;
@@ -7964,7 +7963,7 @@ function renderTodos() {
       e.stopPropagation();
       openTodoEditModal(todo.id);
     });
-    textSpan.title = '클릭: 일정 공유/추가 | 더블클릭: 수정 | 꾹 누르기: 순서 이동';
+    textSpan.title = '?대┃: ?쇱젙 怨듭쑀/異붽? | ?붾툝?대┃: ?섏젙 | 袁??꾨Ⅴ湲? ?쒖꽌 ?대룞';
     textSpan.style.cursor = 'grab';
 
     const metaDiv = document.createElement('div');
@@ -7974,7 +7973,7 @@ function renderTodos() {
     if (todo.isImportant) {
       const importantBadge = document.createElement('span');
       importantBadge.classList.add('important-badge');
-      importantBadge.innerHTML = '⭐ 중요';
+      importantBadge.innerHTML = '狩?以묒슂';
       metaDiv.appendChild(importantBadge);
     }
 
@@ -7982,9 +7981,9 @@ function renderTodos() {
     if (todo.isRoutine) {
       const routineBadge = document.createElement('span');
       routineBadge.classList.add('routine-badge');
-      routineBadge.textContent = '루틴';
+      routineBadge.textContent = '猷⑦떞';
       routineBadge.style.cursor = 'pointer';
-      routineBadge.title = '클릭 시 루틴 목록만 보기';
+      routineBadge.title = '?대┃ ??猷⑦떞 紐⑸줉留?蹂닿린';
       routineBadge.addEventListener('click', (e) => {
         e.stopPropagation();
         handleSelectTodoFilterCategory('routine');
@@ -8005,7 +8004,7 @@ function renderTodos() {
     }
     badge.textContent = cat.label;
     badge.style.cursor = 'pointer';
-    badge.title = `클릭 시 '${cat.label}' 카테고리만 보기`;
+    badge.title = `?대┃ ??'${cat.label}' 移댄뀒怨좊━留?蹂닿린`;
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
       const catKey = Object.keys(state.categories).find(k => k === todo.category || state.categories[k].label === todo.category) || todo.category;
@@ -8017,7 +8016,7 @@ function renderTodos() {
     if (todo.time) {
       const timeBadge = document.createElement('span');
       timeBadge.classList.add('todo-time-badge');
-      timeBadge.innerHTML = `⏰ ${formatTimeKorean(todo.time)}`;
+      timeBadge.innerHTML = `??${formatTimeKorean(todo.time)}`;
       metaDiv.appendChild(timeBadge);
     }
 
@@ -8028,7 +8027,7 @@ function renderTodos() {
       const datePill = document.createElement('span');
       datePill.classList.add('search-date-pill');
       datePill.textContent = formatDateKeyToMonthDay(todo.dateKey);
-      datePill.title = `${todo.dateKey}로 이동`;
+      datePill.title = `${todo.dateKey}濡??대룞`;
       datePill.addEventListener('click', (e) => {
         e.stopPropagation();
         state.selectedDate = todo.dateKey;
@@ -8068,13 +8067,13 @@ function renderTodos() {
     if (hasAttachments) {
       const toggleBtn = document.createElement('div');
       toggleBtn.className = 'todo-attachments-toggle';
-      toggleBtn.innerHTML = '▼ 펼치기';
+      toggleBtn.innerHTML = '???쇱튂湲?;
       toggleBtn.style.cssText = 'cursor:pointer; color:var(--text-muted); font-size:0.8rem; margin-top:4px; user-select:none; display:inline-block;';
       toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const isHidden = attachmentsContainer.style.display === 'none';
         attachmentsContainer.style.display = isHidden ? 'block' : 'none';
-        toggleBtn.innerHTML = isHidden ? '▲ 접기' : '▼ 펼치기';
+        toggleBtn.innerHTML = isHidden ? '???묎린' : '???쇱튂湲?;
         
         if (isHidden) {
           onExpandCallbacks.forEach(cb => cb());
@@ -8090,7 +8089,7 @@ function renderTodos() {
       const memoDiv = document.createElement('div');
       memoDiv.className = 'todo-memo-text';
       memoDiv.innerHTML = linkify(todo.memo).replace(/\n/g, '<br>');
-      memoDiv.title = '클릭하여 메모 수정하기';
+      memoDiv.title = '?대┃?섏뿬 硫붾え ?섏젙?섍린';
       memoDiv.style.cursor = 'pointer';
       memoDiv.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -8132,7 +8131,7 @@ function renderTodos() {
         mediaContainer.style.pointerEvents = 'none'; 
         thumb.appendChild(mediaContainer);
         
-        thumb.title = '클릭하여 미리보기 (수정은 더블클릭)';
+        thumb.title = '?대┃?섏뿬 誘몃━蹂닿린 (?섏젙? ?붾툝?대┃)';
         thumb.addEventListener('click', (e) => {
           e.stopPropagation();
           openLightbox(todo.memoImages, idx, true);
@@ -8170,7 +8169,7 @@ function renderTodos() {
         mediaContainer.style.pointerEvents = 'none'; 
         thumb.appendChild(mediaContainer);
         
-        thumb.title = '클릭하여 미리보기 (수정은 더블클릭)';
+        thumb.title = '?대┃?섏뿬 誘몃━蹂닿린 (?섏젙? ?붾툝?대┃)';
         thumb.addEventListener('click', (e) => {
           e.stopPropagation();
           openLightbox(todo.memoVideos, idx, true);
@@ -8202,7 +8201,7 @@ function renderTodos() {
       });
       
       viewDrawingContainer.style.cursor = 'pointer';
-      viewDrawingContainer.title = '클릭하여 곧바로 그림 수정하기';
+      viewDrawingContainer.title = '?대┃?섏뿬 怨㏓컮濡?洹몃┝ ?섏젙?섍린';
       const openDirectEdit = (e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -8248,9 +8247,9 @@ function renderTodos() {
     const starBtn = document.createElement('button');
     starBtn.type = 'button';
     starBtn.className = `todo-star-btn ${todo.isImportant ? 'active' : ''}`;
-    starBtn.innerHTML = todo.isImportant ? '⭐' : '☆';
-    starBtn.title = todo.isImportant ? '중요 표시 해제' : '중요 표시 (상단 고정)';
-    starBtn.ariaLabel = todo.isImportant ? '중요 표시 해제' : '중요 표시';
+    starBtn.innerHTML = todo.isImportant ? '狩? : '??;
+    starBtn.title = todo.isImportant ? '以묒슂 ?쒖떆 ?댁젣' : '以묒슂 ?쒖떆 (?곷떒 怨좎젙)';
+    starBtn.ariaLabel = todo.isImportant ? '以묒슂 ?쒖떆 ?댁젣' : '以묒슂 ?쒖떆';
     starBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleTodoImportant(todo.id, todo.dateKey || state.selectedDate);
@@ -8260,9 +8259,9 @@ function renderTodos() {
     const editBtn = document.createElement('button');
     editBtn.type = 'button';
     editBtn.classList.add('edit-btn');
-    editBtn.innerHTML = '✏️';
-    editBtn.ariaLabel = '할 일 수정';
-    editBtn.title = '수정';
+    editBtn.innerHTML = '?륅툘';
+    editBtn.ariaLabel = '?????섏젙';
+    editBtn.title = '?섏젙';
     editBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       openTodoEditModal(todo.id);
@@ -8271,8 +8270,8 @@ function renderTodos() {
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.classList.add('delete-btn');
-    deleteBtn.innerHTML = '✖';
-    deleteBtn.ariaLabel = '할 일 삭제';
+    deleteBtn.innerHTML = '??;
+    deleteBtn.ariaLabel = '??????젣';
     deleteBtn.addEventListener('click', () => deleteTodo(todo.id, todo.text, todo.isRoutine));
 
     actionBtns.appendChild(starBtn);
@@ -8298,13 +8297,13 @@ function renderTodos() {
         const yy = String(cDate.getFullYear()).slice(2);
         const mm = String(cDate.getMonth() + 1).padStart(2, '0');
         const dd = String(cDate.getDate()).padStart(2, '0');
-        createdInfo.innerHTML = `📅 등록일: ${yy}.${mm}.${dd}`;
+        createdInfo.innerHTML = `?뱟 ?깅줉?? ${yy}.${mm}.${dd}`;
         datesPanel.appendChild(createdInfo);
       }
 
       const panelTitle = document.createElement('div');
       panelTitle.classList.add('todo-dates-title');
-      panelTitle.textContent = '함께 계획된 날짜:';
+      panelTitle.textContent = '?④퍡 怨꾪쉷???좎쭨:';
       datesPanel.appendChild(panelTitle);
 
       const tagsContainer = document.createElement('div');
@@ -8320,7 +8319,7 @@ function renderTodos() {
         const removeTagBtn = document.createElement('span');
         removeTagBtn.className = 'remove-tag-btn';
         removeTagBtn.innerHTML = '&times;';
-        removeTagBtn.title = '이 날짜에서 삭제';
+        removeTagBtn.title = '???좎쭨?먯꽌 ??젣';
         removeTagBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           removeTodoFromDate(todo.text, dk);
@@ -8336,9 +8335,9 @@ function renderTodos() {
       copyBtn.classList.add('todo-copy-btn');
       if (state.copyingTodoId === todo.id) {
         copyBtn.classList.add('copying');
-        copyBtn.innerHTML = '🎯 달력에서 복사할 날짜 선택 중... (완료하려면 클릭)';
+        copyBtn.innerHTML = '?렞 ?щ젰?먯꽌 蹂듭궗???좎쭨 ?좏깮 以?.. (?꾨즺?섎젮硫??대┃)';
       } else {
-        copyBtn.innerHTML = '➕ 다른 날짜에 추가하기';
+        copyBtn.innerHTML = '???ㅻⅨ ?좎쭨??異붽??섍린';
       }
       copyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -8425,7 +8424,7 @@ function setupLocalBackup() {
         downloadLink.click();
         document.body.removeChild(downloadLink);
       } catch (err) {
-        alert("백업 파일 생성 중 오류가 발생했습니다: " + err.message);
+        alert("諛깆뾽 ?뚯씪 ?앹꽦 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎: " + err.message);
       }
     });
   }
@@ -8441,7 +8440,7 @@ function setupLocalBackup() {
           const content = event.target.result;
           const parsedData = JSON.parse(content);
 
-          if (!confirm('선택한 백업 파일로 모든 데이터를 복구하시겠습니까?\n현재 데이터는 모두 덮어씌워집니다.')) {
+          if (!confirm('?좏깮??諛깆뾽 ?뚯씪濡?紐⑤뱺 ?곗씠?곕? 蹂듦뎄?섏떆寃좎뒿?덇퉴?\n?꾩옱 ?곗씠?곕뒗 紐⑤몢 ??뼱?뚯썙吏묐땲??')) {
             localRestoreInput.value = '';
             return;
           }
@@ -8466,10 +8465,10 @@ function setupLocalBackup() {
           if (state.appTitle) localStorage.setItem('neon_planner_app_title', state.appTitle);
           if (state.tabIcons) localStorage.setItem('neon_planner_tab_icons', JSON.stringify(state.tabIcons));
 
-          alert('로컬 백업 복원이 완료되었습니다! 화면을 새로고침합니다.');
+          alert('濡쒖뺄 諛깆뾽 蹂듭썝???꾨즺?섏뿀?듬땲?? ?붾㈃???덈줈怨좎묠?⑸땲??');
           location.reload();
         } catch (err) {
-          alert('백업 파일을 읽는 중 오류가 발생했습니다. 올바른 파일인지 확인해주세요.\n' + err.message);
+          alert('諛깆뾽 ?뚯씪???쎈뒗 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎. ?щ컮瑜??뚯씪?몄? ?뺤씤?댁＜?몄슂.\n' + err.message);
         }
         localRestoreInput.value = ''; // reset
       };
@@ -8521,7 +8520,7 @@ window.addEventListener('online', () => {
   if (localStorage.getItem('neon_planner_gdrive_connected') === 'true' && typeof autoSyncWithDrive === 'function') {
     const badge = document.getElementById('gdrive-status-badge');
     if (badge) {
-      badge.textContent = '🌐 인터넷 재연결됨...';
+      badge.textContent = '?뙋 ?명꽣???ъ뿰寃곕맖...';
     }
     setTimeout(autoSyncWithDrive, 1000);
   }
@@ -8585,7 +8584,7 @@ function initVoiceAssistant() {
       }
     } else {
       if (voiceOverlay) voiceOverlay.classList.remove('hidden');
-      if (voiceStatusText) voiceStatusText.textContent = '듣고 있습니다...';
+      if (voiceStatusText) voiceStatusText.textContent = '?ｊ퀬 ?덉뒿?덈떎...';
     }
   };
 
@@ -8602,7 +8601,7 @@ function initVoiceAssistant() {
   recognition.onerror = (event) => {
     console.error("Speech recognition error", event.error);
     if (!currentTargetInput && voiceStatusText) {
-      voiceStatusText.textContent = '오류가 발생했습니다. 다시 시도해주세요.';
+      voiceStatusText.textContent = '?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎. ?ㅼ떆 ?쒕룄?댁＜?몄슂.';
       setTimeout(stopListeningUI, 1500);
     } else {
       stopListeningUI();
@@ -8645,68 +8644,68 @@ function initVoiceAssistant() {
 function handleVoiceCommand(transcript, recognition, stopListeningUI) {
   const t = transcript.toLowerCase().trim();
   
-  if (t.includes('종료') || t.includes('그만') || t.includes('닫아') || t.includes('끝내')) {
+  if (t.includes('醫낅즺') || t.includes('洹몃쭔') || t.includes('?レ븘') || t.includes('?앸궡')) {
     if (recognition) recognition.stop();
     if (stopListeningUI) stopListeningUI();
     return;
   }
   
-  // Navigation commands (No return, so it can chain with '추가')
-  if (t.includes('할 일 탭') || t.includes('할일 탭') || t.includes('할일 열어') || t.includes('할 일 열어') || t.includes('투두')) {
+  // Navigation commands (No return, so it can chain with '異붽?')
+  if (t.includes('??????) || t.includes('?좎씪 ??) || t.includes('?좎씪 ?댁뼱') || t.includes('?????댁뼱') || t.includes('?щ몢')) {
     const btn = document.getElementById('btn-toggle-todos');
     if (btn && !btn.classList.contains('active-view')) btn.click();
-  } else if (t.includes('분석') || t.includes('통계')) {
+  } else if (t.includes('遺꾩꽍') || t.includes('?듦퀎')) {
     const btn = document.getElementById('btn-toggle-analytics');
     if (btn && !btn.classList.contains('active-view')) btn.click();
-  } else if (t.includes('달력') || t.includes('캘린더')) {
+  } else if (t.includes('?щ젰') || t.includes('罹섎┛??)) {
     const btn = document.getElementById('btn-toggle-calendar');
     if (btn && !btn.classList.contains('active-view')) btn.click();
-  } else if (t.includes('기록') || t.includes('일기')) {
+  } else if (t.includes('湲곕줉') || t.includes('?쇨린')) {
     const btn = document.getElementById('btn-toggle-records');
     if (btn && !btn.classList.contains('active-view')) btn.click();
-  } else if (t.includes('루틴')) {
+  } else if (t.includes('猷⑦떞')) {
     const btn = document.getElementById('btn-toggle-routines');
     if (btn && !btn.classList.contains('active-view')) btn.click();
-  } else if (t.includes('설정')) {
+  } else if (t.includes('?ㅼ젙')) {
     const btn = document.getElementById('btn-toggle-control-panel');
     if (btn && !btn.classList.contains('active-view')) btn.click();
   }
   
   // Adding Command (Todo, Routine, Record, D-day)
-  if (t.includes('추가') || t.includes('넣어') || t.includes('저장')) {
-    const textToParse = t.replace(/할\s*일에?/gi, '')
-                         .replace(/일정에?/gi, '')
-                         .replace(/루틴\s*관리에?/gi, '')
-                         .replace(/루팅\s*관리에?/gi, '')
-                         .replace(/루틴\s*관리의?/gi, '')
-                         .replace(/루팅\s*관리의?/gi, '')
-                         .replace(/루틴\s*관리해서?/gi, '')
-                         .replace(/루팅\s*관리해서?/gi, '')
-                         .replace(/루틴[의에]?/gi, '')
-                         .replace(/루팅[의에]?/gi, '')
-                         .replace(/기록에?/gi, '')
-                         .replace(/일기에?/gi, '')
-                         .replace(/디데이에?/gi, '')
-                         .replace(/기념일에?/gi, '')
-                         .replace(/추가해\s*주세요/gi, '')
-                         .replace(/저장해\s*주세요/gi, '')
-                         .replace(/넣어\s*주세요/gi, '')
-                         .replace(/추가해?/gi, '')
-                         .replace(/저장해?/gi, '')
-                         .replace(/저장/gi, '')
-                         .replace(/넣어줘?/gi, '')
-                         .replace(/주세요/gi, '')
-                         .replace(/부탁해/gi, '')
-                         .replace(/할\s*일\s*탭\s*열고/gi, '')
-                         .replace(/할\s*일\s*탭\s*열어주고/gi, '')
+  if (t.includes('異붽?') || t.includes('?ｌ뼱') || t.includes('???)) {
+    const textToParse = t.replace(/??s*?쇱뿉?/gi, '')
+                         .replace(/?쇱젙??/gi, '')
+                         .replace(/猷⑦떞\s*愿由ъ뿉?/gi, '')
+                         .replace(/猷⑦똿\s*愿由ъ뿉?/gi, '')
+                         .replace(/猷⑦떞\s*愿由ъ쓽?/gi, '')
+                         .replace(/猷⑦똿\s*愿由ъ쓽?/gi, '')
+                         .replace(/猷⑦떞\s*愿由ы빐??/gi, '')
+                         .replace(/猷⑦똿\s*愿由ы빐??/gi, '')
+                         .replace(/猷⑦떞[?섏뿉]?/gi, '')
+                         .replace(/猷⑦똿[?섏뿉]?/gi, '')
+                         .replace(/湲곕줉??/gi, '')
+                         .replace(/?쇨린??/gi, '')
+                         .replace(/?붾뜲?댁뿉?/gi, '')
+                         .replace(/湲곕뀗?쇱뿉?/gi, '')
+                         .replace(/異붽???s*二쇱꽭??gi, '')
+                         .replace(/??ν빐\s*二쇱꽭??gi, '')
+                         .replace(/?ｌ뼱\s*二쇱꽭??gi, '')
+                         .replace(/異붽???/gi, '')
+                         .replace(/??ν빐?/gi, '')
+                         .replace(/???gi, '')
+                         .replace(/?ｌ뼱以?/gi, '')
+                         .replace(/二쇱꽭??gi, '')
+                         .replace(/遺?곹빐/gi, '')
+                         .replace(/??s*??s*??s*?닿퀬/gi, '')
+                         .replace(/??s*??s*??s*?댁뼱二쇨퀬/gi, '')
                          .trim();
                          
     if (textToParse) {
       const parsed = parseNaturalLanguageTodo(textToParse);
       
-      const isRoutine = t.includes('루틴') || t.includes('루팅');
-      const isRecord = t.includes('기록') || t.includes('일기');
-      const isDday = t.includes('디데이') || t.includes('기념일');
+      const isRoutine = t.includes('猷⑦떞') || t.includes('猷⑦똿');
+      const isRecord = t.includes('湲곕줉') || t.includes('?쇨린');
+      const isDday = t.includes('?붾뜲??) || t.includes('湲곕뀗??);
 
       pushToHistory();
 
@@ -8763,9 +8762,9 @@ function handleVoiceCommand(transcript, recognition, stopListeningUI) {
       
       // Visual feedback without blocking alert
       const statusText = document.getElementById('voice-status-text');
-      let targetName = isRoutine ? '루틴' : (isRecord ? '기록' : (isDday ? '디데이' : '할 일'));
+      let targetName = isRoutine ? '猷⑦떞' : (isRecord ? '湲곕줉' : (isDday ? '?붾뜲?? : '????));
       if (statusText) {
-        statusText.textContent = `✅ [${targetName}] 추가됨: ${parsed.cleanedText}`;
+        statusText.textContent = `??[${targetName}] 異붽??? ${parsed.cleanedText}`;
       }
       
       // Auto-close voice assistant after a successful save
@@ -8849,7 +8848,7 @@ function createMediaElementAsync(mediaObj, isEditMode, onClick, onRemove) {
 
       // Play icon overlay
       const playBadge = document.createElement('div');
-      playBadge.innerHTML = '▶';
+      playBadge.innerHTML = '??;
       playBadge.style.cssText = 'position:absolute; bottom:4px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); color:white; font-size:14px; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; pointer-events:none;';
       container.appendChild(playBadge);
       
@@ -8861,17 +8860,17 @@ function createMediaElementAsync(mediaObj, isEditMode, onClick, onRemove) {
         });
       }
       if (delBtn) container.appendChild(delBtn);
-      return container; // Done — no async load needed for thumbnails
+      return container; // Done ??no async load needed for thumbnails
     }
 
     // ===== VIDEO WITHOUT POSTER / PDF: async load from FileDB =====
     const loading = document.createElement('div');
     if (mediaObj.type === 'video') {
       // Show video icon placeholder while loading
-      loading.innerHTML = '🎬';
+      loading.innerHTML = '?렗';
       loading.style.cssText = 'font-size:28px; opacity:0.7;';
     } else {
-      loading.innerHTML = '📄';
+      loading.innerHTML = '?뱞';
       loading.style.cssText = 'font-size:24px; opacity:0.7; color:#fff;';
     }
     container.appendChild(loading);
@@ -8880,9 +8879,9 @@ function createMediaElementAsync(mediaObj, isEditMode, onClick, onRemove) {
       if (container.contains(loading)) container.removeChild(loading);
       if (!fileRecord || !fileRecord.blob) {
         const err = document.createElement('div');
-        err.innerHTML = '⚠️<br><span style="font-size:12px; margin-top:4px; display:inline-block; border-bottom:1px solid currentColor;">연동 안됨</span>';
+        err.innerHTML = '?좑툘<br><span style="font-size:12px; margin-top:4px; display:inline-block; border-bottom:1px solid currentColor;">?곕룞 ?덈맖</span>';
         err.style.cssText = 'font-size:18px; opacity:0.8; cursor:pointer; text-align:center; color:#fff; display:flex; flex-direction:column; align-items:center;';
-        err.title = "다운로드 재시도";
+        err.title = "?ㅼ슫濡쒕뱶 ?ъ떆??;
         err.onclick = (e) => {
           e.stopPropagation();
           if (container.parentElement) {
@@ -8895,9 +8894,9 @@ function createMediaElementAsync(mediaObj, isEditMode, onClick, onRemove) {
         if (onRemove && isEditMode) {
           const delBtn = document.createElement('button');
           delBtn.type = 'button';
-          delBtn.innerHTML = '❌';
+          delBtn.innerHTML = '??;
           delBtn.className = 'delete-thumb-btn';
-          delBtn.title = '이 파일 지우기';
+          delBtn.title = '???뚯씪 吏?곌린';
           delBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             onRemove();
@@ -8938,7 +8937,7 @@ function createMediaElementAsync(mediaObj, isEditMode, onClick, onRemove) {
               container.appendChild(img);
 
               const playBadge = document.createElement('div');
-              playBadge.innerHTML = '▶';
+              playBadge.innerHTML = '??;
               playBadge.style.cssText = 'position:absolute; bottom:4px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); color:white; font-size:14px; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; pointer-events:none;';
               container.appendChild(playBadge);
             } catch(e) {
@@ -8970,13 +8969,14 @@ function createMediaElementAsync(mediaObj, isEditMode, onClick, onRemove) {
           vid.controls = true;
           vid.style.width = '100%';
           vid.style.height = '100%';
-          vid.style.objectFit = 'cover';
+          vid.style.objectFit = 'contain';
+          vid.style.background = '#000'; // Add background for letterboxing
           container.appendChild(vid);
         }
       } else if (mediaObj.type === 'pdf') {
         const pdfBtn = document.createElement('button');
         pdfBtn.type = 'button';
-        pdfBtn.innerHTML = '📄 PDF 보기';
+        pdfBtn.innerHTML = '?뱞 PDF 蹂닿린';
         pdfBtn.style.cssText = 'padding:8px 12px; background:#3b82f6; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; width:100%; height:100%;';
         pdfBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -8988,9 +8988,9 @@ function createMediaElementAsync(mediaObj, isEditMode, onClick, onRemove) {
        console.error('Failed to load file:', e);
        if (container.contains(loading)) container.removeChild(loading);
        const err = document.createElement('div');
-       err.innerHTML = '❌<br><span style="font-size:12px; margin-top:4px; display:inline-block; border-bottom:1px solid currentColor;">재시도</span>';
+       err.innerHTML = '??br><span style="font-size:12px; margin-top:4px; display:inline-block; border-bottom:1px solid currentColor;">?ъ떆??/span>';
        err.style.cssText = 'font-size:22px; opacity:0.8; cursor:pointer; text-align:center; color:#fff; display:flex; flex-direction:column; align-items:center;';
-       err.title = "다시 다운로드 시도하기";
+       err.title = "?ㅼ떆 ?ㅼ슫濡쒕뱶 ?쒕룄?섍린";
        err.onclick = (e) => {
          e.stopPropagation();
          if (container.parentElement) {
@@ -9057,7 +9057,7 @@ const GDriveMediaSync = {
   async downloadMedia(id, isRetry = false) {
     if (typeof gdriveAccessToken === 'undefined' || !gdriveAccessToken) return null;
     
-    // 이미 같은 파일의 다운로드가 진행 중이면 해당 Promise를 반환하여 중복 요청 방지
+    // ?대? 媛숈? ?뚯씪???ㅼ슫濡쒕뱶媛 吏꾪뻾 以묒씠硫??대떦 Promise瑜?諛섑솚?섏뿬 以묐났 ?붿껌 諛⑹?
     if (this._pendingDownloads[id]) {
       return this._pendingDownloads[id];
     }
@@ -9263,7 +9263,7 @@ const AudioRecorder = {
       }
     } catch (err) {
       console.error("Microphone access denied or error:", err);
-      alert("마이크 접근 권한이 필요합니다.");
+      alert("留덉씠???묎렐 沅뚰븳???꾩슂?⑸땲??");
     }
   },
 
@@ -9311,8 +9311,8 @@ function renderAudioPreviews(containerId, draftArray, onChangeCallback) {
     if (onChangeCallback) {
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
-      delBtn.innerHTML = '❌';
-      delBtn.title = '녹음 파일 삭제';
+      delBtn.innerHTML = '??;
+      delBtn.title = '?뱀쓬 ?뚯씪 ??젣';
       delBtn.style.background = 'none';
       delBtn.style.border = 'none';
       delBtn.style.cursor = 'pointer';
@@ -9333,7 +9333,7 @@ function renderAudioPreviews(containerId, draftArray, onChangeCallback) {
     textRow.style.marginTop = '8px';
     
     const sttIcon = document.createElement('span');
-    sttIcon.innerHTML = '📝';
+    sttIcon.innerHTML = '?뱷';
     sttIcon.style.fontSize = '1.1rem';
     sttIcon.style.marginTop = '4px';
     textRow.appendChild(sttIcon);
@@ -9348,7 +9348,7 @@ function renderAudioPreviews(containerId, draftArray, onChangeCallback) {
     textEl.style.borderRadius = '4px';
     textEl.style.resize = 'vertical';
     textEl.style.minHeight = '60px';
-    textEl.placeholder = "음성 인식된 텍스트가 없거나 수정이 필요하면 직접 입력하세요.";
+    textEl.placeholder = "?뚯꽦 ?몄떇???띿뒪?멸? ?녾굅???섏젙???꾩슂?섎㈃ 吏곸젒 ?낅젰?섏꽭??";
     textEl.value = audioData.transcription || '';
     
     if (!onChangeCallback) {
@@ -9364,8 +9364,8 @@ function renderAudioPreviews(containerId, draftArray, onChangeCallback) {
     if (onChangeCallback) {
       const delTextBtn = document.createElement('button');
       delTextBtn.type = 'button';
-      delTextBtn.innerHTML = '🗑️';
-      delTextBtn.title = '텍스트 지우기';
+      delTextBtn.innerHTML = '?뿊截?;
+      delTextBtn.title = '?띿뒪??吏?곌린';
       delTextBtn.style.background = 'none';
       delTextBtn.style.border = 'none';
       delTextBtn.style.cursor = 'pointer';
@@ -9384,7 +9384,7 @@ function renderAudioPreviews(containerId, draftArray, onChangeCallback) {
     // Toggle Button for STT Text
     const toggleTextBtn = document.createElement('button');
     toggleTextBtn.type = 'button';
-    toggleTextBtn.innerHTML = audioData.transcription ? '📖 변환된 텍스트 보기 (수정 가능)' : '✏️ 텍스트 직접 입력 (자동변환 없음)';
+    toggleTextBtn.innerHTML = audioData.transcription ? '?뱰 蹂?섎맂 ?띿뒪??蹂닿린 (?섏젙 媛??' : '?륅툘 ?띿뒪??吏곸젒 ?낅젰 (?먮룞蹂???놁쓬)';
     toggleTextBtn.style.marginTop = '6px';
     toggleTextBtn.style.padding = '6px 10px';
     toggleTextBtn.style.background = 'rgba(255,255,255,0.1)';
@@ -9398,10 +9398,10 @@ function renderAudioPreviews(containerId, draftArray, onChangeCallback) {
     toggleTextBtn.addEventListener('click', () => {
       if (textRow.style.display === 'none') {
         textRow.style.display = 'flex';
-        toggleTextBtn.innerHTML = '⬆️ 텍스트 숨기기';
+        toggleTextBtn.innerHTML = '燧놅툘 ?띿뒪???④린湲?;
       } else {
         textRow.style.display = 'none';
-        toggleTextBtn.innerHTML = textEl.value.trim() ? '📖 변환된 텍스트 보기 (수정 가능)' : '✏️ 텍스트 직접 입력 (자동변환 없음)';
+        toggleTextBtn.innerHTML = textEl.value.trim() ? '?뱰 蹂?섎맂 ?띿뒪??蹂닿린 (?섏젙 媛??' : '?륅툘 ?띿뒪??吏곸젒 ?낅젰 (?먮룞蹂???놁쓬)';
       }
     });
     
@@ -9422,11 +9422,11 @@ function handleAudioDictateClick(btnId, inputId, getDraftsArray, containerId, on
       AudioRecorder.stop();
       btn.classList.remove('listening');
       btn.style.animation = 'none';
-      btn.innerHTML = '🎙️';
+      btn.innerHTML = '?럺截?;
     } else {
       btn.classList.add('listening');
       btn.style.animation = 'pulse 1.5s infinite';
-      btn.innerHTML = '⏹️';
+      btn.innerHTML = '?뱄툘';
       AudioRecorder.start(
         (base64Audio, transcript) => {
           if (base64Audio) {
@@ -9438,7 +9438,7 @@ function handleAudioDictateClick(btnId, inputId, getDraftsArray, containerId, on
           // Do not append to main text field anymore, we show it in the audio preview block
           // But to show it's listening, we could update the button text temporarily
           if (interimTranscript.trim() !== '') {
-            btn.innerHTML = '듣는 중...';
+            btn.innerHTML = '?ｋ뒗 以?..';
           }
         }
       );
@@ -9477,7 +9477,7 @@ window.openFullscreenDrawing = function(initialData, onSaveCallback) {
   
   container.innerHTML = '';
 
-  // 스로틀링: 스트로크마다 데이터만 저장 (UI 갱신은 최소화)
+  // ?ㅻ줈?留? ?ㅽ듃濡쒗겕留덈떎 ?곗씠?곕쭔 ???(UI 媛깆떊? 理쒖냼??
   let autoSaveTimer = null;
   const throttledSave = (data) => {
     clearTimeout(autoSaveTimer);
@@ -9489,11 +9489,11 @@ window.openFullscreenDrawing = function(initialData, onSaveCallback) {
   window.currentDrawingBoard = new NeonDrawingBoard(container, {
     initialData: initialData || [],
     onChange: (data) => {
-      // 그림을 그릴 때마다 실시간 자동 저장 (UI 리렌더링 제외)
+      // 洹몃┝??洹몃┫ ?뚮쭏???ㅼ떆媛??먮룞 ???(UI 由щ젋?붾쭅 ?쒖쇅)
       throttledSave(data);
     },
     onClose: (data) => {
-      // 닫기 버튼 클릭 시: 진행 중인 자동저장 취소 후 즉시 저장 및 UI 갱신
+      // ?リ린 踰꾪듉 ?대┃ ?? 吏꾪뻾 以묒씤 ?먮룞???痍⑥냼 ??利됱떆 ???諛?UI 媛깆떊
       clearTimeout(autoSaveTimer);
       try {
         if (onSaveCallback) onSaveCallback(data, true);
@@ -9571,10 +9571,10 @@ document.addEventListener('DOMContentLoaded', () => {
           
           const logoTextEl = headerLogo.querySelector('.logo-text');
           if (logoTextEl) {
-            const originalText = localStorage.getItem('neon_planner_app_title') || '�÷���';
-            logoTextEl.textContent = state.device === 'pc' ? 'PC ��� ��ȯ' : '�ڵ��� ��� ��ȯ';
+            const originalText = localStorage.getItem('neon_planner_app_title') || '플래너';
+            logoTextEl.textContent = state.device === 'pc' ? 'PC 모드 전환' : '핸드폰 모드 전환';
             setTimeout(() => {
-               logoTextEl.textContent = localStorage.getItem('neon_planner_app_title') || '�÷���';
+               logoTextEl.textContent = localStorage.getItem('neon_planner_app_title') || '플래너';
             }, 1500);
           }
         }

@@ -344,11 +344,7 @@ body {
   min-width: 0;
 }
 
-@media (max-width: 900px) {
-  .app-container {
-    grid-template-columns: 1fr;
-  }
-}
+
 
 /* Common Header Styles */
 h1, h2, h3 {
@@ -546,14 +542,7 @@ h1, h2, h3 {
   padding-top: 20px;
 }
 
-@media (max-width: 900px) {
-  .todo-section {
-    border-left: none;
-    padding-left: 0;
-    padding-top: 30px;
-    border-top: 1px solid var(--panel-border);
-  }
-}
+
 
 .selected-date-title {
   font-size: 1.1rem;
