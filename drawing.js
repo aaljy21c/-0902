@@ -1926,6 +1926,13 @@ class NeonDrawingBoard {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.save();
+    
+    // In readOnly mode (thumbnails), fill the whole canvas with background color first
+    if (this.readOnly && !this.isMultiPage) {
+      this.ctx.fillStyle = this.bgColor;
+      const dpr = window.devicePixelRatio || 1;
+      this.ctx.fillRect(0, 0, this.canvas.width / dpr, this.canvas.height / dpr);
+    }
 
     // Apply pan and zoom
     this.ctx.translate(this.panX, this.panY);
@@ -1934,7 +1941,7 @@ class NeonDrawingBoard {
     const currentPage = this._pages[this.currentPageIndex];
     if (currentPage && currentPage.bgCanvas) {
       this.ctx.drawImage(currentPage.bgCanvas, 0, 0);
-    } else if (this.layoutMode === 'paged' && !this.isMultiPage) {
+    } else if (this.layoutMode === 'paged' && !this.isMultiPage && !this.readOnly) {
       // Calculate how many pages to draw based on strokes
       let maxY = 0;
       this.strokes.forEach(stroke => {
@@ -2043,7 +2050,9 @@ class NeonDrawingBoard {
     this.ctx.beginPath();
     this.ctx.lineCap = 'round';
     this.ctx.lineJoin = 'round';
-    this.ctx.lineWidth = stroke.size;
+    // Ensure line is at least 1px thick on screen when zoomed out (viewScale < 1)
+    const minWidth = this.viewScale > 0 ? 1 / this.viewScale : stroke.size;
+    this.ctx.lineWidth = Math.max(stroke.size, minWidth);
     this.ctx.strokeStyle = stroke.color;
     this.ctx.globalAlpha = stroke.opacity || 1;
 

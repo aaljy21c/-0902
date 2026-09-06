@@ -3338,7 +3338,7 @@ body.light-theme .diary-textarea {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 1000;
+  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
