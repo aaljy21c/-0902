@@ -123,7 +123,11 @@ const PRESET_COLORS = [
 function hasDrawingData(data) {
   if (!data) return false;
   if (Array.isArray(data)) {
-    return data.some(stroke => !stroke.isBg && stroke.points && stroke.points.length > 0);
+    return data.some(stroke => {
+      if (stroke.isBg) return false;
+      if (stroke.tool === 'image' && stroke.imgData) return true;
+      return stroke.points && stroke.points.length > 0;
+    });
   }
   if (data && data.type === 'pdf_drawing') return true;
   return false;
@@ -3613,8 +3617,8 @@ function setupEventListeners() {
       const newAudio = todoEditDraftAudio ? JSON.parse(JSON.stringify(todoEditDraftAudio)) : [];
 
       if (todo) {
-        // Save if anything changed (text, category, time, date, memo, importance, memo images, memo drawing, or memo audio)
-        if (todo.text !== text || todo.category !== modalSelectedCategory || todo.time !== timeValue || targetDateKey !== dateKey || (todo.memo || '') !== memoValue || Boolean(todo.isImportant) !== isImportantVal || JSON.stringify(todo.memoImages || []) !== JSON.stringify(newImages) || JSON.stringify(todo.memoDrawing || []) !== JSON.stringify(newDrawing) || JSON.stringify(todo.memoAudio || []) !== JSON.stringify(newAudio)) {
+        // Save if anything changed (text, category, time, memo, importance, memo images, memo drawing, or memo audio)
+        if (todo.text !== text || todo.category !== modalSelectedCategory || todo.time !== timeValue || (todo.memo || '') !== memoValue || Boolean(todo.isImportant) !== isImportantVal || JSON.stringify(todo.memoImages || []) !== JSON.stringify(newImages) || JSON.stringify(todo.memoDrawing || []) !== JSON.stringify(newDrawing) || JSON.stringify(todo.memoAudio || []) !== JSON.stringify(newAudio)) {
           pushToHistory();
           todo.text = text;
           todo.category = modalSelectedCategory;
@@ -3624,20 +3628,6 @@ function setupEventListeners() {
           todo.memoDrawing = newDrawing;
           todo.memoAudio = newAudio;
           todo.isImportant = isImportantVal;
-
-          // If date has changed, move the todo item
-          if (targetDateKey !== dateKey) {
-            // Remove from old date
-            state.todos[dateKey] = state.todos[dateKey].filter(t => t.id !== todo.id);
-            if (state.todos[dateKey].length === 0) {
-              delete state.todos[dateKey];
-            }
-            // Push to new date
-            if (!state.todos[targetDateKey]) {
-              state.todos[targetDateKey] = [];
-            }
-            state.todos[targetDateKey].push(todo);
-          }
 
           // If it's a routine, also update the routine template
           if (todo.isRoutine) {
@@ -9509,9 +9499,15 @@ window.openFullscreenDrawing = function(initialData, onSaveCallback) {
   const container = document.getElementById('drawing-fullscreen-container');
   if (!modal || !container) return;
   
+  // Store callback reference for popstate handler access
+  window._drawingOnSaveCallback = onSaveCallback;
+  
   modal.classList.remove('hidden');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden'; // prevent bg scroll
+  
+  // Push history state for hardware back button support
+  history.pushState({ modal: 'drawing-fullscreen' }, '');
   
   container.innerHTML = '';
 
@@ -9539,7 +9535,7 @@ window.openFullscreenDrawing = function(initialData, onSaveCallback) {
   });
 };
 
-window.closeFullscreenDrawing = function() {
+window.closeFullscreenDrawing = function(fromPopState = false) {
   const modal = document.getElementById('drawing-fullscreen-modal');
   if (modal) {
     modal.classList.add('hidden');
@@ -9547,6 +9543,10 @@ window.closeFullscreenDrawing = function() {
   }
   document.body.style.overflow = '';
   window.currentDrawingBoard = null;
+  window._drawingOnSaveCallback = null;
+  if (!fromPopState && history.state && history.state.modal === 'drawing-fullscreen') {
+    history.back();
+  }
 };
 
 
@@ -9786,6 +9786,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Hardware back button support for modals
 window.addEventListener('popstate', (e) => {
+  // Drawing fullscreen modal
+  const drawingModal = document.getElementById('drawing-fullscreen-modal');
+  if (drawingModal && !drawingModal.classList.contains('hidden')) {
+    // Save data and close - popstate already went back so pass fromPopState=true
+    if (window.currentDrawingBoard) {
+      const data = window.currentDrawingBoard.getData();
+      // Close the modal first (with fromPopState=true to avoid double history.back())
+      window.closeFullscreenDrawing(true);
+      // Then trigger the save callback with isClosing=true
+      if (window._drawingOnSaveCallback) {
+        window._drawingOnSaveCallback(data, true);
+        window._drawingOnSaveCallback = null;
+      }
+    } else {
+      window.closeFullscreenDrawing(true);
+    }
+    return;
+  }
+  
   const todoEditModal = document.getElementById('todo-edit-modal');
   if (todoEditModal && !todoEditModal.classList.contains('hidden')) {
     if (typeof closeTodoEditModal === 'function') {
