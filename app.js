@@ -9800,12 +9800,12 @@ window.addEventListener('popstate', (e) => {
     // Save data and close - popstate already went back so pass fromPopState=true
     if (window.currentDrawingBoard) {
       const data = window.currentDrawingBoard.getData();
+      const saveCb = window._drawingOnSaveCallback;
       // Close the modal first (with fromPopState=true to avoid double history.back())
       window.closeFullscreenDrawing(true);
       // Then trigger the save callback with isClosing=true
-      if (window._drawingOnSaveCallback) {
-        window._drawingOnSaveCallback(data, true);
-        window._drawingOnSaveCallback = null;
+      if (saveCb) {
+        saveCb(data, true);
       }
     } else {
       window.closeFullscreenDrawing(true);
