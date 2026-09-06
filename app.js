@@ -3584,8 +3584,22 @@ function setupEventListeners() {
       const minVal = selectModalMin ? selectModalMin.value : '';
       const timeValue = parsedResult.time || ((hourVal && minVal) ? convertTo24h(editModalSelectedAmpm, hourVal, minVal) : '');
 
-      const dateKey = state.selectedDate;
-      const targetDateKey = parsedResult.dateKey;
+      let dateKey = state.selectedDate;
+      let todo = state.todos[dateKey] ? state.todos[dateKey].find(t => t.id === editingTodoId) : null;
+      if (!todo) {
+        for (const d of Object.keys(state.todos)) {
+          todo = state.todos[d].find(t => t.id === editingTodoId);
+          if (todo) {
+            dateKey = d;
+            break;
+          }
+        }
+      }
+
+      if (!todo) {
+        closeTodoEditModal();
+        return;
+      }
 
       const memoInput = document.getElementById('todo-edit-modal-memo');
       const memoValue = memoInput ? memoInput.value.trim() : '';
@@ -3596,7 +3610,6 @@ function setupEventListeners() {
       const newDrawing = todoEditDraftDrawing ? JSON.parse(JSON.stringify(todoEditDraftDrawing)) : [];
       const newAudio = todoEditDraftAudio ? JSON.parse(JSON.stringify(todoEditDraftAudio)) : [];
 
-      const todo = state.todos[dateKey].find(t => t.id === editingTodoId);
       if (todo) {
         // Save if anything changed (text, category, time, date, memo, importance, memo images, memo drawing, or memo audio)
         if (todo.text !== text || todo.category !== modalSelectedCategory || todo.time !== timeValue || targetDateKey !== dateKey || (todo.memo || '') !== memoValue || Boolean(todo.isImportant) !== isImportantVal || JSON.stringify(todo.memoImages || []) !== JSON.stringify(newImages) || JSON.stringify(todo.memoDrawing || []) !== JSON.stringify(newDrawing) || JSON.stringify(todo.memoAudio || []) !== JSON.stringify(newAudio)) {
@@ -4462,15 +4475,16 @@ function openTodoEditModal(todoId) {
   const modal = document.getElementById('todo-edit-modal');
   if (modal) {
     modal.classList.remove('hidden');
+    history.pushState({ modal: 'todo-edit' }, '');
   }
 
   // Focus Input
-  if (textInput) {
-    setTimeout(() => {
-      textInput.focus();
-      textInput.select();
-    }, 100);
-  }
+  // if (textInput) {
+  //   setTimeout(() => {
+  //     textInput.focus();
+  //     textInput.select();
+  //   }, 100);
+  // }
   
   renderTodoEditPreviews();
 
@@ -4566,10 +4580,13 @@ function renderTodoEditPreviews() {
 }
 
 // Close Todo Edit Modal
-function closeTodoEditModal() {
+function closeTodoEditModal(fromPopState = false) {
   const modal = document.getElementById('todo-edit-modal');
   if (modal) {
     modal.classList.add('hidden');
+    if (!fromPopState && history.state && history.state.modal === 'todo-edit') {
+      history.back();
+    }
   }
   const memoInput = document.getElementById('todo-edit-modal-memo');
   if (memoInput) memoInput.value = '';
@@ -9738,5 +9755,15 @@ document.addEventListener('DOMContentLoaded', () => {
       modal.classList.add('hidden');
       modal.style.display = 'none';
     });
+  }
+});
+
+// Hardware back button support for modals
+window.addEventListener('popstate', (e) => {
+  const todoEditModal = document.getElementById('todo-edit-modal');
+  if (todoEditModal && !todoEditModal.classList.contains('hidden')) {
+    if (typeof closeTodoEditModal === 'function') {
+      closeTodoEditModal(true);
+    }
   }
 });

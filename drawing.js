@@ -297,7 +297,7 @@ class NeonDrawingBoard {
       btnClose.addEventListener('click', (e) => {
         e.stopPropagation();
         if (this.isDrawing) {
-          this.endDrawing(e);
+          this.onPointerUp(e);
         }
         this.onClose(this.getData());
       });
@@ -325,7 +325,7 @@ class NeonDrawingBoard {
       btnDrawingClose.addEventListener('click', (e) => {
         e.preventDefault();
         if (this.isDrawing) {
-          this.endDrawing(e);
+          this.onPointerUp(e);
         }
         if (this.onClose) this.onClose(this.getData());
       });
