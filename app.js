@@ -1295,10 +1295,12 @@ function autoRefreshGDriveToken() {
 }
 
 // Background Auto-sync to Google Drive (if logged in and connected)
-function triggerGDriveAutoSync() {
-  const prevMod = parseInt(localStorage.getItem('neon_planner_last_modified') || '0', 10);
-  const newMod = Math.max(Date.now(), prevMod + 1);
-  localStorage.setItem('neon_planner_last_modified', newMod.toString());
+function triggerGDriveAutoSync(isAutoPopulate = false) {
+  if (!isAutoPopulate) {
+    const prevMod = parseInt(localStorage.getItem('neon_planner_last_modified') || '0', 10);
+    const newMod = Math.max(Date.now(), prevMod + 1);
+    localStorage.setItem('neon_planner_last_modified', newMod.toString());
+  }
   if (!gdriveAccessToken) return; // Silent if not connected
 
   if (gdriveSyncTimeout) {
@@ -3942,6 +3944,8 @@ function setupEventListeners() {
             
             if (gdriveBackupBtn) gdriveBackupBtn.disabled = false;
             if (gdriveRestoreBtn) gdriveRestoreBtn.disabled = false;
+            const gdriveRecoverBtn = document.getElementById('btn-gdrive-recover');
+            if (gdriveRecoverBtn) gdriveRecoverBtn.disabled = false;
             
             const logoutBtn = document.getElementById('btn-gdrive-logout');
             if (logoutBtn) logoutBtn.style.display = 'inline-flex';
@@ -4611,7 +4615,7 @@ function saveRoutines() {
 
 function saveRoutinesPopulatedDates() {
   localStorage.setItem('neon_planner_populated_dates', JSON.stringify(state.routinesPopulatedDates));
-  triggerGDriveAutoSync();
+  triggerGDriveAutoSync(true); // Don't bump last_modified for background auto-population
 }
 
 function saveCategories() {
@@ -9584,5 +9588,154 @@ document.addEventListener('DOMContentLoaded', () => {
     headerLogo.style.cursor = 'pointer';
     headerLogo.style.userSelect = 'none';
     headerLogo.style.WebkitUserSelect = 'none';
+  }
+});
+
+// Google Drive Recovery Modal Logic
+document.addEventListener('DOMContentLoaded', () => {
+  const btnRecover = document.getElementById('btn-gdrive-recover');
+  const modal = document.getElementById('gdrive-recovery-modal');
+  const cancelBtn = document.getElementById('btn-gdrive-recovery-cancel');
+  const listEl = document.getElementById('recovery-revisions-list');
+  
+  if (btnRecover) {
+    btnRecover.addEventListener('click', async () => {
+      if (typeof gdriveAccessToken === 'undefined' || !gdriveAccessToken) {
+        alert('먼저 구글 로그인을 진행해주세요.');
+        return;
+      }
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+      listEl.innerHTML = '<div style="text-align: center; padding: 20px;">기록을 불러오는 중...</div>';
+      
+      try {
+        const fileId = localStorage.getItem('neon_planner_gdrive_file_id');
+        if (!fileId) {
+          listEl.innerHTML = '<div style="text-align: center; padding: 20px;">백업 파일이 존재하지 않습니다.</div>';
+          return;
+        }
+
+        const revUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(id,modifiedTime)`;
+        const res = await fetch(revUrl, {
+          headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch revisions');
+        
+        const data = await res.json();
+        const revisions = data.revisions || [];
+        
+        if (revisions.length === 0) {
+          listEl.innerHTML = '<div style="text-align: center; padding: 20px;">과거 기록이 없습니다.</div>';
+          return;
+        }
+
+        // Sort descending (newest first)
+        revisions.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+        
+        listEl.innerHTML = '';
+        revisions.forEach((rev, index) => {
+          const date = new Date(rev.modifiedTime);
+          const formatted = date.toLocaleString('ko-KR', { 
+            year: 'numeric', month: '2-digit', day: '2-digit', 
+            hour: '2-digit', minute: '2-digit', second: '2-digit' 
+          });
+          
+          let label = formatted;
+          if (index === 0) label += ' (현재 구글 드라이브 최신)';
+          
+          const item = document.createElement('div');
+          item.style.padding = '12px';
+          item.style.border = '1px solid var(--border-color)';
+          item.style.borderRadius = '6px';
+          item.style.display = 'flex';
+          item.style.justifyContent = 'space-between';
+          item.style.alignItems = 'center';
+          item.style.background = 'var(--panel-bg)';
+          
+          const text = document.createElement('span');
+          text.textContent = label;
+          text.style.fontSize = '0.9rem';
+          
+          const btn = document.createElement('button');
+          btn.textContent = '이 시점으로 복구';
+          btn.className = 'ctrl-btn';
+          btn.style.padding = '4px 8px';
+          btn.style.fontSize = '0.8rem';
+          btn.style.background = 'rgba(16, 185, 129, 0.15)';
+          btn.style.color = '#10b981';
+          btn.style.borderColor = '#10b981';
+          
+          btn.onclick = async () => {
+            if (!confirm(formatted + ' 시점의 기록으로 복구하시겠습니까?\\n현재 기기의 모든 데이터가 해당 시점으로 덮어써집니다.')) return;
+            
+            btn.textContent = '복구 중...';
+            btn.disabled = true;
+            
+            try {
+              const dlUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/revisions/${rev.id}?alt=media`;
+              const dlRes = await fetch(dlUrl, {
+                headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
+              });
+              
+              if (!dlRes.ok) throw new Error('Download failed');
+              
+              const restoreData = await dlRes.json();
+              if (restoreData.todos) localStorage.setItem('neon_planner_todos', JSON.stringify(restoreData.todos));
+              if (restoreData.diaries) localStorage.setItem('neon_planner_diaries', JSON.stringify(restoreData.diaries));
+              if (restoreData.categories) localStorage.setItem('neon_planner_categories', JSON.stringify(restoreData.categories));
+              if (restoreData.tabIcons) localStorage.setItem('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
+              if (restoreData.appTitle) localStorage.setItem('neon_planner_app_title', restoreData.appTitle);
+              if (restoreData.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(restoreData.ddays));
+              if (restoreData.routines) localStorage.setItem('neon_planner_routines', JSON.stringify(restoreData.routines));
+              if (restoreData.routinesPopulatedDates) localStorage.setItem('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
+              if (restoreData.preferences) {
+                const prefs = restoreData.preferences;
+                if (prefs.theme) localStorage.setItem('neon_planner_theme', prefs.theme);
+                if (prefs.fontSize) localStorage.setItem('neon_planner_font_size', prefs.fontSize);
+                if (prefs.dateSize) localStorage.setItem('neon_planner_date_size', prefs.dateSize);
+                if (prefs.bgHue) localStorage.setItem('neon_planner_bg_hue', prefs.bgHue);
+                if (prefs.bgIntensity) localStorage.setItem('neon_planner_bg_intensity', prefs.bgIntensity);
+                if (prefs.accentColor) localStorage.setItem('neon_planner_accent_color', prefs.accentColor);
+                if (prefs.accentIntensity) localStorage.setItem('neon_planner_accent_intensity', prefs.accentIntensity);
+                if (prefs.showCalendar) localStorage.setItem('neon_planner_show_calendar', prefs.showCalendar);
+                if (prefs.showTodos) localStorage.setItem('neon_planner_show_todos', prefs.showTodos);
+                if (prefs.showRecords) localStorage.setItem('neon_planner_show_records', prefs.showRecords);
+                if (prefs.showAnalytics) localStorage.setItem('neon_planner_show_analytics', prefs.showAnalytics);
+                if (prefs.showSearch) localStorage.setItem('neon_planner_show_search', prefs.showSearch);
+                if (prefs.buttonOrder) localStorage.setItem('neon_planner_button_order', prefs.buttonOrder);
+              }
+              // Force next sync to overwrite cloud with this restored version
+              localStorage.setItem('neon_planner_last_modified', Date.now().toString());
+              
+              if (typeof triggerGDriveAutoSync === 'function') triggerGDriveAutoSync();
+              
+              alert('복구가 완료되었습니다. 변경사항을 적용하기 위해 새로고침합니다.');
+              window.location.reload();
+            } catch (err) {
+              console.error(err);
+              alert('복구 중 오류가 발생했습니다.');
+              btn.textContent = '이 시점으로 복구';
+              btn.disabled = false;
+            }
+          };
+          
+          item.appendChild(text);
+          item.appendChild(btn);
+          listEl.appendChild(item);
+        });
+        
+      } catch (err) {
+        console.error(err);
+        listEl.innerHTML = '<div style="text-align: center; padding: 20px;">기록을 불러오는데 실패했습니다.</div>';
+      }
+    });
+  }
+  
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    });
   }
 });
