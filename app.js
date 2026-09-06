@@ -535,7 +535,7 @@ function loadFromLocalStorage() {
           });
         }
       });
-      if (migrated) saveTodos();
+      if (migrated) saveTodos(true);
       
     } catch (e) {
       console.error(e);
@@ -758,14 +758,14 @@ function loadFromLocalStorage() {
   }
 }
 
-function saveDdays() {
+function saveDdays(skipSync = false) {
   localStorage.setItem('neon_planner_ddays', JSON.stringify(state.ddays));
-  triggerGDriveAutoSync();
+  if (!skipSync) triggerGDriveAutoSync();
 }
 
-function saveRoutines() {
+function saveRoutines(skipSync = false) {
   localStorage.setItem('neon_planner_routines', JSON.stringify(state.routines));
-  triggerGDriveAutoSync();
+  if (!skipSync) triggerGDriveAutoSync();
 }
 
 // Format Date object to YYYY-MM-DD
@@ -2600,7 +2600,7 @@ function rolloverUnfinishedTodos() {
   });
 
   if (rolledCount > 0) {
-    saveTodos();
+    saveTodos(true);
   }
 }
 
@@ -2634,8 +2634,8 @@ function populateRoutinesForDate(dateKey, force = false) {
   });
 
   state.routinesPopulatedDates[dateKey] = true;
-  saveTodos();
-  saveRoutinesPopulatedDates();
+  saveTodos(true);
+  saveRoutinesPopulatedDates(true);
 }
 
 function setupEventListeners() {
@@ -4603,24 +4603,25 @@ function deleteTodo(todoId, text, isRoutine, dateKeyParam = null) {
 }
 
 // Save helpers to LocalStorage
-function saveTodos() {
+function saveTodos(skipSync = false) {
   localStorage.setItem('neon_planner_todos', JSON.stringify(state.todos));
-  triggerGDriveAutoSync();
+  if (!skipSync) triggerGDriveAutoSync();
 }
 
-function saveRoutines() {
+// saveRoutines is already defined above, but we update it here as well for consistency
+function saveRoutines(skipSync = false) {
   localStorage.setItem('neon_planner_routines', JSON.stringify(state.routines));
-  triggerGDriveAutoSync();
+  if (!skipSync) triggerGDriveAutoSync();
 }
 
-function saveRoutinesPopulatedDates() {
+function saveRoutinesPopulatedDates(skipSync = false) {
   localStorage.setItem('neon_planner_populated_dates', JSON.stringify(state.routinesPopulatedDates));
-  triggerGDriveAutoSync(true); // Don't bump last_modified for background auto-population
+  if (!skipSync) triggerGDriveAutoSync(true); // Don't bump last_modified for background auto-population
 }
 
-function saveCategories() {
+function saveCategories(skipSync = false) {
   localStorage.setItem('neon_planner_categories', JSON.stringify(state.categories));
-  triggerGDriveAutoSync();
+  if (!skipSync) triggerGDriveAutoSync();
 }
 
 function handleDeleteCategory(catId) {
@@ -5218,9 +5219,9 @@ function renderCategorySelector() {
 }
 
 // Save diaries to LocalStorage
-function saveDiaries() {
+function saveDiaries(skipSync = false) {
   localStorage.setItem('neon_planner_diaries', JSON.stringify(state.diaries));
-  triggerGDriveAutoSync();
+  if (!skipSync) triggerGDriveAutoSync();
 }
 
 // Render the diary entry (records) for the selected date
