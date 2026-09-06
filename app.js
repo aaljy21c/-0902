@@ -6437,7 +6437,8 @@ function showLightboxImage(idx) {
 
       const vid = document.createElement('video');
       vid.style.maxWidth = '100%';
-      vid.style.maxHeight = '90%';
+      vid.style.maxHeight = '70vh';
+      vid.style.objectFit = 'contain';
       vid.controls = true;
       vid.autoplay = true;
       vid.playsInline = true;
