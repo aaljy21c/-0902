@@ -295,11 +295,16 @@ class NeonDrawingBoard {
     const btnClose = this.toolbar.querySelector('#btn-close-drawing');
     if (btnClose && this.onClose) {
       btnClose.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (this.isDrawing) {
-          this.onPointerUp(e);
+        try {
+          e.stopPropagation();
+          if (this.isDrawing) {
+            this.onPointerUp(e);
+          }
+          this.onClose(this.getData());
+        } catch (err) {
+          alert('저장 중 오류 발생: ' + err.message);
+          console.error(err);
         }
-        this.onClose(this.getData());
       });
     }
 

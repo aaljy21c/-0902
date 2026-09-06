@@ -8205,7 +8205,7 @@ function renderTodos() {
       viewDrawingContainer.className = 'diary-drawing-container view-mode';
       viewDrawingContainer.style.marginTop = '6px';
       viewDrawingContainer.style.width = '100%';
-      viewDrawingContainer.style.height = '150px'; // Explicit height required
+      viewDrawingContainer.style.height = '300px'; // Increased height for very large drawing view
       viewDrawingContainer.style.display = 'block'; 
       attachmentsContainer.appendChild(viewDrawingContainer);
 
