@@ -299,7 +299,9 @@ class NeonDrawingBoard {
         if (this.isDrawing) {
           this.onPointerUp(e);
         }
-        this.onClose(this.getData());
+        const drawData = this.getData();
+        console.log('[DRAWING DEBUG] btn-close-drawing clicked, getData() strokes:', drawData.length, 'non-bg strokes:', drawData.filter(s => !s.isBg).length);
+        this.onClose(drawData);
       });
     }
 

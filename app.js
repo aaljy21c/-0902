@@ -3617,8 +3617,13 @@ function setupEventListeners() {
       const newAudio = todoEditDraftAudio ? JSON.parse(JSON.stringify(todoEditDraftAudio)) : [];
 
       if (todo) {
+        console.log('[SAVE DEBUG] todoEditDraftDrawing length:', todoEditDraftDrawing ? todoEditDraftDrawing.length : 'null');
+        console.log('[SAVE DEBUG] newDrawing length:', newDrawing.length, 'non-bg:', newDrawing.filter(s => !s.isBg).length);
+        console.log('[SAVE DEBUG] todo.memoDrawing:', todo.memoDrawing ? (Array.isArray(todo.memoDrawing) ? todo.memoDrawing.length : typeof todo.memoDrawing) : 'null/undefined');
+        console.log('[SAVE DEBUG] drawing changed?', JSON.stringify(todo.memoDrawing || []) !== JSON.stringify(newDrawing));
         // Save if anything changed (text, category, time, memo, importance, memo images, memo drawing, or memo audio)
         if (todo.text !== text || todo.category !== modalSelectedCategory || todo.time !== timeValue || (todo.memo || '') !== memoValue || Boolean(todo.isImportant) !== isImportantVal || JSON.stringify(todo.memoImages || []) !== JSON.stringify(newImages) || JSON.stringify(todo.memoDrawing || []) !== JSON.stringify(newDrawing) || JSON.stringify(todo.memoAudio || []) !== JSON.stringify(newAudio)) {
+          console.log('[SAVE DEBUG] Changes detected! Saving...');
           pushToHistory();
           todo.text = text;
           todo.category = modalSelectedCategory;
@@ -9529,7 +9534,15 @@ window.openFullscreenDrawing = function(initialData, onSaveCallback) {
     onClose: (data) => {
       // 닫기 버튼 클릭 시: 진행 중인 자동저장 취소 후 즉시 저장 및 UI 갱신
       clearTimeout(autoSaveTimer);
-      if (onSaveCallback) onSaveCallback(data, true);
+      console.log('[DRAWING DEBUG] onClose fired, data type:', Array.isArray(data) ? 'array(' + data.length + ')' : typeof data, 'hasCallback:', !!onSaveCallback);
+      if (onSaveCallback) {
+        try {
+          onSaveCallback(data, true);
+          console.log('[DRAWING DEBUG] onSaveCallback(data, true) completed successfully');
+        } catch(err) {
+          console.error('[DRAWING DEBUG] onSaveCallback ERROR:', err);
+        }
+      }
       window.closeFullscreenDrawing();
     }
   });
