@@ -9550,3 +9550,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+
+// Long press on header logo to toggle device mode
+document.addEventListener('DOMContentLoaded', () => {
+  const headerLogo = document.querySelector('.header-logo');
+  if (headerLogo) {
+    let pressTimer = null;
+    let isPressing = false;
+
+    const startPress = (e) => {
+      if (e.type === 'mousedown' && e.button !== 0) return;
+      isPressing = true;
+      pressTimer = setTimeout(() => {
+        if (isPressing) {
+          state.device = state.device === 'pc' ? 'phone' : 'pc';
+          localStorage.setItem('neon_planner_device', state.device);
+          if (typeof applyPreferences === 'function') applyPreferences();
+          
+          if (navigator.vibrate) navigator.vibrate(50);
+          
+          const logoTextEl = headerLogo.querySelector('.logo-text');
+          if (logoTextEl) {
+            const originalText = localStorage.getItem('neon_planner_app_title') || '플래너';
+            logoTextEl.textContent = state.device === 'pc' ? 'PC 모드 전환' : '핸드폰 모드 전환';
+            setTimeout(() => {
+               logoTextEl.textContent = localStorage.getItem('neon_planner_app_title') || '플래너';
+            }, 1500);
+          }
+        }
+      }, 700);
+    };
+
+    const cancelPress = () => {
+      isPressing = false;
+      if (pressTimer) clearTimeout(pressTimer);
+    };
+
+    headerLogo.addEventListener('mousedown', startPress);
+    headerLogo.addEventListener('touchstart', startPress, {passive: true});
+    headerLogo.addEventListener('mouseup', cancelPress);
+    headerLogo.addEventListener('mouseleave', cancelPress);
+    headerLogo.addEventListener('touchend', cancelPress);
+    headerLogo.addEventListener('touchcancel', cancelPress);
+    headerLogo.addEventListener('contextmenu', (e) => { e.preventDefault(); cancelPress(); });
+    
+    headerLogo.style.cursor = 'pointer';
+    headerLogo.style.userSelect = 'none';
+    headerLogo.style.WebkitUserSelect = 'none';
+  }
+});
+
