@@ -122,7 +122,9 @@ const PRESET_COLORS = [
 // Helper to check if drawing data exists
 function hasDrawingData(data) {
   if (!data) return false;
-  if (Array.isArray(data)) return data.length > 0;
+  if (Array.isArray(data)) {
+    return data.some(stroke => !stroke.isBg && stroke.points && stroke.points.length > 0);
+  }
   if (data && data.type === 'pdf_drawing') return true;
   return false;
 }
@@ -5672,8 +5674,20 @@ function renderDiary() {
             e.stopPropagation();
             e.preventDefault();
             openFullscreenDrawing(record.drawing, (data, isClosing) => {
-              const currentDayDiaries = state.diaries[dateKey] || [];
-              const currentRecord = currentDayDiaries.find(r => r.id === record.id);
+              let targetDateKey = dateKey;
+              let currentDayDiaries = state.diaries[targetDateKey] || [];
+              let currentRecord = currentDayDiaries.find(r => r.id === record.id);
+              
+              if (!currentRecord) {
+                for (const d of Object.keys(state.diaries)) {
+                  currentRecord = state.diaries[d].find(r => r.id === record.id);
+                  if (currentRecord) {
+                    targetDateKey = d;
+                    break;
+                  }
+                }
+              }
+              
               if (currentRecord) {
                 currentRecord.drawing = data ? JSON.parse(JSON.stringify(data)) : [];
                 saveDiaries();
@@ -8218,8 +8232,20 @@ function renderTodos() {
         e.stopPropagation();
         e.preventDefault();
         openFullscreenDrawing(todo.memoDrawing, (data, isClosing) => {
-          const currentDayTodos = state.todos[dateKey] || [];
-          const currentTodo = currentDayTodos.find(t => t.id === todo.id);
+          let targetDateKey = dateKey;
+          let currentDayTodos = state.todos[targetDateKey] || [];
+          let currentTodo = currentDayTodos.find(t => t.id === todo.id);
+          
+          if (!currentTodo) {
+            for (const d of Object.keys(state.todos)) {
+              currentTodo = state.todos[d].find(t => t.id === todo.id);
+              if (currentTodo) {
+                targetDateKey = d;
+                break;
+              }
+            }
+          }
+          
           if (currentTodo) {
             currentTodo.memoDrawing = data ? JSON.parse(JSON.stringify(data)) : [];
             saveTodos();

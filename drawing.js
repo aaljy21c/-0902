@@ -947,6 +947,7 @@ class NeonDrawingBoard {
     } else if (activeTool === 'lasso') {
       if (this.lassoPoints.length < 3) {
         // It was a tap! Check if we tapped on an image
+        const pos = this.getPointerPos(e);
         this.checkLassoTap(pos);
       } else {
         this.applyLassoSelection();
