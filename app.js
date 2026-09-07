@@ -4503,7 +4503,72 @@ function openTodoEditModal(todoId) {
       if (hasDrawingData(todoEditDraftDrawing)) {
         container.style.display = 'block';
         container.classList.remove('hidden');
-        new NeonDrawingBoard(container, { initialData: todoEditDraftDrawing, readOnly: true });
+        container.style.height = 'auto'; // Disable fixed height
+        
+        // Crop and render drawing
+        let strokes = [];
+        let bgColor = '#1e1e1e';
+        if (todoEditDraftDrawing.type === 'pdf_drawing') {
+          if (todoEditDraftDrawing.pages && todoEditDraftDrawing.pages.length > 0) {
+            strokes = todoEditDraftDrawing.pages[0]._strokes || [];
+          } else if (todoEditDraftDrawing.strokesPerPage && todoEditDraftDrawing.strokesPerPage.length > 0) {
+            strokes = todoEditDraftDrawing.strokesPerPage[0];
+          }
+        } else {
+          strokes = Array.isArray(todoEditDraftDrawing) ? todoEditDraftDrawing : [];
+        }
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let hasStrokes = false;
+        strokes.forEach(s => {
+          if (s.isBg) { bgColor = s.color; return; }
+          if (s.points && s.points.length > 0) {
+            s.points.forEach(p => {
+              if (p.x < minX) minX = p.x;
+              if (p.y < minY) minY = p.y;
+              if (p.x > maxX) maxX = p.x;
+              if (p.y > maxY) maxY = p.y;
+              hasStrokes = true;
+            });
+          }
+        });
+
+        if (!hasStrokes) {
+          minX = 0; minY = 0; maxX = 300; maxY = 150;
+        } else {
+          minX = Math.max(0, minX - 20); minY = Math.max(0, minY - 20);
+          maxX += 20; maxY += 20;
+        }
+        
+        const width = Math.max(10, maxX - minX);
+        const height = Math.max(10, maxY - minY);
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, width, height);
+
+        strokes.forEach(stroke => {
+          if (stroke.isBg || !stroke.points || stroke.points.length === 0) return;
+          ctx.beginPath();
+          ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          ctx.lineWidth = stroke.size; ctx.strokeStyle = stroke.color; ctx.globalAlpha = stroke.opacity || 1;
+          if (stroke.tool === 'highlighter') ctx.globalCompositeOperation = 'multiply';
+          stroke.points.forEach((pt, j) => {
+            const adjX = pt.x - minX, adjY = pt.y - minY;
+            if (j === 0) ctx.moveTo(adjX, adjY); else ctx.lineTo(adjX, adjY);
+          });
+          ctx.stroke();
+          ctx.globalCompositeOperation = 'source-over';
+        });
+
+        canvas.style.width = '100%';
+        canvas.style.height = 'auto';
+        canvas.style.borderRadius = '8px';
+        canvas.style.display = 'block';
+        container.appendChild(canvas);
+
         if (deleteBtn) deleteBtn.style.display = 'block';
       } else {
         container.style.display = 'none';
@@ -4523,8 +4588,12 @@ function openTodoEditModal(todoId) {
     }
 
     newBtn.addEventListener('click', openTodoDrawingEditor);
-    const drawContainer = document.getElementById('todo-edit-modal-drawing-container');
+    let drawContainer = document.getElementById('todo-edit-modal-drawing-container');
     if (drawContainer) {
+      const newDrawContainer = drawContainer.cloneNode(true);
+      drawContainer.parentNode.replaceChild(newDrawContainer, drawContainer);
+      drawContainer = newDrawContainer;
+      
       drawContainer.style.cursor = 'pointer';
       drawContainer.title = '클릭하여 곧바로 그림 수정하기';
       drawContainer.addEventListener('click', openTodoDrawingEditor);
