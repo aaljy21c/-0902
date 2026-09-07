@@ -8291,7 +8291,7 @@ function renderTodos() {
         e.stopPropagation();
         e.preventDefault();
         openFullscreenDrawing(todo.memoDrawing, (data, isClosing) => {
-          let targetDateKey = dateKey;
+          let targetDateKey = todo.dateKey || state.selectedDate;
           let currentDayTodos = state.todos[targetDateKey] || [];
           let currentTodo = currentDayTodos.find(t => t.id === todo.id);
           
