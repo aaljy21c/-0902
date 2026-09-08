@@ -577,35 +577,30 @@ class NeonDrawingBoard {
 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;';
+
+        const title = document.createElement('div');
         if (isMobile) {
-          const overlay = document.createElement('div');
-          overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;';
-
-          const title = document.createElement('div');
           title.innerHTML = '이미지를 길게 눌러서 <strong>[사진 앱에 저장]</strong>을 선택하세요.';
-          title.style.cssText = 'color:white; margin-bottom:20px; text-align:center; font-size:1rem; line-height:1.5; background:rgba(255,255,255,0.1); padding:12px; border-radius:8px;';
-
-          const img = document.createElement('img');
-          img.src = dataUrl;
-          img.style.cssText = 'max-width:100%; max-height:70vh; object-fit:contain; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.5);';
-
-          const closeBtn = document.createElement('button');
-          closeBtn.innerText = '닫기';
-          closeBtn.style.cssText = 'margin-top:20px; padding:12px 32px; font-size:1.1rem; border-radius:24px; background:#ef4444; color:white; border:none; font-weight:bold; cursor:pointer;';
-          closeBtn.onclick = () => document.body.removeChild(overlay);
-
-          overlay.appendChild(title);
-          overlay.appendChild(img);
-          overlay.appendChild(closeBtn);
-          document.body.appendChild(overlay);
         } else {
-          const a = document.createElement('a');
-          a.href = dataUrl;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+          title.innerHTML = '이미지를 마우스 우클릭하여 <strong>[이미지를 다른 이름으로 저장]</strong>을 선택하세요.';
         }
+        title.style.cssText = 'color:white; margin-bottom:20px; text-align:center; font-size:1rem; line-height:1.5; background:rgba(255,255,255,0.1); padding:12px; border-radius:8px;';
+
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.style.cssText = 'max-width:100%; max-height:70vh; object-fit:contain; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.innerText = '닫기';
+        closeBtn.style.cssText = 'margin-top:20px; padding:12px 32px; font-size:1.1rem; border-radius:24px; background:#ef4444; color:white; border:none; font-weight:bold; cursor:pointer;';
+        closeBtn.onclick = () => document.body.removeChild(overlay);
+
+        overlay.appendChild(title);
+        overlay.appendChild(img);
+        overlay.appendChild(closeBtn);
+        document.body.appendChild(overlay);
       });
     }
 
@@ -2133,5 +2128,113 @@ class NeonDrawingBoard {
     this.ctx.restore();
   }
 }
+
+// Add global helper to generate a cropped preview image from drawing data
+window.generateDrawingCroppedUrl = function(drawingData) {
+  if (!drawingData) return '';
+  const strokes = Array.isArray(drawingData) ? drawingData : [];
+  
+  // Find background color
+  const bgStroke = strokes.find(s => s.isBg);
+  let globalBg = '#1e1e1e';
+  if (window.state && window.state.settings && window.state.settings.drawingBgColor) {
+    globalBg = window.state.settings.drawingBgColor;
+  } else {
+    globalBg = localStorage.getItem('planeer_drawing_bg') || '#1e1e1e';
+  }
+  const bgColor = bgStroke ? bgStroke.color : globalBg;
+
+  let minX = 0, minY = 0, maxX = 0, maxY = 0;
+  let hasStrokes = false;
+
+  strokes.forEach(s => {
+    if (s.isBg) return;
+    if (s.tool === 'image' && s.imgData) {
+      // Assuming image stroke has x, y, width, height. 
+      // If not easily computable, we might just use default bounds.
+      if (!hasStrokes) { minX = s.x || 0; minY = s.y || 0; maxX = (s.x || 0) + (s.width || 300); maxY = (s.y || 0) + (s.height || 300); hasStrokes = true; }
+      else {
+        if ((s.x || 0) < minX) minX = s.x || 0;
+        if ((s.y || 0) < minY) minY = s.y || 0;
+        if ((s.x || 0) + (s.width || 300) > maxX) maxX = (s.x || 0) + (s.width || 300);
+        if ((s.y || 0) + (s.height || 300) > maxY) maxY = (s.y || 0) + (s.height || 300);
+      }
+    }
+    if (!s.points || s.points.length === 0) return;
+    s.points.forEach(p => {
+      if (!hasStrokes) { minX = maxX = p.x; minY = maxY = p.y; hasStrokes = true; }
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    });
+  });
+
+  if (!hasStrokes) {
+    // Return a blank small canvas if empty
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 300;
+    tempCanvas.height = 100;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.fillStyle = bgColor;
+    tempCtx.fillRect(0, 0, 300, 100);
+    return tempCanvas.toDataURL('image/png');
+  }
+
+  // Add some padding
+  minX -= 20; minY -= 20; maxX += 20; maxY += 20;
+  
+  // Ensure we don't go negative
+  if (minX < 0) minX = 0;
+  if (minY < 0) minY = 0;
+
+  const targetWidth = maxX - minX;
+  const targetHeight = maxY - minY;
+
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = targetWidth;
+  tempCanvas.height = targetHeight;
+  const tempCtx = tempCanvas.getContext('2d');
+
+  tempCtx.fillStyle = bgColor;
+  tempCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+  strokes.forEach(stroke => {
+    if (stroke.isBg) return;
+    
+    if (stroke.tool === 'image' && stroke.imgData) {
+      const img = new Image();
+      img.src = stroke.imgData;
+      // We can't await here because it's synchronous, but usually data URL images are instantly available or very fast.
+      // If it fails, it will just not render the image in the preview.
+      try {
+        tempCtx.drawImage(img, (stroke.x || 0) - minX, (stroke.y || 0) - minY, stroke.width || 300, stroke.height || 300);
+      } catch(e) {}
+      return;
+    }
+
+    if (!stroke.points || stroke.points.length === 0) return;
+
+    tempCtx.beginPath();
+    tempCtx.lineCap = 'round'; tempCtx.lineJoin = 'round';
+    tempCtx.lineWidth = stroke.size; 
+    tempCtx.strokeStyle = stroke.color; 
+    tempCtx.globalAlpha = stroke.opacity || 1;
+
+    if (stroke.tool === 'highlighter') {
+      tempCtx.globalCompositeOperation = 'multiply';
+    }
+
+    stroke.points.forEach((pt, j) => {
+      const adjX = pt.x - minX;
+      const adjY = pt.y - minY;
+      if (j === 0) tempCtx.moveTo(adjX, adjY); else tempCtx.lineTo(adjX, adjY);
+    });
+    tempCtx.stroke();
+    tempCtx.globalCompositeOperation = 'source-over';
+  });
+
+  return tempCanvas.toDataURL('image/png');
+};
 
 window.NeonDrawingBoard = NeonDrawingBoard;

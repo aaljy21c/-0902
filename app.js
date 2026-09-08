@@ -8274,19 +8274,10 @@ function renderTodos() {
       viewDrawingContainer.className = 'diary-drawing-container view-mode';
       viewDrawingContainer.style.marginTop = '6px';
       viewDrawingContainer.style.width = '100%';
-      viewDrawingContainer.style.height = '300px'; // Increased height for very large drawing view
+      // Removed fixed height to let image scale naturally up to the drawn portion
       viewDrawingContainer.style.display = 'block'; 
       attachmentsContainer.appendChild(viewDrawingContainer);
 
-      onExpandCallbacks.push(() => {
-        new NeonDrawingBoard(viewDrawingContainer, {
-          initialData: todo.memoDrawing,
-          readOnly: true
-        });
-      });
-      
-      viewDrawingContainer.style.cursor = 'pointer';
-      viewDrawingContainer.title = '클릭하여 곧바로 그림 수정하기';
       const openDirectEdit = (e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -8312,8 +8303,35 @@ function renderTodos() {
           }
         });
       };
-      viewDrawingContainer.addEventListener('click', openDirectEdit);
-      viewDrawingContainer.addEventListener('contextmenu', openDirectEdit);
+
+      onExpandCallbacks.push(() => {
+        // Use the cropped image data URL for preview
+        const imgDataUrl = typeof window.generateDrawingCroppedUrl === 'function' ? window.generateDrawingCroppedUrl(todo.memoDrawing) : '';
+        if (imgDataUrl) {
+          const imgEl = document.createElement('img');
+          imgEl.src = imgDataUrl;
+          imgEl.style.width = '100%';
+          imgEl.style.height = 'auto'; // Scales naturally to only the drawn portion!
+          imgEl.style.borderRadius = '8px';
+          imgEl.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+          imgEl.style.display = 'block';
+          imgEl.style.cursor = 'pointer';
+          imgEl.title = '클릭하여 그림 수정 / 길게 누르거나 우클릭하여 저장';
+          imgEl.addEventListener('click', openDirectEdit);
+          viewDrawingContainer.appendChild(imgEl);
+        } else {
+          // Fallback if helper is missing
+          new NeonDrawingBoard(viewDrawingContainer, {
+            initialData: todo.memoDrawing,
+            readOnly: true
+          });
+          viewDrawingContainer.style.height = '300px';
+          viewDrawingContainer.style.cursor = 'pointer';
+          viewDrawingContainer.title = '클릭하여 곧바로 그림 수정하기';
+          viewDrawingContainer.addEventListener('click', openDirectEdit);
+          viewDrawingContainer.addEventListener('contextmenu', openDirectEdit);
+        }
+      });
     }
 
     // Memo Audio rendering
