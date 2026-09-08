@@ -1241,7 +1241,7 @@ function scheduleGDriveTokenRefresh(expiryTime) {
 // Silently refresh the Google Drive access token using promptless GIS client
 function autoRefreshGDriveToken() {
   return new Promise((resolve) => {
-    let clientId = (state.gdriveClientId || '').trim();
+    let clientId = '854612323351-26jkik1olt4tu51ukb7coh23n8sdrbb6.apps.googleusercontent.com';
     if (!clientId) { resolve(null); return; }
     if (!clientId.endsWith('.apps.googleusercontent.com')) {
       clientId += '.apps.googleusercontent.com';
@@ -3914,7 +3914,7 @@ function setupEventListeners() {
 
   if (gdriveLoginBtn) {
     gdriveLoginBtn.addEventListener('click', () => {
-      let clientId = (state.gdriveClientId || '').trim();
+      let clientId = '854612323351-26jkik1olt4tu51ukb7coh23n8sdrbb6.apps.googleusercontent.com';
       if (clientId && !clientId.endsWith('.apps.googleusercontent.com')) {
         clientId += '.apps.googleusercontent.com';
       }
