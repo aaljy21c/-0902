@@ -1238,6 +1238,30 @@ function scheduleGDriveTokenRefresh(expiryTime) {
   }
 }
 
+// Function to clear local user data when switching accounts or logging out
+window.clearLocalUserData = function() {
+  const keysToClear = [
+    'neon_planner_todos',
+    'neon_planner_routines',
+    'neon_planner_categories',
+    'neon_planner_diaries',
+    'neon_planner_records',
+    'neon_planner_memos',
+    'neon_planner_routinesPopulatedDates'
+  ];
+  keysToClear.forEach(k => localStorage.removeItem(k));
+  if (typeof state !== 'undefined' && state) {
+    state.todos = {};
+    state.routines = [];
+    state.categories = [];
+    state.diaries = {};
+    state.records = {};
+    state.memos = [];
+    state.routinesPopulatedDates = {};
+  }
+  if (typeof updateUI === 'function') updateUI();
+};
+
 // Silently refresh the Google Drive access token using promptless GIS client
 function autoRefreshGDriveToken() {
   return new Promise((resolve) => {
@@ -3931,13 +3955,30 @@ function setupEventListeners() {
       try {
         gdriveTokenClient = google.accounts.oauth2.initTokenClient({
           client_id: clientId,
-          scope: 'https://www.googleapis.com/auth/drive.appdata',
-          callback: (tokenResponse) => {
+          scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email',
+          callback: async (tokenResponse) => {
             if (tokenResponse.error !== undefined) {
               alert('구글 인증에 실패했습니다: ' + tokenResponse.error);
               return;
             }
             gdriveAccessToken = tokenResponse.access_token;
+
+            // Handle account switching
+            try {
+              const infoRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
+              });
+              if (infoRes.ok) {
+                const info = await infoRes.json();
+                const newEmail = info.email;
+                const oldEmail = localStorage.getItem('neon_planner_gdrive_email');
+                if (oldEmail && oldEmail !== newEmail) {
+                   window.clearLocalUserData();
+                }
+                localStorage.setItem('neon_planner_gdrive_email', newEmail);
+              }
+            } catch(e) { console.warn('Failed to fetch user email', e); }
+
             const expiryTime = Date.now() + (tokenResponse.expires_in * 1000);
             localStorage.setItem('neon_planner_gdrive_connected', 'true');
             localStorage.setItem('neon_planner_gdrive_access_token', gdriveAccessToken);
@@ -3988,6 +4029,9 @@ function setupEventListeners() {
       localStorage.removeItem('neon_planner_gdrive_access_token');
       localStorage.removeItem('neon_planner_gdrive_token_expiry');
       localStorage.removeItem('neon_planner_gdrive_file_modifiedTime');
+      
+      // Clear data when logging out to protect privacy for next user
+      window.clearLocalUserData();
 
       if (gdriveBackupBtn) gdriveBackupBtn.disabled = true;
       if (gdriveRestoreBtn) gdriveRestoreBtn.disabled = true;

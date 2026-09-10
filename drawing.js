@@ -367,8 +367,10 @@ class NeonDrawingBoard {
           if (typeof window.saveData === 'function') window.saveData();
         }
         this.canvasContainer.style.backgroundColor = this.bgColor;
-        this.strokes = this.strokes.filter(s => !s.isBg);
-        this.strokes.unshift({ isBg: true, color: this.bgColor });
+        let currentStrokes = this.getCurrentStrokes();
+        currentStrokes = currentStrokes.filter(s => !s.isBg);
+        currentStrokes.unshift({ isBg: true, color: this.bgColor });
+        this.setCurrentStrokes(currentStrokes);
         this.saveState();
       });
     }
@@ -413,6 +415,7 @@ class NeonDrawingBoard {
               }
 
               pageObj._strokes.forEach(stroke => {
+                if (stroke.isBg || !stroke.points) return;
                 tempCtx.beginPath();
                 tempCtx.lineCap = 'round'; tempCtx.lineJoin = 'round';
                 tempCtx.lineWidth = stroke.size; tempCtx.strokeStyle = stroke.color; tempCtx.globalAlpha = stroke.opacity || 1;
@@ -436,7 +439,9 @@ class NeonDrawingBoard {
           } else if (this.layoutMode === 'paged') {
             let maxY = 0;
             this.strokes.forEach(stroke => {
-              stroke.points.forEach(p => { if (p.y > maxY) maxY = p.y; });
+              if (stroke.points) {
+                stroke.points.forEach(p => { if (p.y > maxY) maxY = p.y; });
+              }
             });
             const numPages = Math.max(1, Math.ceil(maxY / (pageHeight + pageGap)));
 
@@ -775,11 +780,48 @@ class NeonDrawingBoard {
 
   getPointerPos(e) {
     const rect = this.canvas.getBoundingClientRect();
-    return {
+    let pos = {
       x: ((e.clientX - rect.left) - this.panX) / this.viewScale,
       y: ((e.clientY - rect.top) - this.panY) / this.viewScale,
       t: Date.now()
     };
+
+    if (this.isMultiPage && this._pages && this._pages.length > 0) {
+      let currentY = 0;
+      const pageGap = 20;
+      let targetPageIndex = 0;
+      let targetPageOffsetY = 0;
+
+      for (let i = 0; i < this._pages.length; i++) {
+        const h = this._pages[i].height || this.canvas.height;
+        if (pos.y >= currentY && pos.y <= currentY + h + pageGap) {
+          targetPageIndex = i;
+          targetPageOffsetY = currentY;
+          break;
+        }
+        currentY += h + pageGap;
+      }
+      if (targetPageIndex === 0 && pos.y > currentY) {
+         targetPageIndex = this._pages.length - 1;
+         targetPageOffsetY = currentY - (this._pages[this._pages.length - 1].height || this.canvas.height) - pageGap;
+      }
+      
+      if (this.currentPageIndex !== targetPageIndex) {
+        this.currentPageIndex = targetPageIndex;
+        if (this.sidebar) {
+          const thumbs = this.sidebar.querySelectorAll('.page-thumbnail');
+          thumbs.forEach((t, idx) => {
+            if (idx === targetPageIndex) t.classList.add('active');
+            else t.classList.remove('active');
+          });
+        }
+      }
+      
+      pos.y -= targetPageOffsetY;
+      this.activePageOffsetY = targetPageOffsetY;
+    }
+
+    return pos;
   }
 
   onPointerDown(e) {
@@ -792,7 +834,16 @@ class NeonDrawingBoard {
 
     if (this.penOnlyMode && e.pointerType === 'touch') {
       this.activePointers.set(e.pointerId, e);
-      if (this.activePointers.size < 2) return;
+      if (this.activePointers.size === 1) {
+        this.isDrawing = false;
+        this.isPanning = true;
+        this.initialPinchDist = 1;
+        this.initialScale = this.viewScale;
+        const rect = this.canvas.getBoundingClientRect();
+        this.pinchPanStartX = (e.clientX - rect.left) - this.panX;
+        this.pinchPanStartY = (e.clientY - rect.top) - this.panY;
+        return;
+      }
     } else {
       this.activePointers.set(e.pointerId, e);
     }
@@ -859,23 +910,32 @@ class NeonDrawingBoard {
       this.activePointers.set(e.pointerId, e);
     }
 
-    if (this.isPanning && this.activePointers.size >= 2) {
-      const pts = Array.from(this.activePointers.values());
-      const currentDist = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
-      const midX = (pts[0].clientX + pts[1].clientX) / 2;
-      const midY = (pts[0].clientY + pts[1].clientY) / 2;
-      const rect = this.canvas.getBoundingClientRect();
+    if (this.isPanning) {
+      if (this.activePointers.size >= 2) {
+        const pts = Array.from(this.activePointers.values());
+        const currentDist = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
+        const midX = (pts[0].clientX + pts[1].clientX) / 2;
+        const midY = (pts[0].clientY + pts[1].clientY) / 2;
+        const rect = this.canvas.getBoundingClientRect();
 
-      let newScale = this.initialScale * (currentDist / (this.initialPinchDist || 1));
-      newScale = Math.max(0.2, Math.min(newScale, 5.0));
+        let newScale = this.initialScale * (currentDist / (this.initialPinchDist || 1));
+        newScale = Math.max(0.2, Math.min(newScale, 5.0));
 
-      this.viewScale = newScale;
-      this.panX = (midX - rect.left) - this.pinchPanStartX * (newScale / this.initialScale);
-      this.panY = (midY - rect.top) - this.pinchPanStartY * (newScale / this.initialScale);
+        this.viewScale = newScale;
+        this.panX = (midX - rect.left) - this.pinchPanStartX * (newScale / this.initialScale);
+        this.panY = (midY - rect.top) - this.pinchPanStartY * (newScale / this.initialScale);
 
-      this.updateZoomIndicator();
-      this.render();
-      return;
+        this.updateZoomIndicator();
+        this.render();
+        return;
+      } else if (this.activePointers.size === 1) {
+        const pt = Array.from(this.activePointers.values())[0];
+        const rect = this.canvas.getBoundingClientRect();
+        this.panX = (pt.clientX - rect.left) - this.pinchPanStartX;
+        this.panY = (pt.clientY - rect.top) - this.pinchPanStartY;
+        this.render();
+        return;
+      }
     }
 
     let pos = this.getPointerPos(e);
@@ -1988,83 +2048,149 @@ class NeonDrawingBoard {
     this.ctx.translate(this.panX, this.panY);
     this.ctx.scale(this.viewScale, this.viewScale);
 
-    const currentPage = this._pages[this.currentPageIndex];
-    if (currentPage && currentPage.bgCanvas) {
-      this.ctx.drawImage(currentPage.bgCanvas, 0, 0);
-    } else if (this.layoutMode === 'paged' && !this.isMultiPage && !this.readOnly) {
-      // Calculate how many pages to draw based on strokes
-      let maxY = 0;
-      this.strokes.forEach(stroke => {
-        stroke.points.forEach(p => {
-          if (p.y > maxY) maxY = p.y;
-        });
-      });
-      const pageHeight = this.pageHeight || 1130;
+    if (this.isMultiPage) {
+      let currentY = 0;
       const pageGap = 20;
-      const pageWidth = this.canvas.width / window.devicePixelRatio;
-
-      const numPages = Math.max(1, Math.ceil(maxY / (pageHeight + pageGap)));
-
-      for (let i = 0; i < numPages + 1; i++) { // +1 to always show the next blank page
-        const yOffset = i * (pageHeight + pageGap);
-        // Draw page shadow
-        this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        this.ctx.fillRect(5, yOffset + 5, pageWidth, pageHeight);
-        // Draw page background
-        this.ctx.fillStyle = this.bgColor;
-        this.ctx.fillRect(0, yOffset, pageWidth, pageHeight);
-      }
-    }
-
-
-    // Draw saved strokes
-    this.getCurrentStrokes().forEach(stroke => this.drawStroke(stroke));
-
-    // Draw current stroke
-    if (this.currentStroke) {
-      this.drawStroke(this.currentStroke);
-    }
-
-    // Draw Lasso path
-    if (this.lassoPoints.length > 0) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.lassoPoints[0].x, this.lassoPoints[0].y);
-      for (let i = 1; i < this.lassoPoints.length; i++) {
-        this.ctx.lineTo(this.lassoPoints[i].x, this.lassoPoints[i].y);
-      }
-      this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
-      this.ctx.lineWidth = 1 / this.viewScale;
-      this.ctx.setLineDash([5 / this.viewScale, 5 / this.viewScale]);
-      this.ctx.stroke();
-      this.ctx.setLineDash([]);
-    }
-
-    // Draw Selection Bounding Box
-    if (this.selectedStrokes.length > 0) {
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      this.selectedStrokes.forEach(s => {
-        s.points.forEach(p => {
-          if (p.x < minX) minX = p.x;
-          if (p.y < minY) minY = p.y;
-          if (p.x > maxX) maxX = p.x;
-          if (p.y > maxY) maxY = p.y;
-        });
-      });
-      const pad = 5;
-      this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
-      this.ctx.lineWidth = 1 / this.viewScale;
-      this.ctx.setLineDash([4 / this.viewScale, 4 / this.viewScale]);
-      this.ctx.strokeRect(minX - pad, minY - pad, maxX - minX + pad * 2, maxY - minY + pad * 2);
-      this.ctx.setLineDash([]);
-
-      this.selectedStrokes.forEach(stroke => {
+      
+      this._pages.forEach((page, idx) => {
         this.ctx.save();
-        this.ctx.globalAlpha = 0.3;
-        this.ctx.shadowColor = '#3b82f6';
-        this.ctx.shadowBlur = 10 / this.viewScale;
-        this.drawStroke(stroke, true);
+        this.ctx.translate(0, currentY);
+        
+        this.ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        this.ctx.fillRect(5, 5, page.width || this.canvas.width, page.height || this.canvas.height);
+
+        if (page.bgCanvas) {
+          this.ctx.drawImage(page.bgCanvas, 0, 0);
+        } else {
+          this.ctx.fillStyle = this.bgColor;
+          this.ctx.fillRect(0, 0, page.width || this.canvas.width, page.height || this.canvas.height);
+        }
+
+        if (page._strokes) {
+          page._strokes.forEach(stroke => this.drawStroke(stroke));
+        }
+        
+        if (idx === this.currentPageIndex && this.currentStroke) {
+           this.drawStroke(this.currentStroke);
+        }
+
+        if (idx === this.currentPageIndex) {
+          if (this.lassoPoints.length > 0) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.lassoPoints[0].x, this.lassoPoints[0].y);
+            for (let i = 1; i < this.lassoPoints.length; i++) {
+              this.ctx.lineTo(this.lassoPoints[i].x, this.lassoPoints[i].y);
+            }
+            this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+            this.ctx.lineWidth = 1 / this.viewScale;
+            this.ctx.setLineDash([5 / this.viewScale, 5 / this.viewScale]);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+          }
+
+          if (this.selectedStrokes.length > 0) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            this.selectedStrokes.forEach(s => {
+              if (!s.points) return;
+              s.points.forEach(p => {
+                if (p.x < minX) minX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y > maxY) maxY = p.y;
+              });
+            });
+            const pad = 5;
+            this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+            this.ctx.lineWidth = 1 / this.viewScale;
+            this.ctx.setLineDash([4 / this.viewScale, 4 / this.viewScale]);
+            this.ctx.strokeRect(minX - pad, minY - pad, maxX - minX + pad * 2, maxY - minY + pad * 2);
+            this.ctx.setLineDash([]);
+
+            this.selectedStrokes.forEach(stroke => {
+              this.ctx.save();
+              this.ctx.globalAlpha = 0.3;
+              this.ctx.shadowColor = '#3b82f6';
+              this.ctx.shadowBlur = 10 / this.viewScale;
+              this.drawStroke(stroke, true);
+              this.ctx.restore();
+            });
+          }
+        }
+
         this.ctx.restore();
+        currentY += (page.height || this.canvas.height) + pageGap;
       });
+    } else {
+      if (this.layoutMode === 'paged' && !this.readOnly) {
+        let maxY = 0;
+        this.strokes.forEach(stroke => {
+          if (stroke.points) {
+            stroke.points.forEach(p => {
+              if (p.y > maxY) maxY = p.y;
+            });
+          }
+        });
+        const pageHeight = this.pageHeight || 1130;
+        const pageGap = 20;
+        const pageWidth = this.canvas.width / window.devicePixelRatio;
+
+        const numPages = Math.max(1, Math.ceil(maxY / (pageHeight + pageGap)));
+
+        for (let i = 0; i < numPages + 1; i++) { // +1 to always show the next blank page
+          const yOffset = i * (pageHeight + pageGap);
+          this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+          this.ctx.fillRect(5, yOffset + 5, pageWidth, pageHeight);
+          this.ctx.fillStyle = this.bgColor;
+          this.ctx.fillRect(0, yOffset, pageWidth, pageHeight);
+        }
+      }
+
+      this.getCurrentStrokes().forEach(stroke => this.drawStroke(stroke));
+
+      if (this.currentStroke) {
+        this.drawStroke(this.currentStroke);
+      }
+
+      if (this.lassoPoints.length > 0) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.lassoPoints[0].x, this.lassoPoints[0].y);
+        for (let i = 1; i < this.lassoPoints.length; i++) {
+          this.ctx.lineTo(this.lassoPoints[i].x, this.lassoPoints[i].y);
+        }
+        this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+        this.ctx.lineWidth = 1 / this.viewScale;
+        this.ctx.setLineDash([5 / this.viewScale, 5 / this.viewScale]);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+      }
+
+      if (this.selectedStrokes.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        this.selectedStrokes.forEach(s => {
+          if (!s.points) return;
+          s.points.forEach(p => {
+            if (p.x < minX) minX = p.x;
+            if (p.y < minY) minY = p.y;
+            if (p.x > maxX) maxX = p.x;
+            if (p.y > maxY) maxY = p.y;
+          });
+        });
+        const pad = 5;
+        this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+        this.ctx.lineWidth = 1 / this.viewScale;
+        this.ctx.setLineDash([4 / this.viewScale, 4 / this.viewScale]);
+        this.ctx.strokeRect(minX - pad, minY - pad, maxX - minX + pad * 2, maxY - minY + pad * 2);
+        this.ctx.setLineDash([]);
+
+        this.selectedStrokes.forEach(stroke => {
+          this.ctx.save();
+          this.ctx.globalAlpha = 0.3;
+          this.ctx.shadowColor = '#3b82f6';
+          this.ctx.shadowBlur = 10 / this.viewScale;
+          this.drawStroke(stroke, true);
+          this.ctx.restore();
+        });
+      }
     }
 
     this.ctx.restore();
