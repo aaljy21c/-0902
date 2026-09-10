@@ -372,6 +372,7 @@ class NeonDrawingBoard {
         currentStrokes.unshift({ isBg: true, color: this.bgColor });
         this.setCurrentStrokes(currentStrokes);
         this.saveState();
+        this.render();
       });
     }
 
@@ -389,33 +390,70 @@ class NeonDrawingBoard {
           btnExportPdf.innerHTML = '⏳';
 
           const { PDFDocument } = window.PDFLib;
-          const pdfDoc = await PDFDocument.create();
-
+          let pdfDoc;
 
           const pageWidth = this.canvas.width / window.devicePixelRatio;
           const pageHeight = this.pageHeight || 1130;
           const pageGap = 20;
 
           if (this.isMultiPage) {
+            if (this.pdfFileId) {
+              const fileRecord = await FileDB.getFile(this.pdfFileId);
+              let arrayBuffer;
+              if (fileRecord && fileRecord.blob) {
+                if (fileRecord.blob.arrayBuffer) {
+                  arrayBuffer = await fileRecord.blob.arrayBuffer();
+                } else {
+                  arrayBuffer = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(fileRecord.blob);
+                  });
+                }
+              }
+              if (arrayBuffer) {
+                pdfDoc = await PDFDocument.load(arrayBuffer);
+              }
+            }
+
+            if (!pdfDoc) pdfDoc = await PDFDocument.create();
+            const loadedPages = pdfDoc.getPageCount ? pdfDoc.getPageCount() : 0;
+            const pdfPages = pdfDoc.getPages ? pdfDoc.getPages() : [];
+
             for (let i = 0; i < this._pages.length; i++) {
               const pageObj = this._pages[i];
 
-              const tempCanvas = document.createElement('canvas');
               const targetWidth = pageObj.width || this.canvas.width;
               const targetHeight = pageObj.height || this.canvas.height;
+              
+              let pdfPage;
+              let isOverlay = false;
+              if (pageObj.type === 'pdf' && pageObj.pdfPageNum && pageObj.pdfPageNum <= loadedPages) {
+                pdfPage = pdfPages[pageObj.pdfPageNum - 1];
+                isOverlay = true;
+              } else {
+                pdfPage = pdfDoc.addPage([targetWidth, targetHeight]);
+              }
+
+              const tempCanvas = document.createElement('canvas');
               tempCanvas.width = targetWidth;
               tempCanvas.height = targetHeight;
               const tempCtx = tempCanvas.getContext('2d');
 
-              if (pageObj.bgCanvas) {
-                tempCtx.drawImage(pageObj.bgCanvas, 0, 0, targetWidth, targetHeight);
-              } else {
-                tempCtx.fillStyle = this.bgColor;
-                tempCtx.fillRect(0, 0, targetWidth, targetHeight);
+              if (!isOverlay) {
+                if (pageObj.bgCanvas) {
+                  tempCtx.drawImage(pageObj.bgCanvas, 0, 0, targetWidth, targetHeight);
+                } else {
+                  tempCtx.fillStyle = this.bgColor;
+                  tempCtx.fillRect(0, 0, targetWidth, targetHeight);
+                }
               }
 
+              let hasContent = !isOverlay;
               pageObj._strokes.forEach(stroke => {
-                if (stroke.isBg || !stroke.points) return;
+                if (stroke.isBg || !stroke.points || stroke.points.length === 0) return;
+                hasContent = true;
                 tempCtx.beginPath();
                 tempCtx.lineCap = 'round'; tempCtx.lineJoin = 'round';
                 tempCtx.lineWidth = stroke.size; tempCtx.strokeStyle = stroke.color; tempCtx.globalAlpha = stroke.opacity || 1;
@@ -431,10 +469,12 @@ class NeonDrawingBoard {
                 tempCtx.globalCompositeOperation = 'source-over';
               });
 
-              const pngDataUrl = tempCanvas.toDataURL('image/png');
-              const pngImage = await pdfDoc.embedPng(pngDataUrl);
-              const pdfPage = pdfDoc.addPage([targetWidth, targetHeight]);
-              pdfPage.drawImage(pngImage, { x: 0, y: 0, width: targetWidth, height: targetHeight });
+              if (hasContent) {
+                const pngDataUrl = tempCanvas.toDataURL('image/png');
+                const pngImage = await pdfDoc.embedPng(pngDataUrl);
+                const { width, height } = pdfPage.getSize();
+                pdfPage.drawImage(pngImage, { x: 0, y: 0, width: width, height: height });
+              }
             }
           } else if (this.layoutMode === 'paged') {
             let maxY = 0;
@@ -1696,18 +1736,32 @@ class NeonDrawingBoard {
       const firstPagePdf = await pdf.getPage(1);
       const firstViewport = firstPagePdf.getViewport({ scale });
 
-      if (!this.isMultiPage) {
-        const currentStrokes = this.strokes && this.strokes.length > 0 ? this.strokes : (this._pages[0] ? this._pages[0]._strokes : []);
-        this.isMultiPage = true;
-        this._pages = [{ 
-          type: 'blank', 
-          _strokes: currentStrokes, 
-          bgCanvas: null,
-          width: firstViewport.width,
-          height: firstViewport.height
-        }];
+      let hasExistingContent = false;
+      if (this.isMultiPage && this._pages.length > 0) {
+        hasExistingContent = this._pages.some(p => (p._strokes && p._strokes.length > 0) || p.type === 'pdf' || p.bgCanvas);
+      } else if (this.strokes && this.strokes.length > 0) {
+        hasExistingContent = true;
       }
-      
+
+      let shouldAppend = false;
+      if (hasExistingContent) {
+        const replaceConfirm = confirm("새로운 PDF를 불러오면 기존 내용이 삭제됩니다.\n기존 내용을 삭제하고 새로 불러오시겠습니까?\n\n[확인] 기존 내용 삭제 후 불러오기\n[취소] 기존 페이지 뒤에 이어서 추가하기");
+        if (!replaceConfirm) {
+          shouldAppend = true;
+        }
+      }
+
+      if (!shouldAppend) {
+        this.strokes = [];
+        this._pages = [];
+        this.undoStack = [];
+        this.redoStack = [];
+        this.isMultiPage = true;
+      }
+
+      if (!this.isMultiPage) {
+        this.isMultiPage = true;
+      }
       const startIdx = this._pages.length;
 
       for (let i = 1; i <= pdf.numPages; i++) {

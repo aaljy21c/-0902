@@ -1247,7 +1247,10 @@ window.clearLocalUserData = function() {
     'neon_planner_diaries',
     'neon_planner_records',
     'neon_planner_memos',
-    'neon_planner_routinesPopulatedDates'
+    'neon_planner_routinesPopulatedDates',
+    'neon_planner_ddays',
+    'neon_planner_app_title',
+    'neon_planner_tab_icons'
   ];
   keysToClear.forEach(k => localStorage.removeItem(k));
   if (typeof state !== 'undefined' && state) {
@@ -1258,6 +1261,9 @@ window.clearLocalUserData = function() {
     state.records = {};
     state.memos = [];
     state.routinesPopulatedDates = {};
+    state.ddays = [];
+    state.appTitle = '';
+    state.tabIcons = {};
   }
   if (typeof updateUI === 'function') updateUI();
 };
