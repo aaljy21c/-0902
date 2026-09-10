@@ -190,6 +190,26 @@ class NeonDrawingBoard {
     this.wrapper.appendChild(this.canvasContainer);
     this.container.appendChild(this.wrapper);
 
+    // Add manual extend down button
+    if (!this.readOnly) {
+      this.extendDownBtn = document.createElement('button');
+      this.extendDownBtn.innerHTML = '⬇️ 페이지 확장';
+      this.extendDownBtn.title = '아래쪽으로 페이지를 확장합니다';
+      this.extendDownBtn.style.cssText = 'position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(30, 30, 30, 0.8); color:white; padding:8px 20px; border:1px solid #555; border-radius:20px; font-size:0.9rem; font-weight:bold; cursor:pointer; z-index:100; box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: transform 0.2s, background 0.2s;';
+      
+      this.extendDownBtn.addEventListener('mousedown', () => this.extendDownBtn.style.transform = 'translateX(-50%) scale(0.95)');
+      this.extendDownBtn.addEventListener('mouseup', () => this.extendDownBtn.style.transform = 'translateX(-50%) scale(1)');
+      this.extendDownBtn.addEventListener('mouseleave', () => this.extendDownBtn.style.transform = 'translateX(-50%) scale(1)');
+      
+      this.extendDownBtn.addEventListener('click', () => {
+        this.panY -= 300 / this.viewScale;
+        const currentMin = parseInt(this.canvasContainer.style.minHeight || this.canvasContainer.clientHeight);
+        this.canvasContainer.style.minHeight = `${currentMin + 300}px`;
+        this.render();
+      });
+      this.wrapper.appendChild(this.extendDownBtn);
+    }
+
     // Add transparent overlay in readOnly mode to intercept and bubble click events reliably
     if (this.readOnly) {
       const overlay = document.createElement('div');
@@ -861,6 +881,8 @@ class NeonDrawingBoard {
     let pos = this.getPointerPos(e);
 
     // Auto-expand canvas height and pan if near the vertical edges while drawing or dragging
+    // Disabled as per user request to use the manual 'Extend Page' button instead of auto-expanding.
+    /*
     if (this.isDrawing || this.isDraggingSelection) {
       const containerHeight = this.canvasContainer.clientHeight;
       let physicalY = pos.y * this.viewScale + this.panY;
@@ -881,6 +903,7 @@ class NeonDrawingBoard {
         this.canvasContainer.style.minHeight = `${Math.max(this.canvasContainer.clientHeight, (physicalY + 300))}px`;
       }
     }
+    */
 
     if (this.isDraggingSelection) {
       const dx = pos.x - this.dragStartPoint.x;
@@ -1380,33 +1403,38 @@ class NeonDrawingBoard {
         cvs.height = height;
         const ctx = cvs.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = cvs.toDataURL('image/jpeg', 0.85);
+        
+        cvs.toBlob(async (blob) => {
+          if (!blob) return;
+          const fileId = await FileDB.saveFile(blob, 'image/jpeg', file.name || 'image.jpg');
+          const dataUrl = cvs.toDataURL('image/jpeg', 0.85);
 
-        // Calculate center of current view in logical coordinates
-        const rect = this.canvasContainer.getBoundingClientRect();
-        const centerX = (-this.panX + rect.width / 2) / this.viewScale;
-        const centerY = (-this.panY + rect.height / 2) / this.viewScale;
+          const rect = this.canvasContainer.getBoundingClientRect();
+          const centerX = (-this.panX + rect.width / 2) / this.viewScale;
+          const centerY = (-this.panY + rect.height / 2) / this.viewScale;
 
-        // Ensure it fits within view roughly if it's too big
-        let displayWidth = width;
-        let displayHeight = height;
-        const maxDisplayWidth = (rect.width * 0.8) / this.viewScale;
-        if (displayWidth > maxDisplayWidth) {
-          const ratio = maxDisplayWidth / displayWidth;
-          displayWidth *= ratio;
-          displayHeight *= ratio;
-        }
+          let displayWidth = width;
+          let displayHeight = height;
+          const maxDisplayWidth = (rect.width * 0.8) / this.viewScale;
+          if (displayWidth > maxDisplayWidth) {
+            const ratio = maxDisplayWidth / displayWidth;
+            displayWidth *= ratio;
+            displayHeight *= ratio;
+          }
 
-        this.activeImage = {
-          imgData: dataUrl,
-          cx: centerX,
-          cy: centerY,
-          w: displayWidth,
-          h: displayHeight,
-          img: img
-        };
-        this.buildImageOverlay();
-        this.render();
+          this.activeImage = {
+            imgFileId: fileId,
+            imgData: dataUrl,
+            cx: centerX,
+            cy: centerY,
+            w: displayWidth,
+            h: displayHeight,
+            img: img
+          };
+          this.buildImageOverlay();
+          this.render();
+          if (this.onChange) this.onChange(this.getData());
+        }, 'image/jpeg', 0.85);
       };
       img.src = event.target.result;
     };
@@ -1565,6 +1593,7 @@ class NeonDrawingBoard {
     const ai = this.activeImage;
     const imgStroke = {
       tool: 'image',
+      imgFileId: ai.imgFileId,
       imgData: ai.imgData,
       opacity: 1,
       points: [
@@ -1608,8 +1637,8 @@ class NeonDrawingBoard {
       const firstViewport = firstPagePdf.getViewport({ scale });
 
       if (!this.isMultiPage) {
+        const currentStrokes = this.strokes && this.strokes.length > 0 ? this.strokes : (this._pages[0] ? this._pages[0]._strokes : []);
         this.isMultiPage = true;
-        const currentStrokes = this._pages[0] ? this._pages[0]._strokes : this.strokes;
         this._pages = [{ 
           type: 'blank', 
           _strokes: currentStrokes, 
@@ -1661,7 +1690,18 @@ class NeonDrawingBoard {
       const fileRecord = await FileDB.getFile(this.pdfFileId);
       if (!fileRecord || !fileRecord.blob) return;
 
-      const arrayBuffer = await fileRecord.blob.arrayBuffer();
+      let arrayBuffer;
+      if (fileRecord.blob.arrayBuffer) {
+        arrayBuffer = await fileRecord.blob.arrayBuffer();
+      } else {
+        arrayBuffer = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(fileRecord.blob);
+        });
+      }
+      
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const scale = 2.0;
 
@@ -1826,21 +1866,31 @@ class NeonDrawingBoard {
       this.commitActiveImage();
     }
     
+    const cleanStrokes = (strokes) => {
+      return strokes.map(s => {
+        if (s.tool === 'image' && s.imgFileId) {
+          const { imgData, imgElement, ...rest } = s;
+          return rest;
+        }
+        return s;
+      });
+    };
+
     if (this.isMultiPage) {
       return {
         type: 'pdf_drawing',
         pdfFileId: this.pdfFileId,
-        strokesPerPage: JSON.parse(JSON.stringify(this._pages.map(p => p._strokes))),
+        strokesPerPage: JSON.parse(JSON.stringify(this._pages.map(p => cleanStrokes(p._strokes)))),
         pages: JSON.parse(JSON.stringify(this._pages.map(p => ({
           type: p.type,
           pdfPageNum: p.pdfPageNum,
           width: p.width,
           height: p.height,
-          _strokes: p._strokes
+          _strokes: cleanStrokes(p._strokes)
         }))))
       };
     }
-    return JSON.parse(JSON.stringify(this.strokes));
+    return JSON.parse(JSON.stringify(cleanStrokes(this.strokes)));
   }
 
 
@@ -2026,8 +2076,22 @@ class NeonDrawingBoard {
     if (stroke.tool === 'image') {
       if (!stroke.imgElement) {
         stroke.imgElement = new Image();
-        stroke.imgElement.onload = () => this.render();
-        stroke.imgElement.src = stroke.imgData;
+        if (stroke.imgFileId) {
+          FileDB.getFile(stroke.imgFileId).then(record => {
+            if (record && record.blob) {
+              stroke.imgElement.onload = () => this.render();
+              stroke.imgElement.src = URL.createObjectURL(record.blob);
+            } else if (stroke.imgData) {
+              stroke.imgElement.onload = () => this.render();
+              stroke.imgElement.src = stroke.imgData;
+            }
+          });
+        } else if (stroke.imgData) {
+          stroke.imgElement.onload = () => this.render();
+          stroke.imgElement.src = stroke.imgData;
+        } else {
+          stroke.imgElement = { complete: false };
+        }
       }
       if (stroke.points && stroke.points.length >= 4 && stroke.imgElement.complete) {
         this.ctx.save();

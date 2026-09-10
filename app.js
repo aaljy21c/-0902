@@ -490,7 +490,7 @@ function init() {
         } else if (nextOrder !== null) {
           draggedTodo.customOrder = nextOrder - 1000;
         } else {
-          draggedTodo.customOrder = Date.now();
+          draggedTodo.customOrder = -Date.now();
         }
 
         pushToHistory();
@@ -2634,7 +2634,7 @@ function populateRoutinesForDate(dateKey, force = false) {
         completed: false,
         isRoutine: true,
         createdAt: Date.now(),
-        customOrder: Date.now() + Math.random()
+        customOrder: -(Date.now() + Math.random())
       });
     }
   });
@@ -4296,7 +4296,7 @@ function handleAddTodo() {
     isImportant: isImportant,
     time: timeValue,
     createdAt: Date.now(),
-    customOrder: Date.now()
+    customOrder: -Date.now()
   };
 
   state.todos[dateKey].push(newTodo);
@@ -6941,7 +6941,8 @@ function createCell(day, dateKey, isOtherMonth = false, isToday = false) {
             completed: false,
             isRoutine: copyingTodo.isRoutine,
             isImportant: Boolean(copyingTodo.isImportant),
-            time: copyingTodo.time || ''
+            time: copyingTodo.time || '',
+            customOrder: -(Date.now() + Math.random())
           });
           saveTodos();
           updateUI();
@@ -8869,7 +8870,8 @@ function handleVoiceCommand(transcript, recognition, stopListeningUI) {
           text: parsed.cleanedText,
           category: 'other',
           completed: false,
-          time: parsed.time || ''
+          time: parsed.time || '',
+          customOrder: -Date.now()
         });
         saveTodos();
         updateUI();
