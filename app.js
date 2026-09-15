@@ -4350,6 +4350,15 @@ function handleAddTodo() {
   };
 
   state.todos[dateKey].push(newTodo);
+  
+  // If parsed date is different from current selected date, also add a copy to the current selected date
+  if (dateKey !== state.selectedDate) {
+    if (!state.todos[state.selectedDate]) {
+      state.todos[state.selectedDate] = [];
+    }
+    const currentTodoCopy = { ...newTodo, id: Date.now() + Math.floor(Math.random() * 1000) + 1 };
+    state.todos[state.selectedDate].push(currentTodoCopy);
+  }
 
   // If marked as routine, save it to the routines template pool
   if (isRoutine) {
@@ -7719,7 +7728,7 @@ function parseNaturalLanguageTodo(inputText) {
     
     todayDate.setDate(todayDate.getDate() + offset);
     parsedDateKey = formatDateString(todayDate);
-    text = text.replace(relativeDateRegex, '').trim();
+    // text = text.replace(relativeDateRegex, '').trim(); // Do not remove relative date keyword
   } else {
     // 1-1. Regex for Exact Date:
     // Matches "7월 20일", "7월20일", "7/20", "12/25", "12월25일"
@@ -7737,7 +7746,7 @@ function parseNaturalLanguageTodo(inputText) {
       if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
         parsedDateKey = `${selectedYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         // Remove the matched date text from final todo text
-        text = text.replace(regex, '').trim();
+        // text = text.replace(regex, '').trim(); // Do not remove matched date keyword
         break; // Stop after first successful date match
       }
     }
