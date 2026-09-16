@@ -29,6 +29,7 @@ let state = {
   showCompletedDrilldown: false, // Completed tasks drilldown toggle
   showPendingDrilldown: false, // Pending tasks drilldown toggle
   diaries: {}, // Diary entries indexed by dateKey (now storing array of record objects)
+  diaryDraftText: '', // Draft text for the record being created/edited
   diaryDraftImages: [], // Draft array of image base64 strings for the record being created/edited
   diaryDraftDrawing: [], // Draft array of strokes for the drawing board
   diaryDraftAudio: [], // Draft array of audio objects {src, transcription}
@@ -3334,6 +3335,7 @@ function setupEventListeners() {
   if (btnAddRecordTrigger) {
     btnAddRecordTrigger.addEventListener('click', () => {
       state.editingRecordId = 'new';
+      state.diaryDraftText = '';
       state.diaryDraftImages = [];
       state.diaryDraftDrawing = [];
       state.diaryDraftAudio = [];
@@ -3349,6 +3351,7 @@ function setupEventListeners() {
   if (btnCancelNewRecord) {
     btnCancelNewRecord.addEventListener('click', () => {
       state.editingRecordId = null;
+      state.diaryDraftText = '';
       state.diaryDraftImages = [];
       state.diaryDraftDrawing = [];
       state.diaryDraftAudio = [];
@@ -3383,6 +3386,7 @@ function setupEventListeners() {
 
       saveDiaries();
       state.editingRecordId = null;
+      state.diaryDraftText = '';
       state.diaryDraftImages = [];
       state.diaryDraftDrawing = [];
       state.diaryDraftAudio = [];
@@ -5418,6 +5422,7 @@ function renderDiary() {
   // Auto-collapse creator when date shifts
   if (state.renderedDiaryDate !== dateKey) {
     state.editingRecordId = null;
+    state.diaryDraftText = '';
     state.diaryDraftImages = [];
     state.renderedDiaryDate = dateKey;
   }
@@ -5511,7 +5516,10 @@ function renderDiary() {
         const textarea = document.createElement('textarea');
         textarea.className = 'diary-textarea';
         textarea.id = `edit-record-text-${record.id}`;
-        textarea.value = record.text;
+        textarea.value = typeof state.diaryDraftText === 'string' ? state.diaryDraftText : record.text;
+        textarea.addEventListener('input', (e) => {
+          state.diaryDraftText = e.target.value;
+        });
         textarea.placeholder = '기록 내용을 수정해 보세요...';
         textarea.style.paddingRight = '36px';
         textContainer.appendChild(textarea);
@@ -5540,7 +5548,14 @@ function renderDiary() {
           handleAudioDictateClick(
             `btn-dictate-edit-${record.id}`, 
             `edit-record-text-${record.id}`, 
-            state.diaryDraftAudio, 
+            () => state.diaryDraftAudio, 
+            `edit-record-audio-previews-${record.id}`, 
+            () => renderAudioPreviews(`edit-record-audio-previews-${record.id}`, state.diaryDraftAudio, () => renderAudioPreviews(`edit-record-audio-previews-${record.id}`, state.diaryDraftAudio, null))
+          );
+          handleAudioDictateClick(
+            `btn-record-audio-edit-${record.id}`, 
+            null, 
+            () => state.diaryDraftAudio, 
             `edit-record-audio-previews-${record.id}`, 
             () => renderAudioPreviews(`edit-record-audio-previews-${record.id}`, state.diaryDraftAudio, () => renderAudioPreviews(`edit-record-audio-previews-${record.id}`, state.diaryDraftAudio, null))
           );
@@ -5601,6 +5616,14 @@ function renderDiary() {
       label.appendChild(fileInput);
         label.appendChild(document.createTextNode('📷 사진 선택 (여러장 가능)'));
         mediaRow.appendChild(label);
+
+        const recordAudioBtn = document.createElement('button');
+        recordAudioBtn.type = 'button';
+        recordAudioBtn.id = `btn-record-audio-edit-${record.id}`;
+        recordAudioBtn.className = 'diary-photo-upload-label';
+        recordAudioBtn.style = 'background:transparent; border:none; cursor:pointer; font-family:inherit; margin-left:8px;';
+        recordAudioBtn.innerHTML = '<span class="upload-icon">🎙️</span> 음성 녹음';
+        mediaRow.appendChild(recordAudioBtn);
 
         const statusSpan = document.createElement('span');
         statusSpan.className = 'diary-save-status';
@@ -5719,6 +5742,7 @@ function renderDiary() {
           record.audio = state.diaryDraftAudio ? JSON.parse(JSON.stringify(state.diaryDraftAudio)) : [];
           saveDiaries();
           state.editingRecordId = null;
+          state.diaryDraftText = '';
           state.diaryDraftImages = [];
           state.diaryDraftDrawing = [];
           state.diaryDraftAudio = [];
@@ -5732,6 +5756,7 @@ function renderDiary() {
         cancelBtn.innerHTML = '취소';
         cancelBtn.addEventListener('click', () => {
           state.editingRecordId = null;
+          state.diaryDraftText = '';
           state.diaryDraftImages = [];
           state.diaryDraftDrawing = [];
           state.diaryDraftAudio = [];
@@ -5836,6 +5861,7 @@ function renderDiary() {
         editBtn.innerHTML = '✏️ 수정';
         editBtn.addEventListener('click', () => {
           state.editingRecordId = record.id;
+          state.diaryDraftText = record.text || '';
           state.diaryDraftImages = [...(record.images || [])];
           state.diaryDraftDrawing = record.drawing ? JSON.parse(JSON.stringify(record.drawing)) : [];
           state.diaryDraftAudio = record.audio ? JSON.parse(JSON.stringify(record.audio)) : [];
@@ -9630,6 +9656,14 @@ handleAudioDictateClick(
   () => state.diaryDraftAudio, 
   'new-record-audio-previews', 
   () => renderAudioPreviews('new-record-audio-previews', state.diaryDraftAudio, () => renderAudioPreviews('new-record-audio-previews', state.diaryDraftAudio, null)) // Will hook to renderDiary later
+);
+
+handleAudioDictateClick(
+  'btn-record-audio-new-media', 
+  null, 
+  () => state.diaryDraftAudio, 
+  'new-record-audio-previews', 
+  () => renderAudioPreviews('new-record-audio-previews', state.diaryDraftAudio, () => renderAudioPreviews('new-record-audio-previews', state.diaryDraftAudio, null))
 );
 
 handleAudioDictateClick(
