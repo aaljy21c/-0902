@@ -404,6 +404,8 @@ function init() {
       animation: 150,
       delay: 200,
       delayOnTouchOnly: true,
+      filter: 'button, input',
+      preventOnFilter: false,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
       forceFallback: true,
@@ -429,6 +431,8 @@ function init() {
     Sortable.create(todoItemsList, {
       delay: 400, // 400ms long press to drag on mobile
       delayOnTouchOnly: true,
+      filter: 'button, input, textarea, .todo-checkbox, .delete-btn, .edit-btn, .todo-star-btn',
+      preventOnFilter: false,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
       forceFallback: true,
@@ -5213,6 +5217,8 @@ function renderCategoryFilterTabs() {
       animation: 150,
       delay: 200, // 200ms long press to drag
       delayOnTouchOnly: true, // Only delay on touch devices so desktop can drag instantly
+      filter: 'button, input, .edit-cat-btn, .delete-cat-btn',
+      preventOnFilter: false,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
       forceFallback: true,
@@ -5621,7 +5627,7 @@ function renderDiary() {
         recordAudioBtn.type = 'button';
         recordAudioBtn.id = `btn-record-audio-edit-${record.id}`;
         recordAudioBtn.className = 'diary-photo-upload-label';
-        recordAudioBtn.style = 'background:transparent; border:none; cursor:pointer; font-family:inherit; margin-left:8px;';
+        recordAudioBtn.style = 'cursor:pointer; font-family:inherit; margin-left:8px;';
         recordAudioBtn.innerHTML = '<span class="upload-icon">🎙️</span> 음성 녹음';
         mediaRow.appendChild(recordAudioBtn);
 
@@ -8473,7 +8479,12 @@ function renderTodos() {
     deleteBtn.classList.add('delete-btn');
     deleteBtn.innerHTML = '✖';
     deleteBtn.ariaLabel = '할 일 삭제';
-    deleteBtn.addEventListener('click', () => deleteTodo(todo.id, todo.text, todo.isRoutine));
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm('이 할 일을 삭제하시겠습니까?')) {
+        deleteTodo(todo.id, todo.text, todo.isRoutine);
+      }
+    });
 
     actionBtns.appendChild(starBtn);
     actionBtns.appendChild(editBtn);
