@@ -405,7 +405,7 @@ function init() {
       delay: 200,
       delayOnTouchOnly: true,
       filter: 'button, button *, input',
-      preventOnFilter: false,
+      preventOnFilter: true,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
       forceFallback: true,
@@ -432,7 +432,7 @@ function init() {
       delay: 400, // 400ms long press to drag on mobile
       delayOnTouchOnly: true,
       filter: 'button, button *, input, textarea, .todo-checkbox, .delete-btn, .edit-btn, .todo-star-btn',
-      preventOnFilter: false,
+      preventOnFilter: true,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
       forceFallback: true,
@@ -5218,7 +5218,7 @@ function renderCategoryFilterTabs() {
       delay: 200, // 200ms long press to drag
       delayOnTouchOnly: true, // Only delay on touch devices so desktop can drag instantly
       filter: 'button, button *, input, .edit-cat-btn, .delete-cat-btn',
-      preventOnFilter: false,
+      preventOnFilter: true,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
       forceFallback: true,
