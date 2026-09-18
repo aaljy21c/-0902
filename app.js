@@ -408,8 +408,6 @@ function init() {
       preventOnFilter: true,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
-      forceFallback: true,
-      fallbackOnBody: true,
       ghostClass: 'sortable-ghost',
       onEnd: () => {
         const newOrder = Array.from(navContainer.children).map(child => {
