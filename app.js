@@ -399,26 +399,6 @@ function init() {
         console.error(e);
       }
     }
-
-    Sortable.create(navContainer, {
-      animation: 150,
-      delay: 300,
-      touchStartThreshold: 5,
-      fallbackTolerance: 5,
-      ghostClass: 'sortable-ghost',
-      onEnd: () => {
-        const newOrder = Array.from(navContainer.children).map(child => {
-          if (child.id) return child.id;
-          if (child.classList.contains('header-gdrive-group')) return 'gdrive-group';
-          return null;
-        }).filter(id => id);
-        
-        localStorage.setItem('neon_planner_nav_order', JSON.stringify(newOrder));
-        if (typeof triggerGDriveAutoSync === 'function') {
-          triggerGDriveAutoSync();
-        }
-      }
-    });
   }
 
   // Initialize SortableJS for drag-and-drop
