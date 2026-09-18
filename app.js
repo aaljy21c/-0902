@@ -404,7 +404,7 @@ function init() {
       animation: 150,
       delay: 200,
       delayOnTouchOnly: true,
-      filter: 'button, input',
+      filter: 'button, button *, input',
       preventOnFilter: false,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
@@ -431,7 +431,7 @@ function init() {
     Sortable.create(todoItemsList, {
       delay: 400, // 400ms long press to drag on mobile
       delayOnTouchOnly: true,
-      filter: 'button, input, textarea, .todo-checkbox, .delete-btn, .edit-btn, .todo-star-btn',
+      filter: 'button, button *, input, textarea, .todo-checkbox, .delete-btn, .edit-btn, .todo-star-btn',
       preventOnFilter: false,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
@@ -5217,7 +5217,7 @@ function renderCategoryFilterTabs() {
       animation: 150,
       delay: 200, // 200ms long press to drag
       delayOnTouchOnly: true, // Only delay on touch devices so desktop can drag instantly
-      filter: 'button, input, .edit-cat-btn, .delete-cat-btn',
+      filter: 'button, button *, input, .edit-cat-btn, .delete-cat-btn',
       preventOnFilter: false,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
