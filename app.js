@@ -2922,13 +2922,15 @@ function setupEventListeners() {
 
   // Calendar Toggle Button
   const btnToggleCalendar = document.getElementById('btn-toggle-calendar');
-  btnToggleCalendar.addEventListener('click', () => {
-    state.showCalendar = !state.showCalendar;
-    localStorage.setItem('neon_planner_show_calendar', state.showCalendar);
-    applyCalendarVisibility();
-    applyLayoutSectionOrder();
-    updateUI();
-  });
+  if (btnToggleCalendar) {
+    btnToggleCalendar.addEventListener('click', () => {
+      state.showCalendar = !state.showCalendar;
+      localStorage.setItem('neon_planner_show_calendar', state.showCalendar);
+      applyCalendarVisibility();
+      applyLayoutSectionOrder();
+      updateUI();
+    });
+  }
 
   // Search Toggle Button
   const btnToggleSearch = document.getElementById('btn-toggle-search');
