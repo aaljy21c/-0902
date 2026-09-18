@@ -402,10 +402,7 @@ function init() {
 
     Sortable.create(navContainer, {
       animation: 150,
-      delay: 200,
-      delayOnTouchOnly: true,
-      filter: 'button, button *, input',
-      preventOnFilter: true,
+      delay: 300,
       touchStartThreshold: 5,
       fallbackTolerance: 5,
       ghostClass: 'sortable-ghost',
