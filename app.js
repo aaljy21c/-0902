@@ -92,6 +92,28 @@ let searchAutoOpenedSections = [];
 // Custom Time Picker State for Add Form
 let currentSelectedTime = '';
 
+
+// Safe Storage Wrapper
+function safeStorageSet(key, value) {
+  const ignoreKeys = [
+    'neon_planner_todos',
+    'neon_planner_diaries',
+    'neon_planner_categories',
+    'neon_planner_routines',
+    'neon_planner_ddays',
+    'neon_planner_tab_icons',
+    'neon_planner_populated_dates'
+  ];
+  if (ignoreKeys.includes(key)) {
+    return;
+  }
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn('Failed to save to localStorage:', e);
+  }
+}
+
 // Default Categories Mapping
 const DEFAULT_CATEGORIES = {
   health: { label: '건강', color: '#10b981', class: 'cat-health-style' },
@@ -486,8 +508,8 @@ function init() {
 }
 
 // Load all items from LocalStorage
-function loadFromLocalStorage() {
-  const savedTodos = localStorage.getItem('neon_planner_todos');
+function loadFromLocalStorage(optionalData = null) {
+  const savedTodos = (optionalData && optionalData.todos ? JSON.stringify(optionalData.todos) : localStorage.getItem('neon_planner_todos'));
   if (savedTodos) {
     try {
       const parsedTodos = JSON.parse(savedTodos);
@@ -530,7 +552,7 @@ function loadFromLocalStorage() {
     }
   }
 
-  const savedRoutines = localStorage.getItem('neon_planner_routines');
+  const savedRoutines = (optionalData && optionalData.routines ? JSON.stringify(optionalData.routines) : localStorage.getItem('neon_planner_routines'));
   if (savedRoutines) {
     try {
       const parsedRoutines = JSON.parse(savedRoutines);
@@ -543,7 +565,7 @@ function loadFromLocalStorage() {
     state.routines = [];
   }
 
-  const savedPopulated = localStorage.getItem('neon_planner_populated_dates');
+  const savedPopulated = (optionalData && optionalData.routinesPopulatedDates ? JSON.stringify(optionalData.routinesPopulatedDates) : localStorage.getItem('neon_planner_populated_dates'));
   if (savedPopulated) {
     try {
       const parsedPopulated = JSON.parse(savedPopulated);
@@ -591,7 +613,7 @@ function loadFromLocalStorage() {
   const savedShowDdays = localStorage.getItem('neon_planner_show_ddays');
 
   // Load categories (handles migration from older format)
-  const savedCategories = localStorage.getItem('neon_planner_categories');
+  const savedCategories = (optionalData && optionalData.categories ? JSON.stringify(optionalData.categories) : localStorage.getItem('neon_planner_categories'));
   if (savedCategories) {
     state.categories = JSON.parse(savedCategories);
   } else {
@@ -605,7 +627,7 @@ function loadFromLocalStorage() {
       }
     }
     state.categories = { ...DEFAULT_CATEGORIES, ...customCategories };
-    localStorage.setItem('neon_planner_categories', JSON.stringify(state.categories));
+    safeStorageSet('neon_planner_categories', JSON.stringify(state.categories));
   }
   
   const savedCategoryOrder = localStorage.getItem('neon_planner_category_order');
@@ -620,7 +642,7 @@ function loadFromLocalStorage() {
     state.categoryOrder = [];
   }
 
-  const savedDiaries = localStorage.getItem('neon_planner_diaries');
+  const savedDiaries = (optionalData && optionalData.diaries ? JSON.stringify(optionalData.diaries) : localStorage.getItem('neon_planner_diaries'));
   if (savedDiaries) {
     try {
       state.diaries = JSON.parse(savedDiaries);
@@ -680,17 +702,17 @@ function loadFromLocalStorage() {
     state.headerButtonOrder = ['search', 'calendar', 'todos', 'records', 'timeline', 'ddays', 'analytics', 'settings'];
   }
 
-  const savedAppTitle = localStorage.getItem('neon_planner_app_title');
+  const savedAppTitle = (optionalData && optionalData.appTitle !== undefined ? optionalData.appTitle : localStorage.getItem('neon_planner_app_title'));
   if (savedAppTitle) {
     if (savedAppTitle === 'NEON PLANNER') {
       state.appTitle = '플래너';
-      localStorage.setItem('neon_planner_app_title', '플래너');
+      safeStorageSet('neon_planner_app_title', '플래너');
     } else {
       state.appTitle = savedAppTitle;
     }
   }
 
-  const savedTabIcons = localStorage.getItem('neon_planner_tab_icons');
+  const savedTabIcons = (optionalData && optionalData.tabIcons ? JSON.stringify(optionalData.tabIcons) : localStorage.getItem('neon_planner_tab_icons'));
   if (savedTabIcons) {
     try {
       state.tabIcons = { ...state.tabIcons, ...JSON.parse(savedTabIcons) };
@@ -731,7 +753,7 @@ function loadFromLocalStorage() {
   const savedGDriveClientId = localStorage.getItem('neon_planner_gdrive_client_id');
   state.gdriveClientId = savedGDriveClientId || '';
 
-  const savedDdays = localStorage.getItem('neon_planner_ddays');
+  const savedDdays = (optionalData && optionalData.ddays ? JSON.stringify(optionalData.ddays) : localStorage.getItem('neon_planner_ddays'));
   if (savedDdays) {
     try {
       const parsedDdays = JSON.parse(savedDdays);
@@ -746,12 +768,12 @@ function loadFromLocalStorage() {
 }
 
 function saveDdays(skipSync = false) {
-  localStorage.setItem('neon_planner_ddays', JSON.stringify(state.ddays));
+  safeStorageSet('neon_planner_ddays', JSON.stringify(state.ddays));
   if (!skipSync) triggerGDriveAutoSync();
 }
 
 function saveRoutines(skipSync = false) {
-  localStorage.setItem('neon_planner_routines', JSON.stringify(state.routines));
+  safeStorageSet('neon_planner_routines', JSON.stringify(state.routines));
   if (!skipSync) triggerGDriveAutoSync();
 }
 
@@ -1278,8 +1300,8 @@ function autoRefreshGDriveToken() {
           }
           gdriveAccessToken = tokenResponse.access_token;
           const expiryTime = Date.now() + (tokenResponse.expires_in * 1000);
-        localStorage.setItem('neon_planner_gdrive_access_token', gdriveAccessToken);
-        localStorage.setItem('neon_planner_gdrive_token_expiry', expiryTime);
+        safeStorageSet('neon_planner_gdrive_access_token', gdriveAccessToken);
+        safeStorageSet('neon_planner_gdrive_token_expiry', expiryTime);
 
         if (gdriveBackupBtn) gdriveBackupBtn.disabled = false;
         if (gdriveRestoreBtn) gdriveRestoreBtn.disabled = false;
@@ -1316,7 +1338,7 @@ function triggerGDriveAutoSync(isAutoPopulate = false) {
   if (!isAutoPopulate) {
     const prevMod = parseInt(localStorage.getItem('neon_planner_last_modified') || '0', 10);
     const newMod = Math.max(Date.now(), prevMod + 1);
-    localStorage.setItem('neon_planner_last_modified', newMod.toString());
+    safeStorageSet('neon_planner_last_modified', newMod.toString());
   }
   if (!gdriveAccessToken) return; // Silent if not connected
 
@@ -1336,14 +1358,14 @@ function triggerGDriveAutoSync(isAutoPopulate = false) {
 
     try {
       const backupData = {
-        todos: JSON.parse(localStorage.getItem('neon_planner_todos') || '{}'),
-        diaries: JSON.parse(localStorage.getItem('neon_planner_diaries') || '{}'),
-        categories: JSON.parse(localStorage.getItem('neon_planner_categories') || '{}'),
-        tabIcons: JSON.parse(localStorage.getItem('neon_planner_tab_icons') || '{}'),
-        appTitle: localStorage.getItem('neon_planner_app_title') || '',
-        ddays: JSON.parse(localStorage.getItem('neon_planner_ddays') || '[]'),
-        routines: JSON.parse(localStorage.getItem('neon_planner_routines') || '[]'),
-        routinesPopulatedDates: JSON.parse(localStorage.getItem('neon_planner_populated_dates') || '{}'),
+        todos: JSON.parse((optionalData && optionalData.todos ? JSON.stringify(optionalData.todos) : localStorage.getItem('neon_planner_todos')) || '{}'),
+        diaries: JSON.parse((optionalData && optionalData.diaries ? JSON.stringify(optionalData.diaries) : localStorage.getItem('neon_planner_diaries')) || '{}'),
+        categories: JSON.parse((optionalData && optionalData.categories ? JSON.stringify(optionalData.categories) : localStorage.getItem('neon_planner_categories')) || '{}'),
+        tabIcons: JSON.parse((optionalData && optionalData.tabIcons ? JSON.stringify(optionalData.tabIcons) : localStorage.getItem('neon_planner_tab_icons')) || '{}'),
+        appTitle: (optionalData && optionalData.appTitle !== undefined ? optionalData.appTitle : localStorage.getItem('neon_planner_app_title')) || '',
+        ddays: JSON.parse((optionalData && optionalData.ddays ? JSON.stringify(optionalData.ddays) : localStorage.getItem('neon_planner_ddays')) || '[]'),
+        routines: JSON.parse((optionalData && optionalData.routines ? JSON.stringify(optionalData.routines) : localStorage.getItem('neon_planner_routines')) || '[]'),
+        routinesPopulatedDates: JSON.parse((optionalData && optionalData.routinesPopulatedDates ? JSON.stringify(optionalData.routinesPopulatedDates) : localStorage.getItem('neon_planner_populated_dates')) || '{}'),
         preferences: {
           theme: localStorage.getItem('neon_planner_theme') || 'dark',
           fontSize: localStorage.getItem('neon_planner_font_size') || '16',
@@ -1386,7 +1408,7 @@ function triggerGDriveAutoSync(isAutoPopulate = false) {
       const existingFile = searchData.files && searchData.files[0];
 
       if (existingFile) {
-        localStorage.setItem('neon_planner_gdrive_file_id', existingFile.id);
+        safeStorageSet('neon_planner_gdrive_file_id', existingFile.id);
         const updateUrl = `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media&fields=modifiedTime`;
         const updateRes = await fetch(updateUrl, {
           method: 'PATCH',
@@ -1399,7 +1421,7 @@ function triggerGDriveAutoSync(isAutoPopulate = false) {
         if (!updateRes.ok) throw new Error('파일 덮어쓰기 실패');
         const updateData = await updateRes.json();
         if (updateData.modifiedTime) {
-          localStorage.setItem('neon_planner_gdrive_file_modifiedTime', updateData.modifiedTime);
+          safeStorageSet('neon_planner_gdrive_file_modifiedTime', updateData.modifiedTime);
         }
       } else {
         const boundary = 'neon_planner_multipart_boundary';
@@ -1439,10 +1461,10 @@ function triggerGDriveAutoSync(isAutoPopulate = false) {
         }
         const createData = await createRes.json();
         if (createData.id) {
-          localStorage.setItem('neon_planner_gdrive_file_id', createData.id);
+          safeStorageSet('neon_planner_gdrive_file_id', createData.id);
         }
         if (createData.modifiedTime) {
-          localStorage.setItem('neon_planner_gdrive_file_modifiedTime', createData.modifiedTime);
+          safeStorageSet('neon_planner_gdrive_file_modifiedTime', createData.modifiedTime);
         }
       }
 
@@ -1488,34 +1510,34 @@ async function performAutoRestoreAndBackup() {
         }
 
         if (shouldRestore) {
-          if (restoreData.todos) localStorage.setItem('neon_planner_todos', JSON.stringify(restoreData.todos));
-          if (restoreData.diaries) localStorage.setItem('neon_planner_diaries', JSON.stringify(restoreData.diaries));
-          if (restoreData.categories) localStorage.setItem('neon_planner_categories', JSON.stringify(restoreData.categories));
-          if (restoreData.tabIcons) localStorage.setItem('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
-          if (restoreData.appTitle) localStorage.setItem('neon_planner_app_title', restoreData.appTitle);
-          if (restoreData.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(restoreData.ddays));
-          if (restoreData.routines) localStorage.setItem('neon_planner_routines', JSON.stringify(restoreData.routines));
-          if (restoreData.routinesPopulatedDates) localStorage.setItem('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
+          if (restoreData.todos) safeStorageSet('neon_planner_todos', JSON.stringify(restoreData.todos));
+          if (restoreData.diaries) safeStorageSet('neon_planner_diaries', JSON.stringify(restoreData.diaries));
+          if (restoreData.categories) safeStorageSet('neon_planner_categories', JSON.stringify(restoreData.categories));
+          if (restoreData.tabIcons) safeStorageSet('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
+          if (restoreData.appTitle) safeStorageSet('neon_planner_app_title', restoreData.appTitle);
+          if (restoreData.ddays) safeStorageSet('neon_planner_ddays', JSON.stringify(restoreData.ddays));
+          if (restoreData.routines) safeStorageSet('neon_planner_routines', JSON.stringify(restoreData.routines));
+          if (restoreData.routinesPopulatedDates) safeStorageSet('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
           if (restoreData.preferences) {
             const prefs = restoreData.preferences;
-            if (prefs.theme) localStorage.setItem('neon_planner_theme', prefs.theme);
-            if (prefs.fontSize) localStorage.setItem('neon_planner_font_size', prefs.fontSize);
-            if (prefs.dateSize) localStorage.setItem('neon_planner_date_size', prefs.dateSize);
-            if (prefs.bgHue) localStorage.setItem('neon_planner_bg_hue', prefs.bgHue);
-            if (prefs.bgIntensity) localStorage.setItem('neon_planner_bg_intensity', prefs.bgIntensity);
-            if (prefs.accentColor) localStorage.setItem('neon_planner_accent_color', prefs.accentColor);
-            if (prefs.accentIntensity) localStorage.setItem('neon_planner_accent_intensity', prefs.accentIntensity);
-            if (prefs.showCalendar) localStorage.setItem('neon_planner_show_calendar', prefs.showCalendar);
-            if (prefs.showTodos) localStorage.setItem('neon_planner_show_todos', prefs.showTodos);
-            if (prefs.showRecords) localStorage.setItem('neon_planner_show_records', prefs.showRecords);
-            if (prefs.showAnalytics) localStorage.setItem('neon_planner_show_analytics', prefs.showAnalytics);
-            if (prefs.showSearch) localStorage.setItem('neon_planner_show_search', prefs.showSearch);
-            if (prefs.buttonOrder) localStorage.setItem('neon_planner_button_order', prefs.buttonOrder);
+            if (prefs.theme) safeStorageSet('neon_planner_theme', prefs.theme);
+            if (prefs.fontSize) safeStorageSet('neon_planner_font_size', prefs.fontSize);
+            if (prefs.dateSize) safeStorageSet('neon_planner_date_size', prefs.dateSize);
+            if (prefs.bgHue) safeStorageSet('neon_planner_bg_hue', prefs.bgHue);
+            if (prefs.bgIntensity) safeStorageSet('neon_planner_bg_intensity', prefs.bgIntensity);
+            if (prefs.accentColor) safeStorageSet('neon_planner_accent_color', prefs.accentColor);
+            if (prefs.accentIntensity) safeStorageSet('neon_planner_accent_intensity', prefs.accentIntensity);
+            if (prefs.showCalendar) safeStorageSet('neon_planner_show_calendar', prefs.showCalendar);
+            if (prefs.showTodos) safeStorageSet('neon_planner_show_todos', prefs.showTodos);
+            if (prefs.showRecords) safeStorageSet('neon_planner_show_records', prefs.showRecords);
+            if (prefs.showAnalytics) safeStorageSet('neon_planner_show_analytics', prefs.showAnalytics);
+            if (prefs.showSearch) safeStorageSet('neon_planner_show_search', prefs.showSearch);
+            if (prefs.buttonOrder) safeStorageSet('neon_planner_button_order', prefs.buttonOrder);
           }
-          localStorage.setItem('neon_planner_last_modified', driveModified.toString());
+          safeStorageSet('neon_planner_last_modified', driveModified.toString());
         } else {
           const prevMod = parseInt(localStorage.getItem('neon_planner_last_modified') || '0', 10);
-          localStorage.setItem('neon_planner_last_modified', Math.max(Date.now(), prevMod + 1).toString());
+          safeStorageSet('neon_planner_last_modified', Math.max(Date.now(), prevMod + 1).toString());
         }
       }
     }
@@ -1625,7 +1647,7 @@ async function autoSyncWithDrive() {
       const searchData = await searchRes.json();
       existingFile = searchData.files && searchData.files[0];
       if (existingFile) {
-        localStorage.setItem('neon_planner_gdrive_file_id', existingFile.id);
+        safeStorageSet('neon_planner_gdrive_file_id', existingFile.id);
       }
     }
 
@@ -1658,41 +1680,32 @@ async function autoSyncWithDrive() {
     const restoreData = await contentRes.json();
     
     if (existingFile.modifiedTime) {
-      localStorage.setItem('neon_planner_gdrive_file_modifiedTime', existingFile.modifiedTime);
+      safeStorageSet('neon_planner_gdrive_file_modifiedTime', existingFile.modifiedTime);
     }
 
     const driveModified = parseInt(restoreData.lastModified || '0', 10);
     const localModified = parseInt(localStorage.getItem('neon_planner_last_modified') || '0', 10);
 
     if (driveModified > localModified) {
-      if (restoreData.todos) localStorage.setItem('neon_planner_todos', JSON.stringify(restoreData.todos));
-      if (restoreData.diaries) localStorage.setItem('neon_planner_diaries', JSON.stringify(restoreData.diaries));
-      if (restoreData.categories) localStorage.setItem('neon_planner_categories', JSON.stringify(restoreData.categories));
-      if (restoreData.tabIcons) localStorage.setItem('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
-      if (restoreData.appTitle) localStorage.setItem('neon_planner_app_title', restoreData.appTitle);
-      if (restoreData.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(restoreData.ddays));
-      if (restoreData.routines) localStorage.setItem('neon_planner_routines', JSON.stringify(restoreData.routines));
-      if (restoreData.routinesPopulatedDates) localStorage.setItem('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
-      
       if (restoreData.preferences) {
         const prefs = restoreData.preferences;
-        if (prefs.theme) localStorage.setItem('neon_planner_theme', prefs.theme);
-        if (prefs.fontSize) localStorage.setItem('neon_planner_font_size', prefs.fontSize);
-        if (prefs.dateSize) localStorage.setItem('neon_planner_date_size', prefs.dateSize);
-        if (prefs.bgHue) localStorage.setItem('neon_planner_bg_hue', prefs.bgHue);
-        if (prefs.bgIntensity) localStorage.setItem('neon_planner_bg_intensity', prefs.bgIntensity);
-        if (prefs.accentColor) localStorage.setItem('neon_planner_accent_color', prefs.accentColor);
-        if (prefs.accentIntensity) localStorage.setItem('neon_planner_accent_intensity', prefs.accentIntensity);
-        if (prefs.showCalendar) localStorage.setItem('neon_planner_show_calendar', prefs.showCalendar);
-        if (prefs.showTodos) localStorage.setItem('neon_planner_show_todos', prefs.showTodos);
-        if (prefs.showRecords) localStorage.setItem('neon_planner_show_records', prefs.showRecords);
-        if (prefs.showAnalytics) localStorage.setItem('neon_planner_show_analytics', prefs.showAnalytics);
-        if (prefs.showSearch) localStorage.setItem('neon_planner_show_search', prefs.showSearch);
-        if (prefs.buttonOrder) localStorage.setItem('neon_planner_button_order', prefs.buttonOrder);
+        if (prefs.theme) safeStorageSet('neon_planner_theme', prefs.theme);
+        if (prefs.fontSize) safeStorageSet('neon_planner_font_size', prefs.fontSize);
+        if (prefs.dateSize) safeStorageSet('neon_planner_date_size', prefs.dateSize);
+        if (prefs.bgHue) safeStorageSet('neon_planner_bg_hue', prefs.bgHue);
+        if (prefs.bgIntensity) safeStorageSet('neon_planner_bg_intensity', prefs.bgIntensity);
+        if (prefs.accentColor) safeStorageSet('neon_planner_accent_color', prefs.accentColor);
+        if (prefs.accentIntensity) safeStorageSet('neon_planner_accent_intensity', prefs.accentIntensity);
+        if (prefs.showCalendar) safeStorageSet('neon_planner_show_calendar', prefs.showCalendar);
+        if (prefs.showTodos) safeStorageSet('neon_planner_show_todos', prefs.showTodos);
+        if (prefs.showRecords) safeStorageSet('neon_planner_show_records', prefs.showRecords);
+        if (prefs.showAnalytics) safeStorageSet('neon_planner_show_analytics', prefs.showAnalytics);
+        if (prefs.showSearch) safeStorageSet('neon_planner_show_search', prefs.showSearch);
+        if (prefs.buttonOrder) safeStorageSet('neon_planner_button_order', prefs.buttonOrder);
       }
-      localStorage.setItem('neon_planner_last_modified', driveModified.toString());
+      safeStorageSet('neon_planner_last_modified', driveModified.toString());
       
-      loadFromLocalStorage();
+      loadFromLocalStorage(restoreData);
       updateUI();
       
       showSyncToast();
@@ -1824,7 +1837,7 @@ function setupHeaderButtonsDraggable() {
         // Save order
         const sortedButtons = Array.from(container.getElementsByClassName('header-toggle-btn'));
         state.headerButtonOrder = sortedButtons.map(btn => btn.dataset.sectionId);
-        localStorage.setItem('neon_planner_button_order', JSON.stringify(state.headerButtonOrder));
+        safeStorageSet('neon_planner_button_order', JSON.stringify(state.headerButtonOrder));
 
         applyLayoutSectionOrder();
         
@@ -2662,12 +2675,12 @@ function setupEventListeners() {
   if (btnThemeDark && btnThemeLight) {
     btnThemeDark.addEventListener('click', () => {
       state.theme = 'dark';
-      localStorage.setItem('neon_planner_theme', 'dark');
+      safeStorageSet('neon_planner_theme', 'dark');
       applyPreferences();
     });
     btnThemeLight.addEventListener('click', () => {
       state.theme = 'light';
-      localStorage.setItem('neon_planner_theme', 'light');
+      safeStorageSet('neon_planner_theme', 'light');
       applyPreferences();
     });
   }
@@ -2678,13 +2691,13 @@ function setupEventListeners() {
   if (btnLinkEnable && btnLinkDisable) {
     btnLinkEnable.addEventListener('click', () => {
       state.allowLinkNavigation = true;
-      localStorage.setItem('neon_planner_allow_link_navigation', 'true');
+      safeStorageSet('neon_planner_allow_link_navigation', 'true');
       applyPreferences();
       updateUI();
     });
     btnLinkDisable.addEventListener('click', () => {
       state.allowLinkNavigation = false;
-      localStorage.setItem('neon_planner_allow_link_navigation', 'false');
+      safeStorageSet('neon_planner_allow_link_navigation', 'false');
       applyPreferences();
       updateUI();
     });
@@ -2696,12 +2709,12 @@ function setupEventListeners() {
   if (btnHistoryEnable && btnHistoryDisable) {
     btnHistoryEnable.addEventListener('click', () => {
       state.showHistoryControls = true;
-      localStorage.setItem('neon_planner_show_history_controls', 'true');
+      safeStorageSet('neon_planner_show_history_controls', 'true');
       applyPreferences();
     });
     btnHistoryDisable.addEventListener('click', () => {
       state.showHistoryControls = false;
-      localStorage.setItem('neon_planner_show_history_controls', 'false');
+      safeStorageSet('neon_planner_show_history_controls', 'false');
       applyPreferences();
       const historyControls = document.getElementById('floating-history-controls');
       if (historyControls) historyControls.classList.remove('visible');
@@ -2713,7 +2726,7 @@ function setupEventListeners() {
   presetBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       state.bgHue = parseInt(btn.dataset.hue, 10);
-      localStorage.setItem('neon_planner_bg_hue', state.bgHue);
+      safeStorageSet('neon_planner_bg_hue', state.bgHue);
       applyPreferences();
     });
   });
@@ -2723,7 +2736,7 @@ function setupEventListeners() {
   if (bgIntensitySlider) {
     bgIntensitySlider.addEventListener('input', () => {
       state.bgIntensity = parseInt(bgIntensitySlider.value, 10);
-      localStorage.setItem('neon_planner_bg_intensity', state.bgIntensity);
+      safeStorageSet('neon_planner_bg_intensity', state.bgIntensity);
       applyPreferences();
     });
   }
@@ -2733,7 +2746,7 @@ function setupEventListeners() {
   accentBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       state.accentTheme = btn.dataset.accent;
-      localStorage.setItem('neon_planner_accent_theme', state.accentTheme);
+      safeStorageSet('neon_planner_accent_theme', state.accentTheme);
       applyPreferences();
     });
   });
@@ -2743,7 +2756,7 @@ function setupEventListeners() {
   if (accentIntensitySlider) {
     accentIntensitySlider.addEventListener('input', () => {
       state.accentIntensity = parseInt(accentIntensitySlider.value, 10);
-      localStorage.setItem('neon_planner_accent_intensity', state.accentIntensity);
+      safeStorageSet('neon_planner_accent_intensity', state.accentIntensity);
       applyPreferences();
     });
   }
@@ -2751,20 +2764,20 @@ function setupEventListeners() {
   // Device Preview Toggles
   btnPcView.addEventListener('click', () => {
     state.device = 'pc';
-    localStorage.setItem('neon_planner_device', 'pc');
+    safeStorageSet('neon_planner_device', 'pc');
     applyPreferences();
   });
 
   btnPhoneView.addEventListener('click', () => {
     state.device = 'phone';
-    localStorage.setItem('neon_planner_device', 'phone');
+    safeStorageSet('neon_planner_device', 'phone');
     applyPreferences();
   });
 
   // Font Size Slider (Mobile Panel)
   fontSizeSlider.addEventListener('input', () => {
     state.fontSize = parseInt(fontSizeSlider.value, 10);
-    localStorage.setItem('neon_planner_font_size', state.fontSize);
+    safeStorageSet('neon_planner_font_size', state.fontSize);
     applyPreferences();
   });
 
@@ -2773,7 +2786,7 @@ function setupEventListeners() {
   if (modalFontSizeSliderEl) {
     modalFontSizeSliderEl.addEventListener('input', () => {
       state.fontSize = parseInt(modalFontSizeSliderEl.value, 10);
-      localStorage.setItem('neon_planner_font_size', state.fontSize);
+      safeStorageSet('neon_planner_font_size', state.fontSize);
       applyPreferences();
     });
   }
@@ -2783,7 +2796,7 @@ function setupEventListeners() {
   if (dateSizeSlider) {
     dateSizeSlider.addEventListener('input', () => {
       state.dateSize = parseInt(dateSizeSlider.value, 10);
-      localStorage.setItem('neon_planner_date_size', state.dateSize);
+      safeStorageSet('neon_planner_date_size', state.dateSize);
       applyPreferences();
     });
   }
@@ -2793,7 +2806,7 @@ function setupEventListeners() {
   if (modalDateSizeSliderEl) {
     modalDateSizeSliderEl.addEventListener('input', () => {
       state.dateSize = parseInt(modalDateSizeSliderEl.value, 10);
-      localStorage.setItem('neon_planner_date_size', state.dateSize);
+      safeStorageSet('neon_planner_date_size', state.dateSize);
       applyPreferences();
     });
   }
@@ -2828,7 +2841,7 @@ function setupEventListeners() {
   if (customTitleInput) {
     customTitleInput.addEventListener('input', () => {
       state.appTitle = customTitleInput.value;
-      localStorage.setItem('neon_planner_app_title', state.appTitle);
+      safeStorageSet('neon_planner_app_title', state.appTitle);
       updateUI();
     });
   }
@@ -2903,7 +2916,7 @@ function setupEventListeners() {
       if (analyticsInput) state.tabIcons.analytics = analyticsInput.value;
       if (settingsInput) state.tabIcons.settings = settingsInput.value;
 
-      localStorage.setItem('neon_planner_tab_icons', JSON.stringify(state.tabIcons));
+      safeStorageSet('neon_planner_tab_icons', JSON.stringify(state.tabIcons));
       updateUI();
       closeEmojiModal();
     });
@@ -2925,7 +2938,7 @@ function setupEventListeners() {
   if (btnToggleCalendar) {
     btnToggleCalendar.addEventListener('click', () => {
       state.showCalendar = !state.showCalendar;
-      localStorage.setItem('neon_planner_show_calendar', state.showCalendar);
+      safeStorageSet('neon_planner_show_calendar', state.showCalendar);
       applyCalendarVisibility();
       applyLayoutSectionOrder();
       updateUI();
@@ -2937,7 +2950,7 @@ function setupEventListeners() {
   if (btnToggleSearch) {
     btnToggleSearch.addEventListener('click', () => {
       state.showSearch = !state.showSearch;
-      localStorage.setItem('neon_planner_show_search', state.showSearch);
+      safeStorageSet('neon_planner_show_search', state.showSearch);
       applySearchVisibility();
       updateUI();
     });
@@ -2992,11 +3005,11 @@ function setupEventListeners() {
       if (clearSearchBtn) clearSearchBtn.style.display = 'block';
       if (!state.showTodos) {
         state.showTodos = true;
-        localStorage.setItem('neon_planner_show_todos', 'true');
+        safeStorageSet('neon_planner_show_todos', 'true');
       }
       if (!state.showRecords) {
         state.showRecords = true;
-        localStorage.setItem('neon_planner_show_records', 'true');
+        safeStorageSet('neon_planner_show_records', 'true');
       }
     } else {
       if (clearSearchBtn) clearSearchBtn.style.display = 'none';
@@ -3040,19 +3053,19 @@ function setupEventListeners() {
       searchAutoOpenedSections.forEach(sec => {
         if (sec === 'calendar') {
           state.showCalendar = false;
-          localStorage.setItem('neon_planner_show_calendar', 'false');
+          safeStorageSet('neon_planner_show_calendar', 'false');
         } else if (sec === 'todos') {
           state.showTodos = false;
-          localStorage.setItem('neon_planner_show_todos', 'false');
+          safeStorageSet('neon_planner_show_todos', 'false');
         } else if (sec === 'records') {
           state.showRecords = false;
-          localStorage.setItem('neon_planner_show_records', 'false');
+          safeStorageSet('neon_planner_show_records', 'false');
         } else if (sec === 'analytics') {
           state.showAnalytics = false;
-          localStorage.setItem('neon_planner_show_analytics', 'false');
+          safeStorageSet('neon_planner_show_analytics', 'false');
         } else if (sec === 'settings') {
           state.showControlPanel = false;
-          localStorage.setItem('neon_planner_show_control_panel', 'false');
+          safeStorageSet('neon_planner_show_control_panel', 'false');
         }
       });
       searchAutoOpenedSections = [];
@@ -3124,7 +3137,7 @@ function setupEventListeners() {
   if (btnToggleControlPanel) {
     btnToggleControlPanel.addEventListener('click', () => {
       state.showControlPanel = !state.showControlPanel;
-      localStorage.setItem('neon_planner_show_control_panel', state.showControlPanel);
+      safeStorageSet('neon_planner_show_control_panel', state.showControlPanel);
       applyControlPanelVisibility();
     });
   }
@@ -3143,7 +3156,7 @@ function setupEventListeners() {
   if (btnToggleAnalytics) {
     btnToggleAnalytics.addEventListener('click', () => {
       state.showAnalytics = !state.showAnalytics;
-      localStorage.setItem('neon_planner_show_analytics', state.showAnalytics);
+      safeStorageSet('neon_planner_show_analytics', state.showAnalytics);
       applyAnalyticsVisibility();
       applyLayoutSectionOrder();
       updateUI();
@@ -3154,7 +3167,7 @@ function setupEventListeners() {
   if (btnToggleRoutines) {
     btnToggleRoutines.addEventListener('click', () => {
       state.showRoutines = !state.showRoutines;
-      localStorage.setItem('neon_planner_show_routines', state.showRoutines);
+      safeStorageSet('neon_planner_show_routines', state.showRoutines);
       applyRoutinesVisibility();
       applyLayoutSectionOrder();
       updateUI();
@@ -3165,7 +3178,7 @@ function setupEventListeners() {
   if (btnToggleTimeline) {
     btnToggleTimeline.addEventListener('click', () => {
       state.showTimeline = !state.showTimeline;
-      localStorage.setItem('neon_planner_show_timeline', state.showTimeline);
+      safeStorageSet('neon_planner_show_timeline', state.showTimeline);
       applyTimelineVisibility();
       applyLayoutSectionOrder();
       updateUI();
@@ -3177,7 +3190,7 @@ function setupEventListeners() {
   if (btnToggleDdays) {
     btnToggleDdays.addEventListener('click', () => {
       state.showDdays = !state.showDdays;
-      localStorage.setItem('neon_planner_show_ddays', state.showDdays);
+      safeStorageSet('neon_planner_show_ddays', state.showDdays);
       applyDdaysVisibility();
       applyLayoutSectionOrder();
       updateUI();
@@ -3757,7 +3770,7 @@ function setupEventListeners() {
   if (toggleTodosBtn) {
     toggleTodosBtn.addEventListener('click', () => {
       state.showTodos = !state.showTodos;
-      localStorage.setItem('neon_planner_show_todos', state.showTodos);
+      safeStorageSet('neon_planner_show_todos', state.showTodos);
       applyLayoutSectionOrder();
       updateUI();
     });
@@ -3768,7 +3781,7 @@ function setupEventListeners() {
   if (toggleRecordsBtn) {
     toggleRecordsBtn.addEventListener('click', () => {
       state.showRecords = !state.showRecords;
-      localStorage.setItem('neon_planner_show_records', state.showRecords);
+      safeStorageSet('neon_planner_show_records', state.showRecords);
       applyLayoutSectionOrder();
       updateUI();
     });
@@ -3911,7 +3924,7 @@ function setupEventListeners() {
   const saveClientId = () => {
     if (gdriveClientIdInput) {
       state.gdriveClientId = gdriveClientIdInput.value.trim();
-      localStorage.setItem('neon_planner_gdrive_client_id', state.gdriveClientId);
+      safeStorageSet('neon_planner_gdrive_client_id', state.gdriveClientId);
       alert('🔑 구글 Client ID가 안전하게 등록되었습니다!');
     }
   };
@@ -3967,14 +3980,14 @@ function setupEventListeners() {
                 if (oldEmail && oldEmail !== newEmail) {
                    window.clearLocalUserData();
                 }
-                localStorage.setItem('neon_planner_gdrive_email', newEmail);
+                safeStorageSet('neon_planner_gdrive_email', newEmail);
               }
             } catch(e) { console.warn('Failed to fetch user email', e); }
 
             const expiryTime = Date.now() + (tokenResponse.expires_in * 1000);
-            localStorage.setItem('neon_planner_gdrive_connected', 'true');
-            localStorage.setItem('neon_planner_gdrive_access_token', gdriveAccessToken);
-            localStorage.setItem('neon_planner_gdrive_token_expiry', expiryTime);
+            safeStorageSet('neon_planner_gdrive_connected', 'true');
+            safeStorageSet('neon_planner_gdrive_access_token', gdriveAccessToken);
+            safeStorageSet('neon_planner_gdrive_token_expiry', expiryTime);
             
             scheduleGDriveTokenRefresh(expiryTime);
             if (gdrivePollInterval) clearInterval(gdrivePollInterval);
@@ -4071,12 +4084,12 @@ function setupEventListeners() {
 
       try {
         const backupData = {
-          todos: JSON.parse(localStorage.getItem('neon_planner_todos') || '{}'),
-          diaries: JSON.parse(localStorage.getItem('neon_planner_diaries') || '{}'),
-          categories: JSON.parse(localStorage.getItem('neon_planner_categories') || '{}'),
-          tabIcons: JSON.parse(localStorage.getItem('neon_planner_tab_icons') || '{}'),
-          appTitle: localStorage.getItem('neon_planner_app_title') || '',
-          ddays: JSON.parse(localStorage.getItem('neon_planner_ddays') || '[]'),
+          todos: JSON.parse((optionalData && optionalData.todos ? JSON.stringify(optionalData.todos) : localStorage.getItem('neon_planner_todos')) || '{}'),
+          diaries: JSON.parse((optionalData && optionalData.diaries ? JSON.stringify(optionalData.diaries) : localStorage.getItem('neon_planner_diaries')) || '{}'),
+          categories: JSON.parse((optionalData && optionalData.categories ? JSON.stringify(optionalData.categories) : localStorage.getItem('neon_planner_categories')) || '{}'),
+          tabIcons: JSON.parse((optionalData && optionalData.tabIcons ? JSON.stringify(optionalData.tabIcons) : localStorage.getItem('neon_planner_tab_icons')) || '{}'),
+          appTitle: (optionalData && optionalData.appTitle !== undefined ? optionalData.appTitle : localStorage.getItem('neon_planner_app_title')) || '',
+          ddays: JSON.parse((optionalData && optionalData.ddays ? JSON.stringify(optionalData.ddays) : localStorage.getItem('neon_planner_ddays')) || '[]'),
           preferences: {
             theme: localStorage.getItem('neon_planner_theme') || 'dark',
             fontSize: localStorage.getItem('neon_planner_font_size') || '16',
@@ -4209,31 +4222,31 @@ function setupEventListeners() {
         if (!contentRes.ok) throw new Error('백업 데이터 파일 읽기 실패');
         const restoreData = await contentRes.json();
 
-        if (restoreData.todos) localStorage.setItem('neon_planner_todos', JSON.stringify(restoreData.todos));
-        if (restoreData.diaries) localStorage.setItem('neon_planner_diaries', JSON.stringify(restoreData.diaries));
-        if (restoreData.categories) localStorage.setItem('neon_planner_categories', JSON.stringify(restoreData.categories));
-        if (restoreData.tabIcons) localStorage.setItem('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
-        if (restoreData.appTitle) localStorage.setItem('neon_planner_app_title', restoreData.appTitle);
-        if (restoreData.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(restoreData.ddays));
+        if (restoreData.todos) safeStorageSet('neon_planner_todos', JSON.stringify(restoreData.todos));
+        if (restoreData.diaries) safeStorageSet('neon_planner_diaries', JSON.stringify(restoreData.diaries));
+        if (restoreData.categories) safeStorageSet('neon_planner_categories', JSON.stringify(restoreData.categories));
+        if (restoreData.tabIcons) safeStorageSet('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
+        if (restoreData.appTitle) safeStorageSet('neon_planner_app_title', restoreData.appTitle);
+        if (restoreData.ddays) safeStorageSet('neon_planner_ddays', JSON.stringify(restoreData.ddays));
         
         if (restoreData.preferences) {
           const prefs = restoreData.preferences;
-          if (prefs.theme) localStorage.setItem('neon_planner_theme', prefs.theme);
-          if (prefs.fontSize) localStorage.setItem('neon_planner_font_size', prefs.fontSize);
-          if (prefs.dateSize) localStorage.setItem('neon_planner_date_size', prefs.dateSize);
-          if (prefs.bgHue) localStorage.setItem('neon_planner_bg_hue', prefs.bgHue);
-          if (prefs.bgIntensity) localStorage.setItem('neon_planner_bg_intensity', prefs.bgIntensity);
-          if (prefs.accentColor) localStorage.setItem('neon_planner_accent_color', prefs.accentColor);
-          if (prefs.accentIntensity) localStorage.setItem('neon_planner_accent_intensity', prefs.accentIntensity);
-          if (prefs.showCalendar) localStorage.setItem('neon_planner_show_calendar', prefs.showCalendar);
-          if (prefs.showTodos) localStorage.setItem('neon_planner_show_todos', prefs.showTodos);
-          if (prefs.showRecords) localStorage.setItem('neon_planner_show_records', prefs.showRecords);
-          if (prefs.showAnalytics) localStorage.setItem('neon_planner_show_analytics', prefs.showAnalytics);
-          if (prefs.showSearch) localStorage.setItem('neon_planner_show_search', prefs.showSearch);
-          if (prefs.buttonOrder) localStorage.setItem('neon_planner_button_order', prefs.buttonOrder);
+          if (prefs.theme) safeStorageSet('neon_planner_theme', prefs.theme);
+          if (prefs.fontSize) safeStorageSet('neon_planner_font_size', prefs.fontSize);
+          if (prefs.dateSize) safeStorageSet('neon_planner_date_size', prefs.dateSize);
+          if (prefs.bgHue) safeStorageSet('neon_planner_bg_hue', prefs.bgHue);
+          if (prefs.bgIntensity) safeStorageSet('neon_planner_bg_intensity', prefs.bgIntensity);
+          if (prefs.accentColor) safeStorageSet('neon_planner_accent_color', prefs.accentColor);
+          if (prefs.accentIntensity) safeStorageSet('neon_planner_accent_intensity', prefs.accentIntensity);
+          if (prefs.showCalendar) safeStorageSet('neon_planner_show_calendar', prefs.showCalendar);
+          if (prefs.showTodos) safeStorageSet('neon_planner_show_todos', prefs.showTodos);
+          if (prefs.showRecords) safeStorageSet('neon_planner_show_records', prefs.showRecords);
+          if (prefs.showAnalytics) safeStorageSet('neon_planner_show_analytics', prefs.showAnalytics);
+          if (prefs.showSearch) safeStorageSet('neon_planner_show_search', prefs.showSearch);
+          if (prefs.buttonOrder) safeStorageSet('neon_planner_button_order', prefs.buttonOrder);
         }
 
-        localStorage.setItem('neon_planner_last_modified', restoreData.lastModified ? restoreData.lastModified.toString() : Date.now().toString());
+        safeStorageSet('neon_planner_last_modified', restoreData.lastModified ? restoreData.lastModified.toString() : Date.now().toString());
 
         alert('구글 드라이브 백업 데이터 복원에 성공했습니다! 변경사항 적용을 위해 화면을 새로고침합니다.');
         window.location.reload();
@@ -4727,23 +4740,23 @@ function deleteTodo(todoId, text, isRoutine, dateKeyParam = null) {
 
 // Save helpers to LocalStorage
 function saveTodos(skipSync = false) {
-  localStorage.setItem('neon_planner_todos', JSON.stringify(state.todos));
+  safeStorageSet('neon_planner_todos', JSON.stringify(state.todos));
   if (!skipSync) triggerGDriveAutoSync();
 }
 
 // saveRoutines is already defined above, but we update it here as well for consistency
 function saveRoutines(skipSync = false) {
-  localStorage.setItem('neon_planner_routines', JSON.stringify(state.routines));
+  safeStorageSet('neon_planner_routines', JSON.stringify(state.routines));
   if (!skipSync) triggerGDriveAutoSync();
 }
 
 function saveRoutinesPopulatedDates(skipSync = false) {
-  localStorage.setItem('neon_planner_populated_dates', JSON.stringify(state.routinesPopulatedDates));
+  safeStorageSet('neon_planner_populated_dates', JSON.stringify(state.routinesPopulatedDates));
   if (!skipSync) triggerGDriveAutoSync(true); // Don't bump last_modified for background auto-population
 }
 
 function saveCategories(skipSync = false) {
-  localStorage.setItem('neon_planner_categories', JSON.stringify(state.categories));
+  safeStorageSet('neon_planner_categories', JSON.stringify(state.categories));
   if (!skipSync) triggerGDriveAutoSync();
 }
 
@@ -4862,7 +4875,7 @@ function renderSearchResultsSection() {
             
             if (!state.showTodos) {
               state.showTodos = true;
-              localStorage.setItem('neon_planner_show_todos', 'true');
+              safeStorageSet('neon_planner_show_todos', 'true');
               if (!searchAutoOpenedSections.includes('todos')) {
                 searchAutoOpenedSections.push('todos');
               }
@@ -4901,7 +4914,7 @@ function renderSearchResultsSection() {
             
             if (!state.showRecords) {
               state.showRecords = true;
-              localStorage.setItem('neon_planner_show_records', 'true');
+              safeStorageSet('neon_planner_show_records', 'true');
               if (!searchAutoOpenedSections.includes('records')) {
                 searchAutoOpenedSections.push('records');
               }
@@ -5208,7 +5221,7 @@ function renderCategoryFilterTabs() {
           .map(child => child.dataset.category)
           .filter(c => c); // Ensure no nulls
         state.categoryOrder = newOrder;
-        localStorage.setItem('neon_planner_category_order', JSON.stringify(state.categoryOrder));
+        safeStorageSet('neon_planner_category_order', JSON.stringify(state.categoryOrder));
         triggerGDriveAutoSync();
       }
     });
@@ -5345,7 +5358,7 @@ function renderCategorySelector() {
 
 // Save diaries to LocalStorage
 function saveDiaries(skipSync = false) {
-  localStorage.setItem('neon_planner_diaries', JSON.stringify(state.diaries));
+  safeStorageSet('neon_planner_diaries', JSON.stringify(state.diaries));
   if (!skipSync) triggerGDriveAutoSync();
 }
 
@@ -8646,14 +8659,14 @@ function setupLocalBackup() {
           if (parsedData.tabIcons) state.tabIcons = parsedData.tabIcons;
 
           // Save to LocalStorage
-          localStorage.setItem('neon_planner_todos', JSON.stringify(state.todos));
-          localStorage.setItem('neon_planner_routines', JSON.stringify(state.routines));
-          localStorage.setItem('neon_planner_populated_dates', JSON.stringify(state.routinesPopulatedDates));
-          localStorage.setItem('neon_planner_categories', JSON.stringify(state.categories));
-          localStorage.setItem('neon_planner_diaries', JSON.stringify(state.diaries));
-          localStorage.setItem('neon_planner_ddays', JSON.stringify(state.ddays));
-          if (state.appTitle) localStorage.setItem('neon_planner_app_title', state.appTitle);
-          if (state.tabIcons) localStorage.setItem('neon_planner_tab_icons', JSON.stringify(state.tabIcons));
+          safeStorageSet('neon_planner_todos', JSON.stringify(state.todos));
+          safeStorageSet('neon_planner_routines', JSON.stringify(state.routines));
+          safeStorageSet('neon_planner_populated_dates', JSON.stringify(state.routinesPopulatedDates));
+          safeStorageSet('neon_planner_categories', JSON.stringify(state.categories));
+          safeStorageSet('neon_planner_diaries', JSON.stringify(state.diaries));
+          safeStorageSet('neon_planner_ddays', JSON.stringify(state.ddays));
+          if (state.appTitle) safeStorageSet('neon_planner_app_title', state.appTitle);
+          if (state.tabIcons) safeStorageSet('neon_planner_tab_icons', JSON.stringify(state.tabIcons));
 
           alert('로컬 백업 복원이 완료되었습니다! 화면을 새로고침합니다.');
           location.reload();
@@ -9771,17 +9784,17 @@ document.addEventListener('DOMContentLoaded', () => {
       pressTimer = setTimeout(() => {
         if (isPressing) {
           state.device = state.device === 'pc' ? 'phone' : 'pc';
-          localStorage.setItem('neon_planner_device', state.device);
+          safeStorageSet('neon_planner_device', state.device);
           if (typeof applyPreferences === 'function') applyPreferences();
           
           if (navigator.vibrate) navigator.vibrate(50);
           
           const logoTextEl = headerLogo.querySelector('.logo-text');
           if (logoTextEl) {
-            const originalText = localStorage.getItem('neon_planner_app_title') || '플래너';
+            const originalText = (optionalData && optionalData.appTitle !== undefined ? optionalData.appTitle : localStorage.getItem('neon_planner_app_title')) || '플래너';
             logoTextEl.textContent = state.device === 'pc' ? 'PC 모드 전환' : '핸드폰 모드 전환';
             setTimeout(() => {
-               logoTextEl.textContent = localStorage.getItem('neon_planner_app_title') || '플래너';
+               logoTextEl.textContent = (optionalData && optionalData.appTitle !== undefined ? optionalData.appTitle : localStorage.getItem('neon_planner_app_title')) || '플래너';
             }, 1500);
           }
         }
@@ -9897,32 +9910,32 @@ document.addEventListener('DOMContentLoaded', () => {
               if (!dlRes.ok) throw new Error('Download failed');
               
               const restoreData = await dlRes.json();
-              if (restoreData.todos) localStorage.setItem('neon_planner_todos', JSON.stringify(restoreData.todos));
-              if (restoreData.diaries) localStorage.setItem('neon_planner_diaries', JSON.stringify(restoreData.diaries));
-              if (restoreData.categories) localStorage.setItem('neon_planner_categories', JSON.stringify(restoreData.categories));
-              if (restoreData.tabIcons) localStorage.setItem('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
-              if (restoreData.appTitle) localStorage.setItem('neon_planner_app_title', restoreData.appTitle);
-              if (restoreData.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(restoreData.ddays));
-              if (restoreData.routines) localStorage.setItem('neon_planner_routines', JSON.stringify(restoreData.routines));
-              if (restoreData.routinesPopulatedDates) localStorage.setItem('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
+              if (restoreData.todos) safeStorageSet('neon_planner_todos', JSON.stringify(restoreData.todos));
+              if (restoreData.diaries) safeStorageSet('neon_planner_diaries', JSON.stringify(restoreData.diaries));
+              if (restoreData.categories) safeStorageSet('neon_planner_categories', JSON.stringify(restoreData.categories));
+              if (restoreData.tabIcons) safeStorageSet('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
+              if (restoreData.appTitle) safeStorageSet('neon_planner_app_title', restoreData.appTitle);
+              if (restoreData.ddays) safeStorageSet('neon_planner_ddays', JSON.stringify(restoreData.ddays));
+              if (restoreData.routines) safeStorageSet('neon_planner_routines', JSON.stringify(restoreData.routines));
+              if (restoreData.routinesPopulatedDates) safeStorageSet('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
               if (restoreData.preferences) {
                 const prefs = restoreData.preferences;
-                if (prefs.theme) localStorage.setItem('neon_planner_theme', prefs.theme);
-                if (prefs.fontSize) localStorage.setItem('neon_planner_font_size', prefs.fontSize);
-                if (prefs.dateSize) localStorage.setItem('neon_planner_date_size', prefs.dateSize);
-                if (prefs.bgHue) localStorage.setItem('neon_planner_bg_hue', prefs.bgHue);
-                if (prefs.bgIntensity) localStorage.setItem('neon_planner_bg_intensity', prefs.bgIntensity);
-                if (prefs.accentColor) localStorage.setItem('neon_planner_accent_color', prefs.accentColor);
-                if (prefs.accentIntensity) localStorage.setItem('neon_planner_accent_intensity', prefs.accentIntensity);
-                if (prefs.showCalendar) localStorage.setItem('neon_planner_show_calendar', prefs.showCalendar);
-                if (prefs.showTodos) localStorage.setItem('neon_planner_show_todos', prefs.showTodos);
-                if (prefs.showRecords) localStorage.setItem('neon_planner_show_records', prefs.showRecords);
-                if (prefs.showAnalytics) localStorage.setItem('neon_planner_show_analytics', prefs.showAnalytics);
-                if (prefs.showSearch) localStorage.setItem('neon_planner_show_search', prefs.showSearch);
-                if (prefs.buttonOrder) localStorage.setItem('neon_planner_button_order', prefs.buttonOrder);
+                if (prefs.theme) safeStorageSet('neon_planner_theme', prefs.theme);
+                if (prefs.fontSize) safeStorageSet('neon_planner_font_size', prefs.fontSize);
+                if (prefs.dateSize) safeStorageSet('neon_planner_date_size', prefs.dateSize);
+                if (prefs.bgHue) safeStorageSet('neon_planner_bg_hue', prefs.bgHue);
+                if (prefs.bgIntensity) safeStorageSet('neon_planner_bg_intensity', prefs.bgIntensity);
+                if (prefs.accentColor) safeStorageSet('neon_planner_accent_color', prefs.accentColor);
+                if (prefs.accentIntensity) safeStorageSet('neon_planner_accent_intensity', prefs.accentIntensity);
+                if (prefs.showCalendar) safeStorageSet('neon_planner_show_calendar', prefs.showCalendar);
+                if (prefs.showTodos) safeStorageSet('neon_planner_show_todos', prefs.showTodos);
+                if (prefs.showRecords) safeStorageSet('neon_planner_show_records', prefs.showRecords);
+                if (prefs.showAnalytics) safeStorageSet('neon_planner_show_analytics', prefs.showAnalytics);
+                if (prefs.showSearch) safeStorageSet('neon_planner_show_search', prefs.showSearch);
+                if (prefs.buttonOrder) safeStorageSet('neon_planner_button_order', prefs.buttonOrder);
               }
               // Force next sync to overwrite cloud with this restored version
-              localStorage.setItem('neon_planner_last_modified', Date.now().toString());
+              safeStorageSet('neon_planner_last_modified', Date.now().toString());
               
               if (typeof triggerGDriveAutoSync === 'function') triggerGDriveAutoSync();
               
