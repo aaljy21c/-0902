@@ -1394,14 +1394,14 @@ function triggerGDriveAutoSync(isAutoPopulate = false) {
 
     try {
       const backupData = {
-        todos: JSON.parse((optionalData && optionalData.todos ? JSON.stringify(optionalData.todos) : localStorage.getItem('neon_planner_todos')) || '{}'),
-        diaries: JSON.parse((optionalData && optionalData.diaries ? JSON.stringify(optionalData.diaries) : localStorage.getItem('neon_planner_diaries')) || '{}'),
-        categories: JSON.parse((optionalData && optionalData.categories ? JSON.stringify(optionalData.categories) : localStorage.getItem('neon_planner_categories')) || '{}'),
-        tabIcons: JSON.parse((optionalData && optionalData.tabIcons ? JSON.stringify(optionalData.tabIcons) : localStorage.getItem('neon_planner_tab_icons')) || '{}'),
-        appTitle: (optionalData && optionalData.appTitle !== undefined ? optionalData.appTitle : localStorage.getItem('neon_planner_app_title')) || '',
-        ddays: JSON.parse((optionalData && optionalData.ddays ? JSON.stringify(optionalData.ddays) : localStorage.getItem('neon_planner_ddays')) || '[]'),
-        routines: JSON.parse((optionalData && optionalData.routines ? JSON.stringify(optionalData.routines) : localStorage.getItem('neon_planner_routines')) || '[]'),
-        routinesPopulatedDates: JSON.parse((optionalData && optionalData.routinesPopulatedDates ? JSON.stringify(optionalData.routinesPopulatedDates) : localStorage.getItem('neon_planner_populated_dates')) || '{}'),
+        todos: state.todos || {},
+        diaries: state.diaries || {},
+        categories: state.categories || {},
+        tabIcons: state.tabIcons || {},
+        appTitle: state.appTitle || '',
+        ddays: state.ddays || [],
+        routines: state.routines || [],
+        routinesPopulatedDates: state.routinesPopulatedDates || {},
         preferences: {
           theme: localStorage.getItem('neon_planner_theme') || 'dark',
           fontSize: localStorage.getItem('neon_planner_font_size') || '16',
@@ -4121,12 +4121,14 @@ function setupEventListeners() {
 
       try {
         const backupData = {
-          todos: JSON.parse((optionalData && optionalData.todos ? JSON.stringify(optionalData.todos) : localStorage.getItem('neon_planner_todos')) || '{}'),
-          diaries: JSON.parse((optionalData && optionalData.diaries ? JSON.stringify(optionalData.diaries) : localStorage.getItem('neon_planner_diaries')) || '{}'),
-          categories: JSON.parse((optionalData && optionalData.categories ? JSON.stringify(optionalData.categories) : localStorage.getItem('neon_planner_categories')) || '{}'),
-          tabIcons: JSON.parse((optionalData && optionalData.tabIcons ? JSON.stringify(optionalData.tabIcons) : localStorage.getItem('neon_planner_tab_icons')) || '{}'),
-          appTitle: (optionalData && optionalData.appTitle !== undefined ? optionalData.appTitle : localStorage.getItem('neon_planner_app_title')) || '',
-          ddays: JSON.parse((optionalData && optionalData.ddays ? JSON.stringify(optionalData.ddays) : localStorage.getItem('neon_planner_ddays')) || '[]'),
+          todos: state.todos || {},
+          diaries: state.diaries || {},
+          categories: state.categories || {},
+          tabIcons: state.tabIcons || {},
+          appTitle: state.appTitle || '',
+          ddays: state.ddays || [],
+          routines: state.routines || [],
+          routinesPopulatedDates: state.routinesPopulatedDates || {},
           preferences: {
             theme: localStorage.getItem('neon_planner_theme') || 'dark',
             fontSize: localStorage.getItem('neon_planner_font_size') || '16',
