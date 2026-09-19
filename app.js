@@ -62,6 +62,20 @@ let state = {
   }
 };
 
+// Intercept state.selectedDate to save it to localStorage
+let _internalSelectedDate = state.selectedDate;
+Object.defineProperty(state, 'selectedDate', {
+  get() {
+    return _internalSelectedDate;
+  },
+  set(val) {
+    _internalSelectedDate = val;
+    try {
+      localStorage.setItem('neon_planner_last_selected_date', val);
+    } catch (e) {}
+  }
+});
+
 // Undo/Redo History Stacks
 let undoStack = [];
 let redoStack = [];
@@ -255,8 +269,15 @@ function init() {
 
   // Set initial dates
   const today = new Date();
-  state.selectedDate = formatDateString(today);
-  state.currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const savedSelectedDate = localStorage.getItem('neon_planner_last_selected_date');
+  if (savedSelectedDate && /^\d{4}-\d{2}-\d{2}$/.test(savedSelectedDate)) {
+    state.selectedDate = savedSelectedDate;
+    const [yy, mm, dd] = savedSelectedDate.split('-');
+    state.currentMonth = new Date(parseInt(yy, 10), parseInt(mm, 10) - 1, 1);
+  } else {
+    state.selectedDate = formatDateString(today);
+    state.currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
 
   // Apply Rollover for Unfinished past tasks
   rolloverUnfinishedTodos();
@@ -337,6 +358,8 @@ function init() {
       gdriveAccessToken = savedToken;
       if (gdriveBackupBtn) gdriveBackupBtn.disabled = false;
       if (gdriveRestoreBtn) gdriveRestoreBtn.disabled = false;
+      const gdriveRecoverBtn = document.getElementById('btn-gdrive-recover');
+      if (gdriveRecoverBtn) gdriveRecoverBtn.disabled = false;
       if (gdriveLogoutBtn) gdriveLogoutBtn.style.display = 'inline-flex';
       
       const badge = document.getElementById('gdrive-status-badge');
@@ -1303,6 +1326,8 @@ function autoRefreshGDriveToken() {
 
         if (gdriveBackupBtn) gdriveBackupBtn.disabled = false;
         if (gdriveRestoreBtn) gdriveRestoreBtn.disabled = false;
+        const gdriveRecoverBtn = document.getElementById('btn-gdrive-recover');
+        if (gdriveRecoverBtn) gdriveRecoverBtn.disabled = false;
         if (gdriveLogoutBtn) gdriveLogoutBtn.style.display = 'inline-flex';
 
         const badge = document.getElementById('gdrive-status-badge');
