@@ -1078,17 +1078,20 @@ function applyRoutinesVisibility() {
 
 // Apply timeline section visibility
 function applyTimelineVisibility() {
-  const panel = document.getElementById('timeline-panel');
+  const backdrop = document.getElementById('timeline-modal-backdrop');
+  const panel = document.getElementById('timeline-modal-content');
   const btnToggle = document.getElementById('btn-toggle-timeline');
-  if (!panel || !btnToggle) return;
+  if (!panel) return;
 
   if (state.showTimeline) {
+    if (backdrop) backdrop.classList.remove('hidden');
     panel.classList.remove('hidden');
-    btnToggle.classList.add('active-view');
+    if (btnToggle) btnToggle.classList.add('active-view');
     renderTimeline();
   } else {
+    if (backdrop) backdrop.classList.add('hidden');
     panel.classList.add('hidden');
-    btnToggle.classList.remove('active-view');
+    if (btnToggle) btnToggle.classList.remove('active-view');
   }
 }
 
@@ -10139,3 +10142,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+
+
+
+// Timeline Modal Close Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+  const btnClose = document.getElementById('btn-timeline-close');
+  const backdrop = document.getElementById('timeline-modal-backdrop');
+  
+  const closeTimeline = () => {
+    state.showTimeline = false;
+    localStorage.setItem('neon_planner_show_timeline', state.showTimeline);
+    applyTimelineVisibility();
+  };
+
+  if (btnClose) btnClose.addEventListener('click', closeTimeline);
+  if (backdrop) backdrop.addEventListener('click', closeTimeline);
+});

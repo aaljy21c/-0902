@@ -13,7 +13,7 @@
   <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
   <script src="storage_proxy.js"></script>
-  <link rel="stylesheet" href="style.css?v=202609200824">
+  <link rel="stylesheet" href="style.css?v=202609200848">
   <link rel="stylesheet" href="drawing.css?v=1788058276511">
 </head>
 <body>
@@ -467,27 +467,30 @@
         </div>
       </section>
 
-      <!-- Timeline Panel -->
-      <section id="timeline-panel" class="timeline-panel hidden">
-                <div class="timeline-header">
+            <!-- Timeline Modal -->
+      <div class="todo-modal-backdrop hidden" id="timeline-modal-backdrop" style="z-index: 2000;"></div>
+      <div class="todo-modal-content timeline-modal-content hidden" id="timeline-modal-content" style="z-index: 2001; width: 95%; max-width: 1000px; height: 90vh; display: flex; flex-direction: column; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="timeline-header" style="flex-shrink: 0; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px;">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <div>
               <h2 class="timeline-title">⏱ 타임라인</h2>
               <div style="font-size: 0.85rem; color: var(--text-secondary);">과거부터 현재까지 기록한 모든 일기와 할 일을 시간의 흐름대로 모아봅니다.</div>
             </div>
-            <div class="timeline-filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button type="button" class="timeline-filter-btn active" data-filter="all">🌐 전체</button>
-              <button type="button" class="timeline-filter-btn" data-filter="todo">🎯 할 일</button>
-              <button type="button" class="timeline-filter-btn" data-filter="diary">📝 기록</button>
-              <button type="button" class="timeline-filter-btn" data-filter="stats">📊 통계</button>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="timeline-filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="timeline-filter-btn active" data-filter="all">🌐 전체</button>
+                <button type="button" class="timeline-filter-btn" data-filter="todo">🎯 할 일</button>
+                <button type="button" class="timeline-filter-btn" data-filter="diary">📝 기록</button>
+                <button type="button" class="timeline-filter-btn" data-filter="stats">📊 통계</button>
+              </div>
+              <button type="button" id="btn-timeline-close" class="ctrl-btn" title="닫기" style="padding: 8px; font-size: 1.2rem; cursor: pointer; color: var(--text-color); background: none; border: none;">✖</button>
             </div>
           </div>
         </div>
-        </div>
-        <div id="timeline-list" class="timeline-list">
+        <div id="timeline-list" class="timeline-list" style="overflow-y: auto; flex-grow: 1; padding-right: 10px;">
           <!-- Timeline date cards will be populated dynamically -->
         </div>
-      </section>
+      </div>
 
       <!-- D-day Panel -->
       <section id="ddays-panel" class="ddays-panel hidden">
@@ -991,10 +994,10 @@
     <div id="drawing-fullscreen-container" style="width: 100%; height: 100%; display: flex; flex-direction: column;"></div>
   </div>
 
-  <link rel="stylesheet" href="style.css?v=202609200824">
+  <link rel="stylesheet" href="style.css?v=202609200848">
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <script src="drawing.js?v=1788058276511"></script>
-  <script src="app.js?v=202609200839"></script>
+  <script src="app.js?v=202609200848"></script>
 <!-- GDrive Recovery Modal -->
 <div id="gdrive-recovery-modal" class="modal-backdrop hidden">
   <div class="modal-content" style="max-width: 500px; padding: 25px;">
@@ -1019,6 +1022,9 @@
 </div>
 </body>
 </html>
+
+
+
 
 
 
