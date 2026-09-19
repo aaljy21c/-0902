@@ -5277,3 +5277,73 @@ body.light-theme #font-size-modal #font-size-modal-backdrop {
 
 
 
+/* Timeline Filter Buttons */
+.timeline-filters {
+  margin-top: 10px;
+}
+.timeline-filter-btn {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.timeline-filter-btn:hover {
+  background-color: var(--hover-color);
+}
+.timeline-filter-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+.timeline-stat-summary {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background-color: var(--bg-color);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+.timeline-stat-circle {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: conic-gradient(var(--primary-color) 0%, var(--border-color) 0%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.timeline-stat-circle::after {
+  content: "";
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: var(--bg-color);
+  border-radius: 50%;
+}
+.timeline-stat-val {
+  position: relative;
+  z-index: 1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+.timeline-stat-text {
+  display: flex;
+  flex-direction: column;
+}
+.timeline-stat-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+.timeline-stat-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}

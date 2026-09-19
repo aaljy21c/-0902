@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -13,7 +13,7 @@
   <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
   <script src="storage_proxy.js"></script>
-  <link rel="stylesheet" href="style.css?v=202609061425">
+  <link rel="stylesheet" href="style.css?v=202609200824">
   <link rel="stylesheet" href="drawing.css?v=1788058276511">
 </head>
 <body>
@@ -373,9 +373,16 @@
         <!-- Records Wrapper Block -->
         <div class="records-wrapper-block" id="records-wrapper-block">
           <!-- Diary Section (Header & Records) -->
-          <div class="diary-section-header">
-            <h3 class="diary-section-title">📝 오늘의 기록 & 사진</h3>
-            <button type="button" id="btn-toggle-all-photos" class="record-photo-toggle-btn active-view" title="📷 기록 사진 보이기/숨기기">📷</button>
+                    <div class="diary-section-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 class="diary-section-title" style="display: flex; align-items: center; gap: 10px; margin: 0;">
+              <button type="button" id="btn-diary-prev-date" class="date-nav-btn" title="이전 날짜 기록 보기" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); padding: 0 4px;">◀</button>
+              오늘의 기록 & 메모
+              <button type="button" id="btn-diary-next-date" class="date-nav-btn" title="다음 날짜 기록 보기" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); padding: 0 4px;">▶</button>
+            </h3>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button type="button" id="btn-diary-timeline-shortcut" class="ctrl-btn" title="모든 기록 타임라인으로 보기" style="padding: 4px 10px; font-size: 0.85rem; border-radius: 6px; background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center; gap: 4px;">⏱ 전체 타임라인</button>
+              <button type="button" id="btn-toggle-all-photos" class="record-photo-toggle-btn active-view" title="모든 사진 접기/펴기">🖼️</button>
+            </div>
           </div>
           <div class="diary-section" id="diary-section">
             <div class="records-container" id="records-list-container">
@@ -462,9 +469,20 @@
 
       <!-- Timeline Panel -->
       <section id="timeline-panel" class="timeline-panel hidden">
-        <div class="timeline-header">
-          <h2 class="timeline-title">⏳ 타임라인</h2>
-          <div style="font-size: 0.85rem; color: var(--text-secondary);">과거부터 현재까지 기록한 모든 일기와 할 일을 시간의 흐름대로 모아봅니다.</div>
+                <div class="timeline-header">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 class="timeline-title">⏱ 타임라인</h2>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">과거부터 현재까지 기록한 모든 일기와 할 일을 시간의 흐름대로 모아봅니다.</div>
+            </div>
+            <div class="timeline-filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="timeline-filter-btn active" data-filter="all">🌐 전체</button>
+              <button type="button" class="timeline-filter-btn" data-filter="todo">🎯 할 일</button>
+              <button type="button" class="timeline-filter-btn" data-filter="diary">📝 기록</button>
+              <button type="button" class="timeline-filter-btn" data-filter="stats">📊 통계</button>
+            </div>
+          </div>
+        </div>
         </div>
         <div id="timeline-list" class="timeline-list">
           <!-- Timeline date cards will be populated dynamically -->
@@ -973,9 +991,10 @@
     <div id="drawing-fullscreen-container" style="width: 100%; height: 100%; display: flex; flex-direction: column;"></div>
   </div>
 
+  <link rel="stylesheet" href="style.css?v=202609200824">
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <script src="drawing.js?v=1788058276511"></script>
-  <script src="app.js?v=202609200748"></script>
+  <script src="app.js?v=202609200824"></script>
 <!-- GDrive Recovery Modal -->
 <div id="gdrive-recovery-modal" class="modal-backdrop hidden">
   <div class="modal-content" style="max-width: 500px; padding: 25px;">
@@ -1000,3 +1019,6 @@
 </div>
 </body>
 </html>
+
+
+

@@ -1,4 +1,4 @@
-// Todo Planner & Calendar - app.js
+﻿// Todo Planner & Calendar - app.js
 
 // Initialize State
 let state = {
@@ -6280,7 +6280,7 @@ function renderTimeline() {
       todoContent.appendChild(todoListContainer);
     }
     todoSec.appendChild(todoContent);
-    sectionsGrid.appendChild(todoSec);
+    // todoSec appending moved to end of loop
 
     // 2. DIARY/RECORDS SECTION
     const diarySec = document.createElement('div');
@@ -6470,7 +6470,49 @@ function renderTimeline() {
     }
 
     diarySec.appendChild(diaryContent);
-    sectionsGrid.appendChild(diarySec);
+        const tFilter = state.timelineFilter || 'all';
+
+    if (tFilter === 'all' || tFilter === 'todo') {
+      if (tFilter === 'todo') todoSec.style.gridColumn = '1 / -1';
+      sectionsGrid.appendChild(todoSec);
+    }
+    
+    if (tFilter === 'all' || tFilter === 'diary') {
+      if (tFilter === 'diary') diarySec.style.gridColumn = '1 / -1';
+      sectionsGrid.appendChild(diarySec);
+    }
+
+    if (tFilter === 'stats') {
+      const statSec = document.createElement('div');
+      statSec.className = 'timeline-section';
+      statSec.style.gridColumn = '1 / -1';
+      
+      const statTitle = document.createElement('div');
+      statTitle.className = 'timeline-section-title';
+      statTitle.innerHTML = '📊 일간 통계';
+      statSec.appendChild(statTitle);
+
+      const todos = state.todos[dateKey] || [];
+      const totalTodos = todos.length;
+      const completedTodos = todos.filter(t => t.completed).length;
+      const percentage = totalTodos === 0 ? 0 : Math.round((completedTodos / totalTodos) * 100);
+
+      const statContent = document.createElement('div');
+      statContent.className = 'timeline-section-content';
+      statContent.innerHTML = 
+        <div class="timeline-stat-summary">
+          <div class="timeline-stat-circle" style="background: conic-gradient(var(--primary-color) %, var(--border-color) 0%);">
+            <span class="timeline-stat-val">%</span>
+          </div>
+          <div class="timeline-stat-text">
+            <span class="timeline-stat-title">할 일 달성률</span>
+            <span class="timeline-stat-desc"> /  완료</span>
+          </div>
+        </div>
+      ;
+      statSec.appendChild(statContent);
+      sectionsGrid.appendChild(statSec);
+    }
 
     card.appendChild(sectionsGrid);
     timelineList.appendChild(card);
@@ -10032,4 +10074,67 @@ window.addEventListener('popstate', (e) => {
       closeTodoEditModal(true);
     }
   }
+});
+
+// Date Navigation & Timeline Shortcut Event Listeners added by Assistant
+document.addEventListener('DOMContentLoaded', () => {
+  const btnPrevDate = document.getElementById('btn-diary-prev-date');
+  const btnNextDate = document.getElementById('btn-diary-next-date');
+  const btnTimelineShortcut = document.getElementById('btn-diary-timeline-shortcut');
+
+  if (btnPrevDate) {
+    btnPrevDate.addEventListener('click', () => {
+      if (!state.selectedDate) return;
+      const d = new Date(state.selectedDate);
+      d.setDate(d.getDate() - 1);
+      state.selectedDate = formatDateString(d);
+      updateUI();
+    });
+  }
+
+  if (btnNextDate) {
+    btnNextDate.addEventListener('click', () => {
+      if (!state.selectedDate) return;
+      const d = new Date(state.selectedDate);
+      d.setDate(d.getDate() + 1);
+      state.selectedDate = formatDateString(d);
+      updateUI();
+    });
+  }
+
+  if (btnTimelineShortcut) {
+    btnTimelineShortcut.addEventListener('click', () => {
+      const btnToggleTimeline = document.getElementById('btn-toggle-timeline');
+      if (btnToggleTimeline) {
+        // If timeline is hidden, click the toggle button to show it
+        if (!btnToggleTimeline.classList.contains('active-view')) {
+          btnToggleTimeline.click();
+        }
+        // Scroll to timeline panel
+        setTimeout(() => {
+          const timelinePanel = document.getElementById('timeline-panel');
+          if (timelinePanel) {
+            timelinePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
+    });
+  }
+});
+
+
+// Timeline Filter Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+  const filterBtns = document.querySelectorAll('.timeline-filter-btn');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      // Update active class
+      filterBtns.forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      
+      // Update state and re-render
+      state.timelineFilter = e.target.dataset.filter;
+      renderTimeline();
+    });
+  });
 });
