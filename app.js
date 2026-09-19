@@ -9947,14 +9947,6 @@ document.addEventListener('DOMContentLoaded', () => {
               if (!dlRes.ok) throw new Error('Download failed');
               
               const restoreData = await dlRes.json();
-              if (restoreData.todos) safeStorageSet('neon_planner_todos', JSON.stringify(restoreData.todos));
-              if (restoreData.diaries) safeStorageSet('neon_planner_diaries', JSON.stringify(restoreData.diaries));
-              if (restoreData.categories) safeStorageSet('neon_planner_categories', JSON.stringify(restoreData.categories));
-              if (restoreData.tabIcons) safeStorageSet('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
-              if (restoreData.appTitle) safeStorageSet('neon_planner_app_title', restoreData.appTitle);
-              if (restoreData.ddays) safeStorageSet('neon_planner_ddays', JSON.stringify(restoreData.ddays));
-              if (restoreData.routines) safeStorageSet('neon_planner_routines', JSON.stringify(restoreData.routines));
-              if (restoreData.routinesPopulatedDates) safeStorageSet('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
               if (restoreData.preferences) {
                 const prefs = restoreData.preferences;
                 if (prefs.theme) safeStorageSet('neon_planner_theme', prefs.theme);
@@ -9971,6 +9963,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (prefs.showSearch) safeStorageSet('neon_planner_show_search', prefs.showSearch);
                 if (prefs.buttonOrder) safeStorageSet('neon_planner_button_order', prefs.buttonOrder);
               }
+              
+              // Load the restored data directly into memory
+              loadFromLocalStorage(restoreData);
               // Force next sync to overwrite cloud with this restored version
               safeStorageSet('neon_planner_last_modified', Date.now().toString());
               
