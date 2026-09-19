@@ -422,6 +422,41 @@ function init() {
         console.error(e);
       }
     }
+    
+    // Enable dragging
+    Sortable.create(navContainer, {
+      delay: 300, // 300ms long press to drag on mobile
+      delayOnTouchOnly: true,
+      animation: 150,
+      filter: '#btn-global-mic, .header-gdrive-group', // Don't drag mic or login buttons
+      preventOnFilter: false, // allow clicks on filtered items
+      onEnd: function() {
+        // Save the new DOM order (IDs)
+        const newOrder = Array.from(navContainer.children).map(el => {
+          if (el.classList.contains('header-gdrive-group')) return 'gdrive-group';
+          return el.id;
+        });
+        safeStorageSet('neon_planner_nav_order', JSON.stringify(newOrder));
+        
+        // Update the state.headerButtonOrder based on data-section-id
+        const newSectionOrder = [];
+        Array.from(navContainer.children).forEach(el => {
+          const sectionId = el.dataset?.sectionId;
+          if (sectionId) newSectionOrder.push(sectionId);
+        });
+        
+        if (newSectionOrder.length > 0) {
+          // Keep search at front and settings at end as required by sortHeaderButtonsDOM
+          state.headerButtonOrder = newSectionOrder.filter(id => id !== 'search' && id !== 'settings');
+          state.headerButtonOrder.unshift('search');
+          state.headerButtonOrder.push('settings');
+          
+          safeStorageSet('neon_planner_button_order', JSON.stringify(state.headerButtonOrder));
+          triggerGDriveAutoSync();
+          applyLayoutSectionOrder();
+        }
+      }
+    });
   }
 
   // Initialize SortableJS for drag-and-drop
