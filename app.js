@@ -377,9 +377,9 @@ function init() {
 
     if (savedToken && savedExpiry > Date.now() + 60000) {
       scheduleGDriveTokenRefresh(savedExpiry);
-      setTimeout(autoSyncWithDrive, 500);
+      setTimeout(() => autoSyncWithDrive(true), 500);
       if (gdrivePollInterval) clearInterval(gdrivePollInterval);
-      gdrivePollInterval = setInterval(autoSyncWithDrive, 3000);
+      gdrivePollInterval = setInterval(() => autoSyncWithDrive(false), 3000);
     } else if (savedToken) {
       // Token missing or expired, attempt background auto refresh
       setTimeout(autoRefreshGDriveToken, 1000);
@@ -1355,7 +1355,7 @@ function autoRefreshGDriveToken() {
         
         scheduleGDriveTokenRefresh(expiryTime);
         if (gdrivePollInterval) clearInterval(gdrivePollInterval);
-        gdrivePollInterval = setInterval(autoSyncWithDrive, 3000);
+        gdrivePollInterval = setInterval(() => autoSyncWithDrive(false), 3000);
         resolve(gdriveAccessToken);
       }
     });
@@ -1630,7 +1630,7 @@ function showSyncToast() {
   }, 4000);
 }
 
-async function autoSyncWithDrive() {
+async function autoSyncWithDrive(forcePull = false) {
   const statusBadge = document.getElementById('gdrive-status-badge');
   try {
     // Do not update UI to 'Checking...' on every poll to keep it silent and seamless
@@ -1723,7 +1723,7 @@ async function autoSyncWithDrive() {
     const driveModified = parseInt(restoreData.lastModified || '0', 10);
     const localModified = parseInt(localStorage.getItem('neon_planner_last_modified') || '0', 10);
 
-    if (driveModified > localModified) {
+    if (forcePull || driveModified > localModified) {
       if (restoreData.preferences) {
         const prefs = restoreData.preferences;
         if (prefs.theme) safeStorageSet('neon_planner_theme', prefs.theme);
@@ -4028,7 +4028,7 @@ function setupEventListeners() {
             
             scheduleGDriveTokenRefresh(expiryTime);
             if (gdrivePollInterval) clearInterval(gdrivePollInterval);
-            gdrivePollInterval = setInterval(autoSyncWithDrive, 3000);
+            gdrivePollInterval = setInterval(() => autoSyncWithDrive(false), 3000);
             
             if (gdriveBackupBtn) gdriveBackupBtn.disabled = false;
             if (gdriveRestoreBtn) gdriveRestoreBtn.disabled = false;
