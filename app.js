@@ -4286,7 +4286,15 @@ function setupEventListeners() {
         safeStorageSet('neon_planner_last_modified', restoreData.lastModified ? restoreData.lastModified.toString() : Date.now().toString());
 
         alert('구글 드라이브 백업 데이터 복원에 성공했습니다! 변경사항 적용을 위해 화면을 새로고침합니다.');
-        window.location.reload();
+// window.location.reload();
+              updateUI();
+              const modal = document.getElementById('gdrive-recovery-modal');
+              if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+              }
+              if (typeof triggerGDriveAutoSync === 'function') triggerGDriveAutoSync();
+    
       } catch (err) {
         console.error(err);
         alert('복원 다운로드 중 오류가 발생했습니다: ' + err.message);
@@ -9971,8 +9979,14 @@ document.addEventListener('DOMContentLoaded', () => {
               
               if (typeof triggerGDriveAutoSync === 'function') triggerGDriveAutoSync();
               
-              alert('복구가 완료되었습니다. 변경사항을 적용하기 위해 새로고침합니다.');
-              window.location.reload();
+              updateUI();
+              const modal = document.getElementById('gdrive-recovery-modal');
+              if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+              }
+              
+              alert('과거 기록이 성공적으로 복원되었습니다!');
             } catch (err) {
               console.error(err);
               alert('복구 중 오류가 발생했습니다.');
