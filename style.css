@@ -3058,9 +3058,7 @@ body.light-theme .diary-textarea {
 
 .diary-media-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
 }
 
