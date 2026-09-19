@@ -8560,8 +8560,14 @@ function renderTodos() {
   
 }
 
-// Run init on window load
-window.addEventListener('DOMContentLoaded', init);
+// Run init on window load, but wait for StorageProxy if available
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.StorageProxy && window.StorageProxy.ready) {
+    window.StorageProxy.ready.then(init);
+  } else {
+    init();
+  }
+});
 window.addEventListener('resize', () => {
   applyLayoutSectionOrder();
 });
