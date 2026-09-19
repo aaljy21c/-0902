@@ -1756,8 +1756,6 @@ async function autoSyncWithDrive(forcePull = false) {
           statusBadge.textContent = '연결 완료 (자동 동기화)';
         }, 5000);
       }
-    } else if (localModified > driveModified) {
-      triggerGDriveAutoSync();
     } else {
       if (statusBadge) {
         statusBadge.textContent = '연결 완료 (자동 동기화)';
