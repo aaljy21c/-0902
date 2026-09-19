@@ -6499,17 +6499,17 @@ function renderTimeline() {
 
       const statContent = document.createElement('div');
       statContent.className = 'timeline-section-content';
-      statContent.innerHTML = 
+            statContent.innerHTML = `
         <div class="timeline-stat-summary">
-          <div class="timeline-stat-circle" style="background: conic-gradient(var(--primary-color) %, var(--border-color) 0%);">
-            <span class="timeline-stat-val">%</span>
+          <div class="timeline-stat-circle" style="background: conic-gradient(var(--primary-color) ${percentage}%, var(--border-color) 0%);">
+            <span class="timeline-stat-val">${percentage}%</span>
           </div>
           <div class="timeline-stat-text">
             <span class="timeline-stat-title">할 일 달성률</span>
-            <span class="timeline-stat-desc"> /  완료</span>
+            <span class="timeline-stat-desc">${completedTodos} / ${totalTodos} 완료</span>
           </div>
         </div>
-      ;
+      `;
       statSec.appendChild(statContent);
       sectionsGrid.appendChild(statSec);
     }
@@ -10138,3 +10138,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
