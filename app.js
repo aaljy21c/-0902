@@ -354,12 +354,14 @@ function init() {
     const savedExpiry = parseInt(localStorage.getItem('neon_planner_gdrive_token_expiry') || '0', 10);
     const gdriveBackupBtn = document.getElementById('btn-gdrive-backup');
     const gdriveRestoreBtn = document.getElementById('btn-gdrive-restore');
+    const gdriveRecoverBtn = document.getElementById('btn-gdrive-recover');
     const gdriveLogoutBtn = document.getElementById('btn-gdrive-logout');
     
     if (savedToken) {
       gdriveAccessToken = savedToken;
       if (gdriveBackupBtn) gdriveBackupBtn.disabled = false;
       if (gdriveRestoreBtn) gdriveRestoreBtn.disabled = false;
+      if (gdriveRecoverBtn) gdriveRecoverBtn.disabled = false;
       if (gdriveLogoutBtn) gdriveLogoutBtn.style.display = 'inline-flex';
       
       const badge = document.getElementById('gdrive-status-badge');
@@ -428,7 +430,6 @@ function init() {
       delay: 300, // 300ms long press to drag on mobile
       delayOnTouchOnly: true,
       animation: 150,
-      filter: '#btn-global-mic, .header-gdrive-group', // Don't drag mic or login buttons
       preventOnFilter: false, // allow clicks on filtered items
       onEnd: function() {
         // Save the new DOM order (IDs)
@@ -1651,6 +1652,7 @@ async function autoSyncWithDrive() {
       } else if (getRes.status === 404) {
         fileId = null;
         localStorage.removeItem('neon_planner_gdrive_file_id');
+        localStorage.removeItem('neon_planner_last_modified');
       }
     }
 
