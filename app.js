@@ -1,4 +1,4 @@
-﻿// Todo Planner & Calendar - app.js
+// Todo Planner & Calendar - app.js
 
 // Initialize State
 let state = {
@@ -2230,48 +2230,129 @@ function getDayOfWeek(dateKey) {
   return weekdays[d.getDay()] || '';
 }
 
+function getYYYYMMDD(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 // Update and draw all graphs, summaries, and trackers in the analytics panel
 function updateAnalytics() {
   const panel = document.getElementById('analytics-panel');
   if (!panel || panel.classList.contains('hidden')) return;
 
-  // 1. Gather all tasks across all dates
+  const startDateInput = document.getElementById('analytics-start-date');
+  const endDateInput = document.getElementById('analytics-end-date');
+  
+  let startDateStr = startDateInput ? startDateInput.value : '';
+  let endDateStr = endDateInput ? endDateInput.value : '';
+  
+  if (!startDateStr || !endDateStr) {
+    const today = new Date();
+    const past = new Date();
+    past.setDate(today.getDate() - 30); // Default to last 30 days
+    startDateStr = getYYYYMMDD(past);
+    endDateStr = getYYYYMMDD(today);
+    if(startDateInput) startDateInput.value = startDateStr;
+    if(endDateInput) endDateInput.value = endDateStr;
+  }
+
+  // Generate an array of all date keys in the range for the daily timelines
+  const dateRangeKeys = [];
+  let curr = new Date(startDateStr);
+  const end = new Date(endDateStr);
+  while(curr <= end) {
+    dateRangeKeys.push(getYYYYMMDD(curr));
+    curr.setDate(curr.getDate() + 1);
+  }
+  
+  // Determine sort order
+  const sortOrderSelect = document.getElementById('analytics-sort-order');
+  const sortOrder = sortOrderSelect ? sortOrderSelect.value : 'desc';
+
+  if (sortOrder === 'desc') {
+    // Sort reverse chronologically (latest first)
+    dateRangeKeys.reverse();
+  } else {
+    // Sort chronologically (oldest first) is already the default from the while loop
+  }
+
   let totalCount = 0;
   let completedCount = 0;
   
-  // To track completion by category
   const catTotals = {};
   const catCompletes = {};
+  const catDailyStats = {}; // { catId: { dateKey: { total: 0, comp: 0 } } }
+  
+  const dailyStats = {}; // { dateKey: { total: 0, comp: 0 } }
+  
   Object.keys(state.categories).forEach(catId => {
     catTotals[catId] = 0;
     catCompletes[catId] = 0;
+    catDailyStats[catId] = {};
+    dateRangeKeys.forEach(dk => {
+      catDailyStats[catId][dk] = { total: 0, comp: 0 };
+    });
   });
 
-  // Track unique todo text
-  const uniqueTodos = new Set();
+  dateRangeKeys.forEach(dk => {
+    dailyStats[dk] = { total: 0, comp: 0 };
+  });
 
-  Object.keys(state.todos).forEach(dateKey => {
+  const uniqueTodos = new Set();
+  
+  // Group routines by text
+  const routineCounts = {};
+  state.routines.forEach(r => {
+    routineCounts[r.text] = { total: 0, completed: 0, category: r.category, history: {} };
+    dateRangeKeys.forEach(dk => {
+      routineCounts[r.text].history[dk] = null; // null = not scheduled/done
+    });
+  });
+
+  // Filter keys by date range
+  const filteredDateKeys = Object.keys(state.todos).filter(dk => dk >= startDateStr && dk <= endDateStr);
+
+  filteredDateKeys.forEach(dateKey => {
     state.todos[dateKey].forEach(todo => {
       totalCount++;
       if (todo.completed) completedCount++;
 
-      // Category count
+      // Daily Stats Overall
+      if (dailyStats[dateKey]) {
+        dailyStats[dateKey].total++;
+        if (todo.completed) dailyStats[dateKey].comp++;
+      }
+
+      // Category Stats
       const catId = todo.category;
       if (catTotals[catId] !== undefined) {
         catTotals[catId]++;
         if (todo.completed) {
           catCompletes[catId]++;
         }
+        if (catDailyStats[catId] && catDailyStats[catId][dateKey]) {
+           catDailyStats[catId][dateKey].total++;
+           if (todo.completed) catDailyStats[catId][dateKey].comp++;
+        }
       }
 
-      // Collect unique todo text
+      if (todo.isRoutine && routineCounts[todo.text]) {
+        routineCounts[todo.text].total++;
+        routineCounts[todo.text].history[dateKey] = todo.completed ? 'done' : 'missed';
+        if (todo.completed) {
+          routineCounts[todo.text].completed++;
+        }
+      }
+
       if (todo.text.trim()) {
         uniqueTodos.add(todo.text.trim());
       }
     });
   });
 
-  // 2. Set overall stats
+  // Render Overall Summary
   const totalRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   
   const statsTotalRate = document.getElementById('stats-total-rate');
@@ -2284,7 +2365,38 @@ function updateAnalytics() {
   if (statsCompletedCount) statsCompletedCount.textContent = completedCount;
   if (statsPendingCount) statsPendingCount.textContent = totalCount - completedCount;
 
-  // 3. Draw Category Bar Chart
+  // Render Daily Timeline (Overall)
+  const overallTimelineContainer = document.getElementById('overall-timeline-container');
+  if (overallTimelineContainer) {
+    overallTimelineContainer.innerHTML = '';
+    dateRangeKeys.forEach(dk => {
+      const stats = dailyStats[dk];
+      if (stats.total === 0) return; // Skip days with no tasks
+      const rate = Math.round((stats.comp / stats.total) * 100);
+      
+      const row = document.createElement('div');
+      row.style.background = 'rgba(255,255,255,0.02)';
+      row.style.border = '1px solid var(--panel-border)';
+      row.style.borderRadius = '8px';
+      row.style.padding = '10px 14px';
+      
+      row.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+          <span style="font-weight:700; color:var(--text-primary); font-size:0.9rem;">📅 ${dk} (${getDayOfWeek(dk)})</span>
+          <span style="font-weight:700; color:var(--accent-color); font-size:0.9rem;">${rate}% (${stats.comp}/${stats.total})</span>
+        </div>
+        <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+          <div style="height:100%; width:${rate}%; background:var(--accent-color); transition:width 0.3s ease;"></div>
+        </div>
+      `;
+      overallTimelineContainer.appendChild(row);
+    });
+    if (overallTimelineContainer.innerHTML === '') {
+      overallTimelineContainer.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; padding:10px;">해당 기간에 할 일이 없습니다.</div>';
+    }
+  }
+
+  // Render Category Analytics
   const categoryBarChart = document.getElementById('category-bar-chart');
   if (categoryBarChart) {
     categoryBarChart.innerHTML = '';
@@ -2295,70 +2407,102 @@ function updateAnalytics() {
       const comp = catCompletes[catId] || 0;
       const rate = tot > 0 ? Math.round((comp / tot) * 100) : 0;
 
-      const row = document.createElement('div');
-      row.classList.add('chart-bar-row');
-
-      const label = document.createElement('div');
-      label.classList.add('chart-bar-label');
-      label.textContent = cat.label;
-      row.appendChild(label);
-
-      const barWrapper = document.createElement('div');
-      barWrapper.classList.add('chart-bar-wrapper');
-
-      const barFill = document.createElement('div');
-      barFill.classList.add('chart-bar-fill');
-      barFill.style.width = `${rate}%`;
-      barFill.style.backgroundColor = cat.color;
-      barFill.style.boxShadow = `0 0 8px ${hexToRgba(cat.color, 0.5)}`;
-      barWrapper.appendChild(barFill);
-      row.appendChild(barWrapper);
-
-      const valLabel = document.createElement('div');
-      valLabel.classList.add('chart-bar-value');
-      valLabel.textContent = `${rate}% (${comp}/${tot}개)`;
-      row.appendChild(valLabel);
-
-      categoryBarChart.appendChild(row);
+      const container = document.createElement('div');
+      container.style.marginBottom = '15px';
+      container.style.border = '1px solid var(--panel-border)';
+      container.style.borderRadius = '8px';
+      container.style.background = 'rgba(255,255,255,0.02)';
+      container.style.overflow = 'hidden';
+      
+      // Header for category (overall)
+      const header = document.createElement('div');
+      header.style.padding = '12px 14px';
+      header.style.cursor = 'pointer';
+      header.style.display = 'flex';
+      header.style.justifyContent = 'space-between';
+      header.style.alignItems = 'center';
+      
+      header.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color:${cat.color}; box-shadow:0 0 6px ${cat.color};"></span>
+          <span style="font-weight:700; color:var(--text-primary);">${cat.label} 전체 성취도</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-weight:700; color:${cat.color};">${rate}% (${comp}/${tot})</span>
+          <span style="font-size:0.8rem; color:var(--text-secondary);">▼ 상세</span>
+        </div>
+      `;
+      
+      // Body for daily timeline of category
+      const body = document.createElement('div');
+      body.style.display = 'none';
+      body.style.padding = '0 14px 14px 14px';
+      body.style.borderTop = '1px solid var(--panel-border)';
+      
+      let hasDailyStats = false;
+      const timelineInner = document.createElement('div');
+      timelineInner.style.display = 'flex';
+      timelineInner.style.flexDirection = 'column';
+      timelineInner.style.gap = '8px';
+      timelineInner.style.marginTop = '12px';
+      
+      dateRangeKeys.forEach(dk => {
+        const stats = catDailyStats[catId][dk];
+        if (stats.total === 0) return;
+        hasDailyStats = true;
+        const dRate = Math.round((stats.comp / stats.total) * 100);
+        const dRow = document.createElement('div');
+        dRow.innerHTML = `
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
+            <span style="color:var(--text-secondary);">${dk} (${getDayOfWeek(dk)})</span>
+            <span style="color:var(--text-primary);">${dRate}% (${stats.comp}/${stats.total})</span>
+          </div>
+          <div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden;">
+            <div style="height:100%; width:${dRate}%; background:${cat.color}; opacity:0.8;"></div>
+          </div>
+        `;
+        timelineInner.appendChild(dRow);
+      });
+      
+      if (!hasDailyStats) {
+         timelineInner.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">해당 기간에 기록이 없습니다.</div>';
+      }
+      
+      body.appendChild(timelineInner);
+      
+      header.addEventListener('click', () => {
+        body.style.display = body.style.display === 'none' ? 'block' : 'none';
+      });
+      
+      container.appendChild(header);
+      container.appendChild(body);
+      categoryBarChart.appendChild(container);
     });
   }
 
-  // 3.5 Update Routine Stats
+  // Render Routine Analytics
   const routineStatsContainer = document.getElementById('routine-stats-container');
   if (routineStatsContainer) {
     routineStatsContainer.innerHTML = '';
     
-    // Group routines by text
-    const routineCounts = {};
-    state.routines.forEach(r => {
-      routineCounts[r.text] = { total: 0, completed: 0, category: r.category };
-    });
-    
-    // Count occurrences in todos
-    Object.keys(state.todos).forEach(dk => {
-      state.todos[dk].forEach(todo => {
-        if (todo.isRoutine && routineCounts[todo.text]) {
-          routineCounts[todo.text].total++;
-          if (todo.completed) {
-            routineCounts[todo.text].completed++;
-          }
-        }
-      });
-    });
-
     if (state.routines.length === 0) {
       routineStatsContainer.innerHTML = '<div style="color:var(--text-muted); font-size: 0.85rem; font-style: italic;">아직 등록된 루틴이 없습니다.</div>';
     } else {
       Object.keys(routineCounts).forEach(rText => {
         const stats = routineCounts[rText];
-        const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.justifyContent = 'space-between';
-        row.style.alignItems = 'center';
-        row.style.background = 'rgba(255,255,255,0.03)';
-        row.style.padding = '10px 14px';
-        row.style.borderRadius = '8px';
-        row.style.border = '1px solid var(--panel-border)';
+        const container = document.createElement('div');
+        container.style.marginBottom = '12px';
+        container.style.border = '1px solid var(--panel-border)';
+        container.style.borderRadius = '8px';
+        container.style.background = 'rgba(255,255,255,0.02)';
+        container.style.overflow = 'hidden';
+        
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        header.style.padding = '12px 14px';
+        header.style.cursor = 'pointer';
         
         const left = document.createElement('div');
         left.style.display = 'flex';
@@ -2384,17 +2528,67 @@ function updateAnalytics() {
         const right = document.createElement('div');
         right.style.fontWeight = '700';
         right.style.color = 'var(--accent-color)';
-        right.style.fontSize = '1rem';
-        right.textContent = `총 ${stats.completed}회 완료`;
+        right.style.fontSize = '0.95rem';
+        right.style.display = 'flex';
+        right.style.alignItems = 'center';
+        right.style.gap = '8px';
+        right.innerHTML = `<span>총 ${stats.completed}/${stats.total}회 완료</span> <span style="font-size:0.8rem; color:var(--text-secondary);">▼ 상세</span>`;
         
-        row.appendChild(left);
-        row.appendChild(right);
-        routineStatsContainer.appendChild(row);
+        header.appendChild(left);
+        header.appendChild(right);
+        
+        // Log timeline
+        const body = document.createElement('div');
+        body.style.display = 'none';
+        body.style.padding = '0 14px 14px 14px';
+        body.style.borderTop = '1px solid var(--panel-border)';
+        
+        const timelineList = document.createElement('div');
+        timelineList.style.display = 'flex';
+        timelineList.style.flexDirection = 'column';
+        timelineList.style.gap = '6px';
+        timelineList.style.marginTop = '12px';
+        timelineList.style.maxHeight = '200px';
+        timelineList.style.overflowY = 'auto';
+        
+        let hasLogs = false;
+        dateRangeKeys.forEach(dk => {
+           const status = stats.history[dk];
+           if (status) {
+             hasLogs = true;
+             const entry = document.createElement('div');
+             entry.style.display = 'flex';
+             entry.style.justifyContent = 'space-between';
+             entry.style.fontSize = '0.85rem';
+             entry.style.padding = '6px 10px';
+             entry.style.background = 'rgba(255,255,255,0.02)';
+             entry.style.borderRadius = '4px';
+             
+             const icon = status === 'done' ? '✅ 완료' : '❌ 미완료';
+             const iColor = status === 'done' ? '#10b981' : '#f43f5e';
+             entry.innerHTML = `<span style="color:var(--text-secondary);">${dk} (${getDayOfWeek(dk)})</span> <span style="color:${iColor}; font-weight:600;">${icon}</span>`;
+             timelineList.appendChild(entry);
+           }
+        });
+        
+        if (!hasLogs) {
+           timelineList.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">해당 기간에 기록이 없습니다.</div>';
+        }
+        
+        body.appendChild(timelineList);
+        
+        header.addEventListener('click', () => {
+          body.style.display = body.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        container.appendChild(header);
+        container.appendChild(body);
+        routineStatsContainer.appendChild(container);
       });
     }
   }
 
-  // 4. Update Todo Tracker Selector List
+  // Update Todo Tracker Selector List
   const trackerSelect = document.getElementById('tracker-todo-select');
   if (trackerSelect) {
     const previousSelection = trackerSelect.value;
@@ -3273,44 +3467,36 @@ function setupEventListeners() {
   }
 
   // Analytics Tab View Toggles
+  const tabBtnOverall = document.getElementById('tab-btn-overall');
   const tabBtnCategories = document.getElementById('tab-btn-categories');
   const tabBtnTodos = document.getElementById('tab-btn-todos');
   const tabBtnRoutines = document.getElementById('tab-btn-routines');
+  const viewOverall = document.getElementById('view-overall');
   const viewCategories = document.getElementById('view-categories');
   const viewTodos = document.getElementById('view-todos');
   const viewRoutines = document.getElementById('view-routines');
+  const btnAnalyticsFilter = document.getElementById('btn-analytics-filter');
 
-  if (tabBtnCategories && tabBtnTodos && tabBtnRoutines && viewCategories && viewTodos && viewRoutines) {
-    tabBtnCategories.addEventListener('click', () => {
-      tabBtnCategories.classList.add('active');
-      tabBtnTodos.classList.remove('active');
-      tabBtnRoutines.classList.remove('active');
-      viewCategories.classList.remove('hidden');
-      viewTodos.classList.add('hidden');
-      viewRoutines.classList.add('hidden');
-      updateAnalytics();
-    });
+  const allTabs = [tabBtnOverall, tabBtnCategories, tabBtnTodos, tabBtnRoutines];
+  const allViews = [viewOverall, viewCategories, viewTodos, viewRoutines];
 
-    tabBtnTodos.addEventListener('click', () => {
-      tabBtnTodos.classList.add('active');
-      tabBtnCategories.classList.remove('active');
-      tabBtnRoutines.classList.remove('active');
-      viewTodos.classList.remove('hidden');
-      viewCategories.classList.add('hidden');
-      viewRoutines.classList.add('hidden');
-      updateAnalytics();
-    });
-
-    tabBtnRoutines.addEventListener('click', () => {
-      tabBtnRoutines.classList.add('active');
-      tabBtnCategories.classList.remove('active');
-      tabBtnTodos.classList.remove('active');
-      viewRoutines.classList.remove('hidden');
-      viewCategories.classList.add('hidden');
-      viewTodos.classList.add('hidden');
-      updateAnalytics();
-    });
+  function switchTab(activeBtn, activeView) {
+    if (!activeBtn || !activeView) return;
+    allTabs.forEach(btn => btn && btn.classList.remove('active'));
+    allViews.forEach(view => view && view.classList.add('hidden'));
+    activeBtn.classList.add('active');
+    activeView.classList.remove('hidden');
+    updateAnalytics();
   }
+
+  if (tabBtnOverall) tabBtnOverall.addEventListener('click', () => switchTab(tabBtnOverall, viewOverall));
+  if (tabBtnCategories) tabBtnCategories.addEventListener('click', () => switchTab(tabBtnCategories, viewCategories));
+  if (tabBtnTodos) tabBtnTodos.addEventListener('click', () => switchTab(tabBtnTodos, viewTodos));
+  if (tabBtnRoutines) tabBtnRoutines.addEventListener('click', () => switchTab(tabBtnRoutines, viewRoutines));
+  if (btnAnalyticsFilter) btnAnalyticsFilter.addEventListener('click', () => updateAnalytics());
+  
+  const analyticsSortOrder = document.getElementById('analytics-sort-order');
+  if (analyticsSortOrder) analyticsSortOrder.addEventListener('change', () => updateAnalytics());
 
   // Todo Tracker Dropdown Selection
   const trackerTodoSelect = document.getElementById('tracker-todo-select');
@@ -5447,6 +5633,14 @@ function renderMediaToContainer(mediaObj, container, onClick) {
 function renderDiary() {
   const dateKey = state.selectedDate;
 
+  // Update Diary Section Date Title
+  const diaryTitleSpan = document.getElementById('diary-section-date-title');
+  if (diaryTitleSpan && dateKey) {
+    const d = new Date(dateKey);
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    diaryTitleSpan.textContent = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${weekdays[d.getDay()]}) 기록 & 메모`;
+  }
+
   // Auto-collapse creator when date shifts
   if (state.renderedDiaryDate !== dateKey) {
     state.editingRecordId = null;
@@ -6248,12 +6442,112 @@ function renderTimeline() {
         }
         itemLeft.appendChild(metaDiv);
 
-        // Memo rendering
-        if (todo.memo && todo.memo.trim() !== '') {
-          const memoDiv = document.createElement('div');
-          memoDiv.className = 'todo-memo-text';
-          memoDiv.innerHTML = linkify(todo.memo).replace(/\n/g, '<br>');
-          itemLeft.appendChild(memoDiv);
+        // Media and Memo rendering (Separate Buttons)
+        const hasMemo = todo.memo && todo.memo.trim() !== '';
+        const hasImages = todo.memoImages && todo.memoImages.length > 0;
+        const hasVideos = todo.memoVideos && todo.memoVideos.length > 0;
+
+        if (hasMemo || hasImages || hasVideos) {
+          const mediaButtonsRow = document.createElement('div');
+          mediaButtonsRow.style.display = 'flex';
+          mediaButtonsRow.style.gap = '6px';
+          mediaButtonsRow.style.marginTop = '8px';
+          mediaButtonsRow.style.flexWrap = 'wrap';
+
+          const contentContainer = document.createElement('div');
+          contentContainer.style.marginTop = '8px';
+          
+          if (hasMemo) {
+            const memoBtn = document.createElement('button');
+            memoBtn.type = 'button';
+            memoBtn.className = 'timeline-action-btn-safe';
+            memoBtn.style.border = '1px solid var(--border-color)';
+            memoBtn.innerHTML = '📝 메모';
+            
+            const memoContent = document.createElement('div');
+            memoContent.className = 'todo-memo-text';
+            memoContent.style.display = 'none';
+            memoContent.style.marginTop = '8px';
+            memoContent.innerHTML = linkify(todo.memo).replace(/\n/g, '<br>');
+            
+            memoBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              memoContent.style.display = memoContent.style.display === 'none' ? 'block' : 'none';
+            });
+            
+            mediaButtonsRow.appendChild(memoBtn);
+            contentContainer.appendChild(memoContent);
+          }
+
+          if (hasImages) {
+            const imgBtn = document.createElement('button');
+            imgBtn.type = 'button';
+            imgBtn.className = 'timeline-action-btn-safe';
+            imgBtn.style.border = '1px solid var(--border-color)';
+            imgBtn.innerHTML = '🖼️ 사진';
+            
+            const imgContent = document.createElement('div');
+            imgContent.style.display = 'none';
+            imgContent.style.flexWrap = 'wrap';
+            imgContent.style.gap = '8px';
+            imgContent.style.marginTop = '8px';
+            
+            todo.memoImages.forEach((imgObj, idx) => {
+              const thumb = document.createElement('div');
+              thumb.className = 'media-thumbnail-preview';
+              renderMediaObjAsync(imgObj, thumb);
+              thumb.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openLightbox(todo.memoImages, idx);
+              });
+              imgContent.appendChild(thumb);
+            });
+            
+            imgBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              imgContent.style.display = imgContent.style.display === 'none' ? 'flex' : 'none';
+            });
+            
+            mediaButtonsRow.appendChild(imgBtn);
+            contentContainer.appendChild(imgContent);
+          }
+          
+          if (hasVideos) {
+            const vidBtn = document.createElement('button');
+            vidBtn.type = 'button';
+            vidBtn.className = 'timeline-action-btn-safe';
+            vidBtn.style.border = '1px solid var(--border-color)';
+            vidBtn.innerHTML = '🎬 영상';
+            
+            const vidContent = document.createElement('div');
+            vidContent.style.display = 'none';
+            vidContent.style.flexWrap = 'wrap';
+            vidContent.style.gap = '8px';
+            vidContent.style.marginTop = '8px';
+            
+            todo.memoVideos.forEach((vidObj, idx) => {
+              const thumb = document.createElement('div');
+              thumb.className = 'media-thumbnail-preview';
+              thumb.style.backgroundColor = 'black';
+              renderMediaObjAsync(vidObj, thumb, true);
+              thumb.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openLightbox(todo.memoVideos, idx, true);
+              });
+              vidContent.appendChild(thumb);
+            });
+            
+            vidBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              vidContent.style.display = vidContent.style.display === 'none' ? 'flex' : 'none';
+            });
+            
+            mediaButtonsRow.appendChild(vidBtn);
+            contentContainer.appendChild(vidContent);
+          }
+
+          itemLeft.appendChild(mediaButtonsRow);
+          itemLeft.appendChild(contentContainer);
         }
 
         // Action row layout

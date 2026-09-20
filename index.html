@@ -376,7 +376,7 @@
                     <div class="diary-section-header" style="display: flex; align-items: center; justify-content: space-between;">
             <h3 class="diary-section-title" style="display: flex; align-items: center; gap: 10px; margin: 0;">
               <button type="button" id="btn-diary-prev-date" class="date-nav-btn" title="이전 날짜 기록 보기" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); padding: 0 4px;">◀</button>
-              오늘의 기록 & 메모
+              <span id="diary-section-date-title">오늘의 기록 & 메모</span>
               <button type="button" id="btn-diary-next-date" class="date-nav-btn" title="다음 날짜 기록 보기" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); padding: 0 4px;">▶</button>
             </h3>
             <div style="display: flex; gap: 8px; align-items: center;">
@@ -489,6 +489,19 @@
       <!-- Analytics Dashboard Panel -->
       <section id="analytics-panel" class="analytics-panel hidden">
         <h2 class="analytics-title">📊 일정 성취도 분석</h2>
+        
+        <!-- Analytics Date Range Picker -->
+        <div class="analytics-date-range" style="display: flex; gap: 8px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; background: var(--box-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--panel-border);">
+          <span style="font-weight: 600; color: var(--text-primary);">📅 기간 설정:</span>
+          <input type="date" id="analytics-start-date" class="todo-input" style="width: auto; padding: 6px;">
+          <span style="color: var(--text-secondary);">~</span>
+          <input type="date" id="analytics-end-date" class="todo-input" style="width: auto; padding: 6px;">
+          <select id="analytics-sort-order" class="todo-input" style="width: auto; padding: 6px; margin-left: 10px;">
+            <option value="desc">최신순</option>
+            <option value="asc">과거순</option>
+          </select>
+          <button type="button" id="btn-analytics-filter" class="ctrl-btn active" style="margin-left: auto;">적용</button>
+        </div>
       
       <!-- Overall Stats Summary Cards -->
       <div class="stats-summary-grid">
@@ -531,14 +544,25 @@
 
       <!-- Main Analysis Tabs / Controls -->
       <div class="analytics-tabs-container">
-        <div class="analytics-tab-buttons">
-          <button type="button" class="analytics-tab-btn active" id="tab-btn-categories">카테고리별 성취도</button>
-          <button type="button" class="analytics-tab-btn" id="tab-btn-todos">할 일 항목별 추적</button>
+        <div class="analytics-tab-buttons" style="flex-wrap: wrap;">
+          <button type="button" class="analytics-tab-btn active" id="tab-btn-overall">일일 타임라인</button>
+          <button type="button" class="analytics-tab-btn" id="tab-btn-categories">카테고리 통계</button>
+          <button type="button" class="analytics-tab-btn" id="tab-btn-todos">할 일 항목별</button>
           <button type="button" class="analytics-tab-btn" id="tab-btn-routines">루틴 달성 현황</button>
         </div>
 
+        <!-- Overall Daily Timeline View -->
+        <div class="analytics-tab-view" id="view-overall">
+          <div class="chart-container">
+            <h3 class="chart-title">📈 매일 전체 성취도 타임라인</h3>
+            <div id="overall-timeline-container" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+              <!-- Dynamically populated daily stats -->
+            </div>
+          </div>
+        </div>
+
         <!-- Category Analytics View -->
-        <div class="analytics-tab-view" id="view-categories">
+        <div class="analytics-tab-view hidden" id="view-categories">
           <div class="chart-container">
             <h3 class="chart-title">카테고리별 비교 그래프</h3>
             <div class="bar-chart" id="category-bar-chart">
