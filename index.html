@@ -1030,7 +1030,12 @@
         <div style="font-size: 0.85rem; color: var(--text-secondary);">과거부터 현재까지 기록한 모든 일기와 할 일을 시간의 흐름대로 모아봅니다.</div>
       </div>
       <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="timeline-filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div class="timeline-filters" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <select id="global-timeline-sort-order" class="todo-input" style="width: auto; padding: 4px 8px; font-size: 0.85rem;">
+            <option value="desc">최신순</option>
+            <option value="asc">과거순</option>
+          </select>
+          <div style="width: 1px; height: 20px; background-color: var(--border-color); margin: 0 4px;"></div>
           <button type="button" class="timeline-filter-btn active" data-filter="all">🌐 전체</button>
           <button type="button" class="timeline-filter-btn" data-filter="todo">🎯 할 일</button>
           <button type="button" class="timeline-filter-btn" data-filter="diary">📝 기록</button>

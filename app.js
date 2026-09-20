@@ -6269,8 +6269,14 @@ function renderTimeline() {
     }
   });
 
-  // Sort chronologically (earliest to latest!)
-  const sortedDates = Array.from(datesSet).sort();
+  // Sort chronologically
+  let sortedDates = Array.from(datesSet).sort();
+  
+  // Apply sort order
+  const sortSelect = document.getElementById('global-timeline-sort-order');
+  if (sortSelect && sortSelect.value === 'desc') {
+    sortedDates.reverse();
+  }
 
   if (sortedDates.length === 0) {
     const placeholder = document.createElement('div');
@@ -6447,108 +6453,127 @@ function renderTimeline() {
         const hasImages = todo.memoImages && todo.memoImages.length > 0;
         const hasVideos = todo.memoVideos && todo.memoVideos.length > 0;
 
-        if (hasMemo || hasImages || hasVideos) {
-          const mediaButtonsRow = document.createElement('div');
-          mediaButtonsRow.style.display = 'flex';
-          mediaButtonsRow.style.gap = '6px';
-          mediaButtonsRow.style.marginTop = '8px';
-          mediaButtonsRow.style.flexWrap = 'wrap';
+        const mediaButtonsRow = document.createElement('div');
+        mediaButtonsRow.style.display = 'flex';
+        mediaButtonsRow.style.gap = '6px';
+        mediaButtonsRow.style.marginTop = '8px';
+        mediaButtonsRow.style.flexWrap = 'wrap';
 
-          const contentContainer = document.createElement('div');
-          contentContainer.style.marginTop = '8px';
+        const contentContainer = document.createElement('div');
+        contentContainer.style.marginTop = '8px';
+        
+        // Memo Button
+        const memoBtn = document.createElement('button');
+        memoBtn.type = 'button';
+        memoBtn.className = 'timeline-action-btn-safe';
+        memoBtn.style.border = '1px solid var(--border-color)';
+        memoBtn.style.opacity = hasMemo ? '1' : '0.5';
+        memoBtn.innerHTML = hasMemo ? '📝 메모' : '📝 메모 추가';
+        
+        if (hasMemo) {
+          const memoContent = document.createElement('div');
+          memoContent.className = 'todo-memo-text';
+          memoContent.style.display = 'none';
+          memoContent.style.marginTop = '8px';
+          memoContent.innerHTML = linkify(todo.memo).replace(/\n/g, '<br>');
+          contentContainer.appendChild(memoContent);
           
-          if (hasMemo) {
-            const memoBtn = document.createElement('button');
-            memoBtn.type = 'button';
-            memoBtn.className = 'timeline-action-btn-safe';
-            memoBtn.style.border = '1px solid var(--border-color)';
-            memoBtn.innerHTML = '📝 메모';
-            
-            const memoContent = document.createElement('div');
-            memoContent.className = 'todo-memo-text';
-            memoContent.style.display = 'none';
-            memoContent.style.marginTop = '8px';
-            memoContent.innerHTML = linkify(todo.memo).replace(/\n/g, '<br>');
-            
-            memoBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              memoContent.style.display = memoContent.style.display === 'none' ? 'block' : 'none';
-            });
-            
-            mediaButtonsRow.appendChild(memoBtn);
-            contentContainer.appendChild(memoContent);
-          }
-
-          if (hasImages) {
-            const imgBtn = document.createElement('button');
-            imgBtn.type = 'button';
-            imgBtn.className = 'timeline-action-btn-safe';
-            imgBtn.style.border = '1px solid var(--border-color)';
-            imgBtn.innerHTML = '🖼️ 사진';
-            
-            const imgContent = document.createElement('div');
-            imgContent.style.display = 'none';
-            imgContent.style.flexWrap = 'wrap';
-            imgContent.style.gap = '8px';
-            imgContent.style.marginTop = '8px';
-            
-            todo.memoImages.forEach((imgObj, idx) => {
-              const thumb = document.createElement('div');
-              thumb.className = 'media-thumbnail-preview';
-              renderMediaObjAsync(imgObj, thumb);
-              thumb.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openLightbox(todo.memoImages, idx);
-              });
-              imgContent.appendChild(thumb);
-            });
-            
-            imgBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              imgContent.style.display = imgContent.style.display === 'none' ? 'flex' : 'none';
-            });
-            
-            mediaButtonsRow.appendChild(imgBtn);
-            contentContainer.appendChild(imgContent);
-          }
-          
-          if (hasVideos) {
-            const vidBtn = document.createElement('button');
-            vidBtn.type = 'button';
-            vidBtn.className = 'timeline-action-btn-safe';
-            vidBtn.style.border = '1px solid var(--border-color)';
-            vidBtn.innerHTML = '🎬 영상';
-            
-            const vidContent = document.createElement('div');
-            vidContent.style.display = 'none';
-            vidContent.style.flexWrap = 'wrap';
-            vidContent.style.gap = '8px';
-            vidContent.style.marginTop = '8px';
-            
-            todo.memoVideos.forEach((vidObj, idx) => {
-              const thumb = document.createElement('div');
-              thumb.className = 'media-thumbnail-preview';
-              thumb.style.backgroundColor = 'black';
-              renderMediaObjAsync(vidObj, thumb, true);
-              thumb.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openLightbox(todo.memoVideos, idx, true);
-              });
-              vidContent.appendChild(thumb);
-            });
-            
-            vidBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              vidContent.style.display = vidContent.style.display === 'none' ? 'flex' : 'none';
-            });
-            
-            mediaButtonsRow.appendChild(vidBtn);
-            contentContainer.appendChild(vidContent);
-          }
-
-          itemLeft.appendChild(mediaButtonsRow);
-          itemLeft.appendChild(contentContainer);
+          memoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            memoContent.style.display = memoContent.style.display === 'none' ? 'block' : 'none';
+          });
+        } else {
+          memoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.selectedDate = dateKey;
+            openTodoEditModal(todo.id);
+          });
         }
+        mediaButtonsRow.appendChild(memoBtn);
+
+        // Image Button
+        const imgBtn = document.createElement('button');
+        imgBtn.type = 'button';
+        imgBtn.className = 'timeline-action-btn-safe';
+        imgBtn.style.border = '1px solid var(--border-color)';
+        imgBtn.style.opacity = hasImages ? '1' : '0.5';
+        imgBtn.innerHTML = hasImages ? '🖼️ 사진' : '🖼️ 사진 추가';
+        
+        if (hasImages) {
+          const imgContent = document.createElement('div');
+          imgContent.style.display = 'none';
+          imgContent.style.flexWrap = 'wrap';
+          imgContent.style.gap = '8px';
+          imgContent.style.marginTop = '8px';
+          
+          todo.memoImages.forEach((imgObj, idx) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'media-thumbnail-preview';
+            renderMediaObjAsync(imgObj, thumb);
+            thumb.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openLightbox(todo.memoImages, idx);
+            });
+            imgContent.appendChild(thumb);
+          });
+          contentContainer.appendChild(imgContent);
+          
+          imgBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            imgContent.style.display = imgContent.style.display === 'none' ? 'flex' : 'none';
+          });
+        } else {
+          imgBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.selectedDate = dateKey;
+            openTodoEditModal(todo.id);
+          });
+        }
+        mediaButtonsRow.appendChild(imgBtn);
+        
+        // Video Button
+        const vidBtn = document.createElement('button');
+        vidBtn.type = 'button';
+        vidBtn.className = 'timeline-action-btn-safe';
+        vidBtn.style.border = '1px solid var(--border-color)';
+        vidBtn.style.opacity = hasVideos ? '1' : '0.5';
+        vidBtn.innerHTML = hasVideos ? '🎬 영상' : '🎬 영상 추가';
+        
+        if (hasVideos) {
+          const vidContent = document.createElement('div');
+          vidContent.style.display = 'none';
+          vidContent.style.flexWrap = 'wrap';
+          vidContent.style.gap = '8px';
+          vidContent.style.marginTop = '8px';
+          
+          todo.memoVideos.forEach((vidObj, idx) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'media-thumbnail-preview';
+            thumb.style.backgroundColor = 'black';
+            renderMediaObjAsync(vidObj, thumb, true);
+            thumb.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openLightbox(todo.memoVideos, idx, true);
+            });
+            vidContent.appendChild(thumb);
+          });
+          contentContainer.appendChild(vidContent);
+          
+          vidBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            vidContent.style.display = vidContent.style.display === 'none' ? 'flex' : 'none';
+          });
+        } else {
+          vidBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.selectedDate = dateKey;
+            openTodoEditModal(todo.id);
+          });
+        }
+        mediaButtonsRow.appendChild(vidBtn);
+
+        itemLeft.appendChild(mediaButtonsRow);
+        itemLeft.appendChild(contentContainer);
 
         // Action row layout
         const mainRow = document.createElement('div');
@@ -10434,6 +10459,13 @@ document.addEventListener('DOMContentLoaded', () => {
       renderTimeline();
     });
   });
+
+  const sortSelect = document.getElementById('global-timeline-sort-order');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      renderTimeline();
+    });
+  }
 });
 
 
