@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 
 :root {
   --bg-hue: 240;
@@ -5295,9 +5295,10 @@ body.light-theme #font-size-modal #font-size-modal-backdrop {
   background-color: var(--hover-color);
 }
 .timeline-filter-btn.active {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+  background-color: var(--box-bg);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 5px var(--accent-glow);
 }
 .timeline-stat-summary {
   display: flex;

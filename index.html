@@ -467,30 +467,6 @@
         </div>
       </section>
 
-            <!-- Timeline Modal -->
-      <div class="todo-modal-backdrop hidden" id="timeline-modal-backdrop" style="z-index: 2000;"></div>
-      <div class="todo-modal-content timeline-modal-content hidden" id="timeline-modal-content" style="z-index: 2001; width: 95%; max-width: 1000px; height: 90vh; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; right: 0; margin: auto;">
-        <div class="timeline-header" style="flex-shrink: 0; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <div>
-              <h2 class="timeline-title">⏱ 타임라인</h2>
-              <div style="font-size: 0.85rem; color: var(--text-secondary);">과거부터 현재까지 기록한 모든 일기와 할 일을 시간의 흐름대로 모아봅니다.</div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div class="timeline-filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button type="button" class="timeline-filter-btn active" data-filter="all">🌐 전체</button>
-                <button type="button" class="timeline-filter-btn" data-filter="todo">🎯 할 일</button>
-                <button type="button" class="timeline-filter-btn" data-filter="diary">📝 기록</button>
-                <button type="button" class="timeline-filter-btn" data-filter="stats">📊 통계</button>
-              </div>
-              <button type="button" id="btn-timeline-close" class="ctrl-btn" title="닫기" style="padding: 8px; font-size: 1.2rem; cursor: pointer; color: var(--text-color); background: none; border: none;">✖</button>
-            </div>
-          </div>
-        </div>
-        <div id="timeline-list" class="timeline-list" style="overflow-y: auto; flex-grow: 1; padding-right: 10px;">
-          <!-- Timeline date cards will be populated dynamically -->
-        </div>
-      </div>
 
       <!-- D-day Panel -->
       <section id="ddays-panel" class="ddays-panel hidden">
@@ -1018,6 +994,30 @@
     <div class="modal-actions" style="margin-top: 15px; justify-content: flex-end;">
       <button type="button" class="btn btn-cancel" id="btn-gdrive-recovery-cancel">닫기</button>
     </div>
+  </div>
+</div>
+<!-- Timeline Modal -->
+<div class="todo-modal-backdrop hidden" id="timeline-modal-backdrop" style="z-index: 2000;"></div>
+<div class="todo-modal-content timeline-modal-content hidden" id="timeline-modal-content" style="z-index: 2001; width: 95%; max-width: 1000px; height: 90vh; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; right: 0; margin: auto;">
+  <div class="timeline-header" style="flex-shrink: 0; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h2 class="timeline-title">⏱ 타임라인</h2>
+        <div style="font-size: 0.85rem; color: var(--text-secondary);">과거부터 현재까지 기록한 모든 일기와 할 일을 시간의 흐름대로 모아봅니다.</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="timeline-filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="timeline-filter-btn active" data-filter="all">🌐 전체</button>
+          <button type="button" class="timeline-filter-btn" data-filter="todo">🎯 할 일</button>
+          <button type="button" class="timeline-filter-btn" data-filter="diary">📝 기록</button>
+          <button type="button" class="timeline-filter-btn" data-filter="stats">📊 통계</button>
+        </div>
+        <button type="button" id="btn-timeline-close" class="ctrl-btn" title="닫기" style="padding: 8px; font-size: 1.2rem; cursor: pointer; color: var(--text-color); background: none; border: none;">✖</button>
+      </div>
+    </div>
+  </div>
+  <div id="timeline-list" class="timeline-list" style="overflow-y: auto; flex-grow: 1; padding-right: 10px;">
+    <!-- Timeline date cards will be populated dynamically -->
   </div>
 </div>
 </body>
