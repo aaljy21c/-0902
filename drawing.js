@@ -195,6 +195,24 @@ class NeonDrawingBoard {
     this.wrapper.appendChild(this.canvasContainer);
     this.container.appendChild(this.wrapper);
 
+    // Custom Scrollbars
+    this.hScrollbar = document.createElement('div');
+    this.hScrollbar.className = 'drawing-scrollbar horizontal';
+    this.hThumb = document.createElement('div');
+    this.hThumb.className = 'drawing-scrollbar-thumb';
+    this.hScrollbar.appendChild(this.hThumb);
+
+    this.vScrollbar = document.createElement('div');
+    this.vScrollbar.className = 'drawing-scrollbar vertical';
+    this.vThumb = document.createElement('div');
+    this.vThumb.className = 'drawing-scrollbar-thumb';
+    this.vScrollbar.appendChild(this.vThumb);
+
+    this.canvasContainer.appendChild(this.hScrollbar);
+    this.canvasContainer.appendChild(this.vScrollbar);
+
+    this.setupScrollbarEvents();
+
     // Add manual extend down button
     if (!this.readOnly) {
       this.extendDownBtn = document.createElement('button');
@@ -1139,21 +1157,40 @@ class NeonDrawingBoard {
     if (this.readOnly) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+    const key = e.key.toLowerCase();
+
     if (e.ctrlKey || e.metaKey) {
-      if (e.key === '=' || e.key === '+') {
+      if (key === '=' || key === '+') {
         e.preventDefault();
         this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} });
         return;
-      } else if (e.key === '-') {
+      } else if (key === '-') {
         e.preventDefault();
         this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} });
+        return;
+      } else if (key === 'z') {
+        e.preventDefault();
+        this.undo();
+        return;
+      } else if (key === 'y') {
+        e.preventDefault();
+        this.redo();
+        return;
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} });
         return;
       }
       return;
     }
-    if (e.altKey) return;
 
-    const key = e.key.toLowerCase();
+    if (e.altKey) {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} });
+      }
+      return;
+    }
     
     if (e.code === 'Space') {
       if (!this.isSpacePan) {
@@ -1171,6 +1208,9 @@ class NeonDrawingBoard {
     } else if (key === 'l') {
       const btn = this.toolbar.querySelector('.tool-btn[data-tool="lasso"]');
       if (btn) btn.click();
+    } else if (key === 'c') {
+      const colorInput = this.toolbar.querySelector('.color-picker');
+      if (colorInput) colorInput.click();
     } else if (key === '[') {
       this.adjustSize(-1);
     } else if (key === ']') {
@@ -1179,7 +1219,7 @@ class NeonDrawingBoard {
   }
 
   onKeyUp(e) {
-    if (e.code === 'Space') {
+    if (e.code === 'Space' && this.isSpacePan) {
       this.isSpacePan = false;
       const btn = this.toolbar.querySelector(`.tool-btn[data-tool="${this.previousTool || 'pen'}"]`);
       if (btn) btn.click();
@@ -1194,6 +1234,128 @@ class NeonDrawingBoard {
       this.highlighterSize = Math.max(5, Math.min(50, this.highlighterSize + delta * 2));
     }
     this.updateSettingsUI();
+  }
+
+  setupScrollbarEvents() {
+    let isDraggingH = false;
+    let isDraggingV = false;
+    let startX = 0, startY = 0;
+    let startPanX = 0, startPanY = 0;
+
+    const onPointerDownH = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isDraggingH = true;
+      startX = e.clientX;
+      startPanX = this.panX;
+    };
+
+    const onPointerDownV = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isDraggingV = true;
+      startY = e.clientY;
+      startPanY = this.panY;
+    };
+
+    const onPointerMove = (e) => {
+      if (!isDraggingH && !isDraggingV) return;
+      e.preventDefault();
+
+      const rect = this.canvasContainer.getBoundingClientRect();
+      const contentBounds = this.getContentBounds();
+      
+      if (isDraggingH) {
+        const dx = e.clientX - startX;
+        const scaledWidth = contentBounds.w * this.viewScale;
+        const ratio = rect.width / scaledWidth;
+        this.panX = startPanX + (-dx / ratio);
+      }
+      
+      if (isDraggingV) {
+        const dy = e.clientY - startY;
+        const scaledHeight = contentBounds.h * this.viewScale;
+        const ratio = rect.height / scaledHeight;
+        this.panY = startPanY + (-dy / ratio);
+      }
+      
+      this.render();
+    };
+
+    const onPointerUp = () => {
+      isDraggingH = false;
+      isDraggingV = false;
+    };
+
+    if (this.hThumb) this.hThumb.addEventListener('pointerdown', onPointerDownH);
+    if (this.vThumb) this.vThumb.addEventListener('pointerdown', onPointerDownV);
+    document.addEventListener('pointermove', onPointerMove, { passive: false });
+    document.addEventListener('pointerup', onPointerUp);
+  }
+
+  getContentBounds() {
+    const rect = this.canvasContainer.getBoundingClientRect();
+    if (this.isMultiPage) {
+      const pageHeight = this.pageHeight || 1130;
+      const pageGap = 20;
+      let maxY = 0;
+      if (this.strokes) {
+        this.strokes.forEach(stroke => {
+          if (stroke.points) {
+            stroke.points.forEach(p => {
+              if (p.y > maxY) maxY = p.y;
+            });
+          }
+        });
+      }
+      const numPages = Math.max(1, Math.ceil(maxY / (pageHeight + pageGap))) + 1;
+      return {
+        w: this.canvas.width / (window.devicePixelRatio || 1),
+        h: numPages * (pageHeight + pageGap)
+      };
+    } else {
+      return {
+        w: this.canvas.width / (window.devicePixelRatio || 1),
+        h: this.canvas.height / (window.devicePixelRatio || 1)
+      };
+    }
+  }
+
+  updateScrollbars() {
+    if (!this.hScrollbar || !this.vScrollbar) return;
+
+    const rect = this.canvasContainer.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    const bounds = this.getContentBounds();
+    const scaledW = bounds.w * this.viewScale;
+    const scaledH = bounds.h * this.viewScale;
+
+    // Horizontal
+    if (scaledW <= rect.width) {
+      this.hScrollbar.style.display = 'none';
+    } else {
+      this.hScrollbar.style.display = 'block';
+      const thumbRatioW = rect.width / scaledW;
+      const thumbWidth = Math.max(20, rect.width * thumbRatioW);
+      this.hThumb.style.width = `${thumbWidth}px`;
+
+      const thumbLeft = (-this.panX / scaledW) * rect.width;
+      this.hThumb.style.left = `${Math.max(0, Math.min(rect.width - thumbWidth, thumbLeft))}px`;
+    }
+
+    // Vertical
+    if (scaledH <= rect.height) {
+      this.vScrollbar.style.display = 'none';
+    } else {
+      this.vScrollbar.style.display = 'block';
+      const thumbRatioH = rect.height / scaledH;
+      const thumbHeight = Math.max(20, rect.height * thumbRatioH);
+      this.vThumb.style.height = `${thumbHeight}px`;
+
+      const thumbTop = (-this.panY / scaledH) * rect.height;
+      this.vThumb.style.top = `${Math.max(0, Math.min(rect.height - thumbHeight, thumbTop))}px`;
+    }
   }
 
   updateCursorStyle(e) {
@@ -2397,6 +2559,7 @@ class NeonDrawingBoard {
       }
     }
 
+    this.updateScrollbars();
     this.ctx.restore();
   }
 

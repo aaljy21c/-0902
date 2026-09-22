@@ -385,3 +385,47 @@
   display: none; /* Hidden initially or when out of canvas */
   mix-blend-mode: difference;
 }
+
+/* Custom Scrollbars */
+.drawing-scrollbar {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  z-index: 1000;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.drawing-scrollbar:hover {
+  opacity: 1;
+}
+.drawing-scrollbar-thumb {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.drawing-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.drawing-scrollbar.horizontal {
+  bottom: 0;
+  left: 0;
+  height: 12px;
+  width: 100%;
+}
+.drawing-scrollbar.horizontal .drawing-scrollbar-thumb {
+  top: 2px;
+  bottom: 2px;
+}
+
+.drawing-scrollbar.vertical {
+  right: 0;
+  top: 0;
+  width: 12px;
+  height: 100%;
+}
+.drawing-scrollbar.vertical .drawing-scrollbar-thumb {
+  left: 2px;
+  right: 2px;
+}
