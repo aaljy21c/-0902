@@ -1198,23 +1198,23 @@ class NeonDrawingBoard {
         }
         return;
       }
-      return;
+      // Allow fall-through to fix stuck modifier keys from tablet drivers
     }
 
     if (e.altKey) {
       if (code === 'Space') {
         e.preventDefault();
         this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} }); // Alt + Space (Zoom Out)
+        return;
       }
-      return;
     }
 
     if (e.shiftKey) {
       if (code === 'Space') {
         e.preventDefault();
         this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} }); // Shift + Space (Zoom Out)
+        return;
       }
-      return;
     }
     
     if (code === 'Space') {
@@ -1358,15 +1358,15 @@ class NeonDrawingBoard {
     const scaledW = bounds.w * this.viewScale;
     const scaledH = bounds.h * this.viewScale;
     
-    const slackX = rect.width * 0.8;
-    const slackY = rect.height * 0.8;
+    const pad = 100; // allow 100px panning past the edges
     
-    return {
-      minX: Math.min(0, rect.width - scaledW - slackX),
-      maxX: slackX,
-      minY: Math.min(0, rect.height - scaledH - slackY),
-      maxY: slackY
-    };
+    const minX = Math.min(0, rect.width - scaledW) - pad;
+    const maxX = pad;
+    
+    const minY = Math.min(0, rect.height - scaledH) - pad;
+    const maxY = pad;
+    
+    return { minX, maxX, minY, maxY };
   }
 
   constrainPan() {
