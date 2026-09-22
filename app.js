@@ -10231,21 +10231,50 @@ document.addEventListener('DOMContentLoaded', () => {
       listEl.innerHTML = '<div style="text-align: center; padding: 20px;">기록을 불러오는 중...</div>';
       
       try {
-        const fileId = localStorage.getItem('neon_planner_gdrive_file_id');
-        if (!fileId) {
+        const searchUrl = "https://www.googleapis.com/drive/v3/files?q=name='neon_planner_backup.json'+and+trashed=false&spaces=appDataFolder&fields=files(id)";
+        const searchRes = await fetch(searchUrl, {
+          headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
+        });
+        
+        let files = [];
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          files = searchData.files || [];
+        }
+        
+        // 만약 검색 결과가 없다면 현재 로컬스토리지의 fileId라도 사용
+        const localFileId = localStorage.getItem('neon_planner_gdrive_file_id');
+        if (files.length === 0 && localFileId) {
+          files.push({ id: localFileId });
+        }
+
+        if (files.length === 0) {
           listEl.innerHTML = '<div style="text-align: center; padding: 20px;">백업 파일이 존재하지 않습니다.</div>';
           return;
         }
 
-        const revUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(id,modifiedTime)`;
-        const res = await fetch(revUrl, {
-          headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch revisions');
+        let revisions = [];
         
-        const data = await res.json();
-        const revisions = data.revisions || [];
+        for (const file of files) {
+          let pageToken = null;
+          do {
+            const revUrl = `https://www.googleapis.com/drive/v3/files/${file.id}/revisions?fields=nextPageToken,revisions(id,modifiedTime)&pageSize=1000${pageToken ? '&pageToken=' + pageToken : ''}`;
+            const res = await fetch(revUrl, {
+              headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              if (data.revisions) {
+                const mappedRevisions = data.revisions.map(r => ({...r, fileId: file.id}));
+                revisions = revisions.concat(mappedRevisions);
+              }
+              pageToken = data.nextPageToken;
+            } else {
+              pageToken = null; // 에러 시 해당 파일 탐색 중단
+            }
+          } while (pageToken);
+        }
         
         if (revisions.length === 0) {
           listEl.innerHTML = '<div style="text-align: center; padding: 20px;">과거 기록이 없습니다.</div>';
@@ -10295,7 +10324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = true;
             
             try {
-              const dlUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/revisions/${rev.id}?alt=media`;
+              const dlUrl = `https://www.googleapis.com/drive/v3/files/${rev.fileId}/revisions/${rev.id}?alt=media`;
               const dlRes = await fetch(dlUrl, {
                 headers: { 'Authorization': `Bearer ${gdriveAccessToken}` }
               });
