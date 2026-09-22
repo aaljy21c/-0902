@@ -187,6 +187,11 @@ class NeonDrawingBoard {
     this.zoomIndicator.innerText = '100%';
     this.canvasContainer.appendChild(this.zoomIndicator);
 
+    // Custom cursor
+    this.cursorOverlay = document.createElement('div');
+    this.cursorOverlay.id = 'drawing-cursor';
+    this.canvasContainer.appendChild(this.cursorOverlay);
+
     this.wrapper.appendChild(this.canvasContainer);
     this.container.appendChild(this.wrapper);
 
@@ -678,6 +683,11 @@ class NeonDrawingBoard {
       e.preventDefault();
       const zoomFactor = e.deltaY > 0 ? (1 / 1.1) : 1.1;
       this.doZoom(zoomFactor, e);
+    } else {
+      e.preventDefault();
+      this.panY -= e.deltaY / this.viewScale;
+      this.panX -= e.deltaX / this.viewScale;
+      this.render();
     }
   }
 
@@ -806,6 +816,7 @@ class NeonDrawingBoard {
         else this.highlighterOpacity = parseFloat(e.target.value);
       });
     }
+    if (this.updateCursorStyle) this.updateCursorStyle(null);
   }
 
   bindEvents() {
@@ -814,8 +825,15 @@ class NeonDrawingBoard {
     this.canvas.addEventListener('pointerup', this.onPointerUp.bind(this));
     this.canvas.addEventListener('pointerout', this.onPointerUp.bind(this));
 
+    this.canvas.addEventListener('pointerenter', this.onPointerEnter.bind(this));
+    this.canvas.addEventListener('pointerleave', this.onPointerLeave.bind(this));
+
     // Mouse wheel zoom
     this.wrapper.addEventListener('wheel', this.onWheel.bind(this), { passive: false });
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', this.onKeyDown.bind(this));
+    window.addEventListener('keyup', this.onKeyUp.bind(this));
   }
 
   getPointerPos(e) {
@@ -870,6 +888,18 @@ class NeonDrawingBoard {
     this.isTempEraser = false;
     if (e.pointerType === 'pen' && (e.button === 2 || e.button === 5 || (e.buttons & 2) || (e.buttons & 32))) {
       this.isTempEraser = true;
+    }
+
+    if (this.isSpacePan) {
+      this.isDrawing = false;
+      this.isPanning = true;
+      this.initialPinchDist = 1;
+      this.initialScale = this.viewScale;
+      const rect = this.canvas.getBoundingClientRect();
+      this.pinchPanStartX = (e.clientX - rect.left) - this.panX;
+      this.pinchPanStartY = (e.clientY - rect.top) - this.panY;
+      this.activePointers.set(e.pointerId, e);
+      return;
     }
 
     if (this.penOnlyMode && e.pointerType === 'touch') {
@@ -946,6 +976,7 @@ class NeonDrawingBoard {
   }
 
   onPointerMove(e) {
+    if (this.updateCursorStyle) this.updateCursorStyle(e);
     if (this.activePointers.has(e.pointerId)) {
       this.activePointers.set(e.pointerId, e);
     }
@@ -1081,6 +1112,112 @@ class NeonDrawingBoard {
     this.points = [];
     this.isTempEraser = false;
     this.render();
+    if (this.isMultiPage || this.layoutMode === 'paged') {
+      this.updateCurrentThumbnail();
+    }
+  }
+
+  updateCurrentThumbnail() {
+    if (!this.sidebar || this.sidebar.classList.contains('hidden')) return;
+    const container = this.sidebar.querySelector('#drawing-thumbnails');
+    if (!container) return;
+    const thumbs = container.querySelectorAll('.page-thumbnail');
+    if (thumbs.length > this.currentPageIndex) {
+      this.updateSidebar();
+    }
+  }
+
+  onPointerEnter(e) {
+    if (this.cursorOverlay) this.cursorOverlay.style.display = 'block';
+  }
+
+  onPointerLeave(e) {
+    if (this.cursorOverlay) this.cursorOverlay.style.display = 'none';
+  }
+
+  onKeyDown(e) {
+    if (this.readOnly) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === '=' || e.key === '+') {
+        e.preventDefault();
+        this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} });
+        return;
+      } else if (e.key === '-') {
+        e.preventDefault();
+        this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} });
+        return;
+      }
+      return;
+    }
+    if (e.altKey) return;
+
+    const key = e.key.toLowerCase();
+    
+    if (e.code === 'Space') {
+      if (!this.isSpacePan) {
+        e.preventDefault();
+        this.isSpacePan = true;
+        this.previousTool = this.currentTool;
+        this.canvasContainer.style.cursor = 'grab';
+      }
+    } else if (key === 'b') {
+      const btn = this.toolbar.querySelector('.tool-btn[data-tool="pen"]');
+      if (btn) btn.click();
+    } else if (key === 'e') {
+      const btn = this.toolbar.querySelector('.tool-btn[data-tool="eraser"]');
+      if (btn) btn.click();
+    } else if (key === 'l') {
+      const btn = this.toolbar.querySelector('.tool-btn[data-tool="lasso"]');
+      if (btn) btn.click();
+    } else if (key === '[') {
+      this.adjustSize(-1);
+    } else if (key === ']') {
+      this.adjustSize(1);
+    }
+  }
+
+  onKeyUp(e) {
+    if (e.code === 'Space') {
+      this.isSpacePan = false;
+      const btn = this.toolbar.querySelector(`.tool-btn[data-tool="${this.previousTool || 'pen'}"]`);
+      if (btn) btn.click();
+      this.canvasContainer.style.cursor = 'crosshair';
+    }
+  }
+
+  adjustSize(delta) {
+    if (this.currentTool === 'pen') {
+      this.penSize = Math.max(1, Math.min(20, this.penSize + delta));
+    } else if (this.currentTool === 'highlighter') {
+      this.highlighterSize = Math.max(5, Math.min(50, this.highlighterSize + delta * 2));
+    }
+    this.updateSettingsUI();
+  }
+
+  updateCursorStyle(e) {
+    if (!this.cursorOverlay) return;
+    if (this.isSpacePan || this.currentTool === 'lasso') {
+       this.cursorOverlay.style.display = 'none';
+       return;
+    }
+    
+    let size = 2;
+    if (this.currentTool === 'pen') size = this.penSize;
+    else if (this.currentTool === 'highlighter') size = this.highlighterSize;
+    else if (this.currentTool === 'eraser') size = 30;
+
+    const displaySize = size * this.viewScale;
+    this.cursorOverlay.style.width = `${displaySize}px`;
+    this.cursorOverlay.style.height = `${displaySize}px`;
+    
+    if (e) {
+      const rect = this.canvas.getBoundingClientRect();
+      this.cursorOverlay.style.left = `${e.clientX - rect.left}px`;
+      this.cursorOverlay.style.top = `${e.clientY - rect.top}px`;
+      this.cursorOverlay.style.display = 'block';
+    }
   }
 
   checkLassoTap(pt) {
@@ -1506,7 +1643,10 @@ class NeonDrawingBoard {
         
         cvs.toBlob(async (blob) => {
           if (!blob) return;
-          const fileId = await FileDB.saveFile(blob, 'image/jpeg', file.name || 'image.jpg');
+          let fileId = null;
+          try {
+            if (typeof FileDB !== 'undefined') fileId = await FileDB.saveFile(blob, 'image/jpeg', file.name || 'image.jpg');
+          } catch(err) { console.warn('FileDB error', err); }
           const dataUrl = cvs.toDataURL('image/jpeg', 0.85);
 
           const rect = this.canvasContainer.getBoundingClientRect();
@@ -1529,6 +1669,7 @@ class NeonDrawingBoard {
             cy: centerY,
             w: displayWidth,
             h: displayHeight,
+            angle: 0,
             img: img
           };
           this.buildImageOverlay();
@@ -1555,6 +1696,18 @@ class NeonDrawingBoard {
     this.imageOverlay.style.backgroundImage = `url(${this.activeImage.imgData})`;
     this.imageOverlay.style.backgroundSize = '100% 100%';
     this.imageOverlay.style.touchAction = 'none'; // Prevent browser scrolling while dragging
+
+    const rotateHandle = document.createElement('div');
+    rotateHandle.style.position = 'absolute';
+    rotateHandle.style.left = '50%';
+    rotateHandle.style.top = '-25px';
+    rotateHandle.style.transform = 'translateX(-50%)';
+    rotateHandle.style.width = '16px';
+    rotateHandle.style.height = '16px';
+    rotateHandle.style.backgroundColor = '#ffc107';
+    rotateHandle.style.borderRadius = '50%';
+    rotateHandle.style.cursor = 'grab';
+    rotateHandle.style.touchAction = 'none';
 
     const resizeHandle = document.createElement('div');
     resizeHandle.style.position = 'absolute';
@@ -1591,6 +1744,7 @@ class NeonDrawingBoard {
     btnCancel.style.padding = '4px 8px';
     btnCancel.style.cursor = 'pointer';
 
+    this.imageOverlay.appendChild(rotateHandle);
     this.imageOverlay.appendChild(resizeHandle);
     this.imageOverlay.appendChild(btnConfirm);
     this.imageOverlay.appendChild(btnCancel);
@@ -1598,6 +1752,7 @@ class NeonDrawingBoard {
 
     let isDragging = false;
     let isResizing = false;
+    let isRotating = false;
     let startX, startY;
     let startCx, startCy, startW, startH;
 
@@ -1621,6 +1776,8 @@ class NeonDrawingBoard {
 
       if (e.target === resizeHandle) {
         isResizing = true;
+      } else if (e.target === rotateHandle) {
+        isRotating = true;
       } else {
         isDragging = true;
       }
@@ -1631,7 +1788,12 @@ class NeonDrawingBoard {
         const dx = (c.x - startX) / this.viewScale;
         const dy = (c.y - startY) / this.viewScale;
         
-        if (isDragging) {
+        if (isRotating) {
+          const rect = this.imageOverlay.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          this.activeImage.angle = Math.atan2(c.y - centerY, c.x - centerX) + Math.PI/2;
+        } else if (isDragging) {
           this.activeImage.cx = startCx + dx;
           this.activeImage.cy = startCy + dy;
         } else if (isResizing) {
@@ -1651,6 +1813,7 @@ class NeonDrawingBoard {
       const onUp = () => {
         isDragging = false;
         isResizing = false;
+        isRotating = false;
         document.removeEventListener('pointermove', onMove);
         document.removeEventListener('pointerup', onUp);
       };
@@ -1686,6 +1849,7 @@ class NeonDrawingBoard {
     this.imageOverlay.style.top = `${screenY}px`;
     this.imageOverlay.style.width = `${screenW}px`;
     this.imageOverlay.style.height = `${screenH}px`;
+    this.imageOverlay.style.transform = `rotate(${ai.angle || 0}rad)`;
   }
 
   commitActiveImage() {
@@ -1696,6 +1860,7 @@ class NeonDrawingBoard {
       imgFileId: ai.imgFileId,
       imgData: ai.imgData,
       opacity: 1,
+      angle: ai.angle || 0,
       points: [
         { x: ai.cx - ai.w / 2, y: ai.cy - ai.h / 2 },
         { x: ai.cx + ai.w / 2, y: ai.cy - ai.h / 2 },
@@ -1736,26 +1901,11 @@ class NeonDrawingBoard {
       const firstPagePdf = await pdf.getPage(1);
       const firstViewport = firstPagePdf.getViewport({ scale });
 
-      let hasExistingContent = false;
-      if (this.isMultiPage && this._pages.length > 0) {
-        hasExistingContent = this._pages.some(p => (p._strokes && p._strokes.length > 0) || p.type === 'pdf' || p.bgCanvas);
-      } else if (this.strokes && this.strokes.length > 0) {
-        hasExistingContent = true;
-      }
-
-      let shouldAppend = false;
-      if (hasExistingContent) {
-        const replaceConfirm = confirm("새로운 PDF를 불러오면 기존 내용이 삭제됩니다.\n기존 내용을 삭제하고 새로 불러오시겠습니까?\n\n[확인] 기존 내용 삭제 후 불러오기\n[취소] 기존 페이지 뒤에 이어서 추가하기");
-        if (!replaceConfirm) {
-          shouldAppend = true;
+      if (!this.isMultiPage) {
+        // If it wasn't multipage and has no content, we can clear the single default blank page
+        if (this._pages.length === 1 && this._pages[0].type === 'blank' && this._pages[0]._strokes.length === 0 && !this._pages[0].bgCanvas) {
+          this._pages = [];
         }
-      }
-
-      if (!shouldAppend) {
-        this.strokes = [];
-        this._pages = [];
-        this.undoStack = [];
-        this.redoStack = [];
         this.isMultiPage = true;
       }
 
@@ -2282,7 +2432,11 @@ class NeonDrawingBoard {
         }
         const w = stroke.points[1].x - stroke.points[0].x;
         const h = stroke.points[2].y - stroke.points[1].y;
-        this.ctx.drawImage(stroke.imgElement, stroke.points[0].x, stroke.points[0].y, w, h);
+        const cx = stroke.points[0].x + w/2;
+        const cy = stroke.points[0].y + h/2;
+        this.ctx.translate(cx, cy);
+        this.ctx.rotate(stroke.angle || 0);
+        this.ctx.drawImage(stroke.imgElement, -w/2, -h/2, w, h);
         this.ctx.restore();
       }
       return;
@@ -2452,7 +2606,23 @@ window.generateDrawingCroppedUrl = function(drawingData) {
       // We can't await here because it's synchronous, but usually data URL images are instantly available or very fast.
       // If it fails, it will just not render the image in the preview.
       try {
-        tempCtx.drawImage(img, (stroke.x || 0) - minX, (stroke.y || 0) - minY, stroke.width || 300, stroke.height || 300);
+        let w = stroke.width || 300;
+        let h = stroke.height || 300;
+        let drawX = (stroke.x || 0) - minX;
+        let drawY = (stroke.y || 0) - minY;
+        if (stroke.points && stroke.points.length >= 4) {
+          w = stroke.points[1].x - stroke.points[0].x;
+          h = stroke.points[2].y - stroke.points[1].y;
+          drawX = stroke.points[0].x - minX;
+          drawY = stroke.points[0].y - minY;
+        }
+        tempCtx.save();
+        const cx = drawX + w/2;
+        const cy = drawY + h/2;
+        tempCtx.translate(cx, cy);
+        tempCtx.rotate(stroke.angle || 0);
+        tempCtx.drawImage(img, -w/2, -h/2, w, h);
+        tempCtx.restore();
       } catch(e) {}
       return;
     }

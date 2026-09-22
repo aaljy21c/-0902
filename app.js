@@ -10514,3 +10514,108 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnClose) btnClose.addEventListener('click', closeTimeline);
   if (backdrop) backdrop.addEventListener('click', closeTimeline);
 });
+
+// --- Local Backup & Recovery Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+  const btnLocalRecover = document.getElementById('btn-local-recover');
+  const localModal = document.getElementById('local-recovery-modal');
+  const localCancelBtn = document.getElementById('btn-local-recovery-cancel');
+  const localListEl = document.getElementById('local-recovery-list');
+
+  if (btnLocalRecover && localModal) {
+    btnLocalRecover.addEventListener('click', () => {
+      localModal.classList.remove('hidden');
+      localModal.style.display = 'flex';
+      localListEl.innerHTML = '<div style="text-align: center; padding: 20px;">기록을 불러오는 중...</div>';
+      
+      const backupsStr = localStorage.getItem('neon_planner_local_backups');
+      let backups = [];
+      try {
+        if (backupsStr) backups = JSON.parse(backupsStr);
+      } catch (e) { console.warn(e); }
+      
+      if (backups.length === 0) {
+        localListEl.innerHTML = '<div style="text-align: center; padding: 20px;">로컬 백업 파일이 존재하지 않습니다.</div>';
+        return;
+      }
+      
+      // Sort newest first
+      backups.sort((a, b) => b.timestamp - a.timestamp);
+      
+      localListEl.innerHTML = '';
+      backups.forEach(backup => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 6px;';
+        
+        const text = document.createElement('div');
+        text.style.cssText = 'font-size: 0.95rem; color: var(--text-color);';
+        const d = new Date(backup.timestamp);
+        text.innerHTML = `<strong>${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</strong>`;
+        
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '이 시점으로 복구';
+        btn.style.cssText = 'padding: 6px 12px; font-size: 0.85rem; border-radius: 4px; background: var(--primary-color); color: #fff; border: none; cursor: pointer;';
+        
+        btn.onclick = () => {
+          if (!confirm(text.textContent + ' 시점의 기록으로 복구하시겠습니까?\\n현재 기기의 모든 데이터가 해당 시점으로 덮어써집니다.')) return;
+          try {
+            const data = backup.data;
+            if (data.todos) localStorage.setItem('neon_planner_todos', JSON.stringify(data.todos));
+            if (data.routines) localStorage.setItem('neon_planner_routines', JSON.stringify(data.routines));
+            if (data.routinesPopulatedDates) localStorage.setItem('neon_planner_populated_dates', JSON.stringify(data.routinesPopulatedDates));
+            if (data.categories) localStorage.setItem('neon_planner_categories', JSON.stringify(data.categories));
+            if (data.diaries) localStorage.setItem('neon_planner_diaries', JSON.stringify(data.diaries));
+            if (data.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(data.ddays));
+            alert('복구가 완료되었습니다. 변경사항을 적용하기 위해 새로고침합니다.');
+            location.reload();
+          } catch (e) {
+            alert('복구 중 오류가 발생했습니다.');
+            console.error(e);
+          }
+        };
+        
+        item.appendChild(text);
+        item.appendChild(btn);
+        localListEl.appendChild(item);
+      });
+    });
+  }
+
+  if (localCancelBtn) {
+    localCancelBtn.addEventListener('click', () => {
+      localModal.classList.add('hidden');
+      localModal.style.display = 'none';
+    });
+  }
+
+  // Daily Backup Prompt
+  setTimeout(() => {
+    const lastPrompt = localStorage.getItem('neon_planner_last_backup_prompt');
+    const todayStr = new Date().toDateString();
+    if (lastPrompt !== todayStr) {
+      if (confirm('하루에 한 번 진행하는 기기 내 저장(백업) 시간입니다. 지금 기기에 기록을 백업하시겠습니까?')) {
+        try {
+          let backups = [];
+          const existing = localStorage.getItem('neon_planner_local_backups');
+          if (existing) backups = JSON.parse(existing);
+          const snapData = {
+            todos: state.todos,
+            routines: state.routines,
+            routinesPopulatedDates: state.routinesPopulatedDates,
+            categories: state.categories,
+            diaries: state.diaries,
+            ddays: state.ddays
+          };
+          backups.push({ timestamp: Date.now(), data: snapData });
+          if (backups.length > 30) backups = backups.slice(backups.length - 30);
+          localStorage.setItem('neon_planner_local_backups', JSON.stringify(backups));
+          alert('기기 내 백업이 완료되었습니다. (최대 30일치 보관)');
+        } catch (e) {
+          alert('백업 실패 (저장 공간 부족 등): ' + e.message);
+        }
+      }
+      localStorage.setItem('neon_planner_last_backup_prompt', todayStr);
+    }
+  }, 3000);
+});
