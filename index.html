@@ -451,15 +451,35 @@
             <input type="text" id="new-routine-input" class="todo-input" placeholder="새로운 루틴을 입력하세요..." autocomplete="off">
             <button type="button" id="add-routine-btn" class="add-btn">추가</button>
           </div>
-          <div class="todo-options-row" style="flex-wrap: wrap; gap: 8px;">
-            <div class="category-picker" id="routine-category-selector" style="flex: 1; min-width: 200px;">
-              <!-- Dynamically populated by JS -->
+          <div class="todo-options-row" style="flex-direction: column; gap: 8px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; width: 100%;">
+              <div class="category-picker" id="routine-category-selector" style="flex: 1; min-width: 200px;">
+                <!-- Dynamically populated by JS -->
+              </div>
+              <div class="routine-date-range-picker" style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap;">기간 (선택):</span>
+                <input type="date" id="new-routine-start" class="todo-input" style="width: 130px; padding: 6px; font-size: 0.8rem;">
+                <span style="color: var(--text-secondary);">~</span>
+                <input type="date" id="new-routine-end" class="todo-input" style="width: 130px; padding: 6px; font-size: 0.8rem;">
+              </div>
             </div>
-            <div class="routine-date-range-picker" style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
-              <span style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap;">기간 (선택):</span>
-              <input type="date" id="new-routine-start" class="todo-input" style="width: 130px; padding: 6px; font-size: 0.8rem;">
-              <span style="color: var(--text-secondary);">~</span>
-              <input type="date" id="new-routine-end" class="todo-input" style="width: 130px; padding: 6px; font-size: 0.8rem;">
+            <div class="routine-advanced-options" style="display: flex; flex-wrap: wrap; gap: 16px; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; border: 1px solid var(--panel-border); width: 100%; box-sizing: border-box;">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">반복 요일 (선택 안 하면 매일)</span>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="routine-dow-checkboxes">
+                  <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-primary);"><input type="checkbox" value="1">월</label>
+                  <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-primary);"><input type="checkbox" value="2">화</label>
+                  <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-primary);"><input type="checkbox" value="3">수</label>
+                  <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-primary);"><input type="checkbox" value="4">목</label>
+                  <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-primary);"><input type="checkbox" value="5">금</label>
+                  <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #3b82f6;"><input type="checkbox" value="6">토</label>
+                  <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #ef4444;"><input type="checkbox" value="0">일</label>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">반복 날짜 (쉼표로 구분, 예: 1, 15, 31)</span>
+                <input type="text" id="routine-dom-input" class="todo-input" placeholder="특정 날짜 입력..." style="width: 200px; padding: 6px; font-size: 0.8rem;">
+              </div>
             </div>
           </div>
         </div>

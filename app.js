@@ -2876,6 +2876,21 @@ function populateRoutinesForDate(dateKey, force = false) {
     // Check Date Constraints
     if (routine.startDate && dateKey < routine.startDate) return;
     if (routine.endDate && dateKey > routine.endDate) return;
+    
+    const dateObj = new Date(dateKey);
+    const dayOfWeek = dateObj.getDay();
+    const dayOfMonth = dateObj.getDate();
+    
+    const hasDowCondition = routine.daysOfWeek && routine.daysOfWeek.length > 0;
+    const hasDomCondition = routine.daysOfMonth && routine.daysOfMonth.length > 0;
+    
+    if (hasDowCondition || hasDomCondition) {
+      let matchDow = hasDowCondition && routine.daysOfWeek.includes(dayOfWeek);
+      let matchDom = hasDomCondition && routine.daysOfMonth.includes(dayOfMonth);
+      
+      // If only one condition type is set, it must match. If both are set, matching either one is enough (OR logic).
+      if (!matchDow && !matchDom) return;
+    }
 
     // Check if it already exists to prevent duplicate insertion
     const exists = state.todos[dateKey].some(t => t.text === routine.text && t.isRoutine);
@@ -8090,18 +8105,32 @@ function initRoutinesPanel() {
       const startDate = startInput && startInput.value ? startInput.value : '';
       const endDate = endInput && endInput.value ? endInput.value : '';
       
+      const dowCheckboxes = document.querySelectorAll('#routine-dow-checkboxes input[type="checkbox"]:checked');
+      const daysOfWeek = Array.from(dowCheckboxes).map(cb => parseInt(cb.value));
+      
+      const domInput = document.getElementById('routine-dom-input');
+      let daysOfMonth = [];
+      if (domInput && domInput.value.trim() !== '') {
+        daysOfMonth = domInput.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 31);
+      }
+      
       if (!state.routines) state.routines = [];
       state.routines.push({
         id: Date.now(),
         text: text,
         category: categoryToUse,
         startDate: startDate,
-        endDate: endDate
+        endDate: endDate,
+        daysOfWeek: daysOfWeek,
+        daysOfMonth: daysOfMonth
       });
       
       input.value = '';
       if (startInput) startInput.value = '';
       if (endInput) endInput.value = '';
+      const allDowCheckboxes = document.querySelectorAll('#routine-dow-checkboxes input[type="checkbox"]');
+      allDowCheckboxes.forEach(cb => cb.checked = false);
+      if (domInput) domInput.value = '';
       
       saveRoutines();
       renderRoutinesPanel();
@@ -8864,8 +8893,24 @@ function renderTodos() {
     deleteBtn.ariaLabel = '할 일 삭제';
     deleteBtn.addEventListener('click', () => deleteTodo(todo.id, todo.text, todo.isRoutine));
 
+    const ddayBtn = document.createElement('button');
+    ddayBtn.type = 'button';
+    ddayBtn.classList.add('edit-btn'); // reusing edit-btn style for similar appearance
+    ddayBtn.innerHTML = '🎉';
+    ddayBtn.ariaLabel = '디데이 설정';
+    ddayBtn.title = '이 할 일로 디데이 만들기';
+    ddayBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDdayModal();
+      document.getElementById('dday-title-input').value = todo.text;
+      document.getElementById('dday-date-input').value = todo.dateKey || state.selectedDate;
+      state.showDdays = true;
+      applyLayout();
+    });
+
     actionBtns.appendChild(starBtn);
     actionBtns.appendChild(editBtn);
+    actionBtns.appendChild(ddayBtn);
     actionBtns.appendChild(deleteBtn);
 
     const itemMain = document.createElement('div');
