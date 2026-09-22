@@ -715,7 +715,7 @@ class NeonDrawingBoard {
 
     let zoomCenterX, zoomCenterY;
     const rect = this.canvas.getBoundingClientRect();
-    if (e) {
+    if (e && e.clientX !== undefined && e.clientY !== undefined) {
       zoomCenterX = e.clientX - rect.left;
       zoomCenterY = e.clientY - rect.top;
     } else {
@@ -731,6 +731,7 @@ class NeonDrawingBoard {
     this.panX = zoomCenterX - mouseBeforeX * this.viewScale;
     this.panY = zoomCenterY - mouseBeforeY * this.viewScale;
 
+    this.constrainPan();
     this.updateZoomIndicator();
     this.render();
   }
