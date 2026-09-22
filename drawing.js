@@ -1023,6 +1023,7 @@ class NeonDrawingBoard {
         this.panX = (midX - rect.left) - this.pinchPanStartX * (newScale / this.initialScale);
         this.panY = (midY - rect.top) - this.pinchPanStartY * (newScale / this.initialScale);
 
+        this.constrainPan();
         this.updateZoomIndicator();
         this.render();
         return;
@@ -1031,6 +1032,7 @@ class NeonDrawingBoard {
         const rect = this.canvas.getBoundingClientRect();
         this.panX = (pt.clientX - rect.left) - this.pinchPanStartX;
         this.panY = (pt.clientY - rect.top) - this.pinchPanStartY;
+        this.constrainPan();
         this.render();
         return;
       }
@@ -1188,7 +1190,11 @@ class NeonDrawingBoard {
         return;
       } else if (code === 'Space') {
         e.preventDefault();
-        this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} });
+        if (e.altKey) {
+          this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} }); // Ctrl + Alt + Space (Zoom Out)
+        } else {
+          this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} }); // Ctrl + Space (Zoom In)
+        }
         return;
       }
       return;
@@ -1197,7 +1203,15 @@ class NeonDrawingBoard {
     if (e.altKey) {
       if (code === 'Space') {
         e.preventDefault();
-        this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} });
+        this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} }); // Alt + Space (Zoom Out)
+      }
+      return;
+    }
+
+    if (e.shiftKey) {
+      if (code === 'Space') {
+        e.preventDefault();
+        this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} }); // Shift + Space (Zoom Out)
       }
       return;
     }
@@ -1273,22 +1287,25 @@ class NeonDrawingBoard {
       e.preventDefault();
 
       const rect = this.canvasContainer.getBoundingClientRect();
-      const contentBounds = this.getContentBounds();
+      const pb = this.getPanBounds();
+      const rangeX = pb.maxX - pb.minX;
+      const rangeY = pb.maxY - pb.minY;
       
       if (isDraggingH) {
         const dx = e.clientX - startX;
-        const scaledWidth = contentBounds.w * this.viewScale;
-        const ratio = rect.width / scaledWidth;
-        this.panX = startPanX + (-dx / ratio);
+        const thumbWidth = parseFloat(this.hThumb.style.width) || 30;
+        const moveRatio = (rect.width - thumbWidth) <= 0 ? 0 : rangeX / (rect.width - thumbWidth);
+        this.panX = startPanX - dx * moveRatio;
       }
       
       if (isDraggingV) {
         const dy = e.clientY - startY;
-        const scaledHeight = contentBounds.h * this.viewScale;
-        const ratio = rect.height / scaledHeight;
-        this.panY = startPanY + (-dy / ratio);
+        const thumbHeight = parseFloat(this.vThumb.style.height) || 30;
+        const moveRatio = (rect.height - thumbHeight) <= 0 ? 0 : rangeY / (rect.height - thumbHeight);
+        this.panY = startPanY - dy * moveRatio;
       }
       
+      this.constrainPan();
       this.render();
     };
 
@@ -1304,31 +1321,57 @@ class NeonDrawingBoard {
   }
 
   getContentBounds() {
-    const rect = this.canvasContainer.getBoundingClientRect();
+    let maxY = this.canvas.height / (window.devicePixelRatio || 1);
+    let maxX = this.canvas.width / (window.devicePixelRatio || 1);
+    
+    if (this.strokes) {
+      this.strokes.forEach(stroke => {
+        if (stroke.points) {
+          stroke.points.forEach(p => {
+            if (p.y > maxY) maxY = p.y;
+            if (p.x > maxX) maxX = p.x;
+          });
+        }
+      });
+    }
+
     if (this.isMultiPage) {
       const pageHeight = this.pageHeight || 1130;
       const pageGap = 20;
-      let maxY = 0;
-      if (this.strokes) {
-        this.strokes.forEach(stroke => {
-          if (stroke.points) {
-            stroke.points.forEach(p => {
-              if (p.y > maxY) maxY = p.y;
-            });
-          }
-        });
-      }
       const numPages = Math.max(1, Math.ceil(maxY / (pageHeight + pageGap))) + 1;
       return {
-        w: this.canvas.width / (window.devicePixelRatio || 1),
+        w: maxX,
         h: numPages * (pageHeight + pageGap)
       };
     } else {
       return {
-        w: this.canvas.width / (window.devicePixelRatio || 1),
-        h: this.canvas.height / (window.devicePixelRatio || 1)
+        w: maxX,
+        h: maxY
       };
     }
+  }
+
+  getPanBounds() {
+    const rect = this.canvasContainer.getBoundingClientRect();
+    const bounds = this.getContentBounds();
+    const scaledW = bounds.w * this.viewScale;
+    const scaledH = bounds.h * this.viewScale;
+    
+    const slackX = rect.width * 0.8;
+    const slackY = rect.height * 0.8;
+    
+    return {
+      minX: Math.min(0, rect.width - scaledW - slackX),
+      maxX: slackX,
+      minY: Math.min(0, rect.height - scaledH - slackY),
+      maxY: slackY
+    };
+  }
+
+  constrainPan() {
+    const pb = this.getPanBounds();
+    this.panX = Math.min(pb.maxX, Math.max(pb.minX, this.panX));
+    this.panY = Math.min(pb.maxY, Math.max(pb.minY, this.panY));
   }
 
   updateScrollbars() {
@@ -1337,34 +1380,40 @@ class NeonDrawingBoard {
     const rect = this.canvasContainer.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
 
-    const bounds = this.getContentBounds();
-    const scaledW = bounds.w * this.viewScale;
-    const scaledH = bounds.h * this.viewScale;
+    this.constrainPan();
+
+    const pb = this.getPanBounds();
+    const rangeX = pb.maxX - pb.minX;
+    const rangeY = pb.maxY - pb.minY;
 
     // Horizontal
-    if (scaledW <= rect.width) {
+    if (rangeX <= 0) {
       this.hScrollbar.style.display = 'none';
     } else {
       this.hScrollbar.style.display = 'block';
-      const thumbRatioW = rect.width / scaledW;
-      const thumbWidth = Math.max(20, rect.width * thumbRatioW);
+      const bounds = this.getContentBounds();
+      const thumbRatioW = Math.max(0.1, Math.min(1, rect.width / (bounds.w * this.viewScale + pb.maxX - pb.minX)));
+      const thumbWidth = Math.max(30, rect.width * thumbRatioW);
       this.hThumb.style.width = `${thumbWidth}px`;
 
-      const thumbLeft = (-this.panX / scaledW) * rect.width;
-      this.hThumb.style.left = `${Math.max(0, Math.min(rect.width - thumbWidth, thumbLeft))}px`;
+      const fractionX = (pb.maxX - this.panX) / rangeX;
+      const thumbLeft = fractionX * (rect.width - thumbWidth);
+      this.hThumb.style.left = `${thumbLeft}px`;
     }
 
     // Vertical
-    if (scaledH <= rect.height) {
+    if (rangeY <= 0) {
       this.vScrollbar.style.display = 'none';
     } else {
       this.vScrollbar.style.display = 'block';
-      const thumbRatioH = rect.height / scaledH;
-      const thumbHeight = Math.max(20, rect.height * thumbRatioH);
+      const bounds = this.getContentBounds();
+      const thumbRatioH = Math.max(0.1, Math.min(1, rect.height / (bounds.h * this.viewScale + pb.maxY - pb.minY)));
+      const thumbHeight = Math.max(30, rect.height * thumbRatioH);
       this.vThumb.style.height = `${thumbHeight}px`;
 
-      const thumbTop = (-this.panY / scaledH) * rect.height;
-      this.vThumb.style.top = `${Math.max(0, Math.min(rect.height - thumbHeight, thumbTop))}px`;
+      const fractionY = (pb.maxY - this.panY) / rangeY;
+      const thumbTop = fractionY * (rect.height - thumbHeight);
+      this.vThumb.style.top = `${thumbTop}px`;
     }
   }
 
