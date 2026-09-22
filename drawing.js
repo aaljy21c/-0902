@@ -849,9 +849,18 @@ class NeonDrawingBoard {
     // Mouse wheel zoom
     this.wrapper.addEventListener('wheel', this.onWheel.bind(this), { passive: false });
 
-    // Keyboard shortcuts
-    window.addEventListener('keydown', this.onKeyDown.bind(this));
-    window.addEventListener('keyup', this.onKeyUp.bind(this));
+    // Keyboard shortcuts (only for active boards)
+    if (!this.readOnly) {
+      this.boundOnKeyDown = this.onKeyDown.bind(this);
+      this.boundOnKeyUp = this.onKeyUp.bind(this);
+      window.addEventListener('keydown', this.boundOnKeyDown);
+      window.addEventListener('keyup', this.boundOnKeyUp);
+    }
+  }
+
+  destroy() {
+    if (this.boundOnKeyDown) window.removeEventListener('keydown', this.boundOnKeyDown);
+    if (this.boundOnKeyUp) window.removeEventListener('keyup', this.boundOnKeyUp);
   }
 
   getPointerPos(e) {
@@ -1158,25 +1167,26 @@ class NeonDrawingBoard {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     const key = e.key.toLowerCase();
+    const code = e.code;
 
     if (e.ctrlKey || e.metaKey) {
-      if (key === '=' || key === '+') {
+      if (key === '=' || key === '+' || code === 'Equal' || code === 'NumpadAdd') {
         e.preventDefault();
         this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} });
         return;
-      } else if (key === '-') {
+      } else if (key === '-' || code === 'Minus' || code === 'NumpadSubtract') {
         e.preventDefault();
         this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} });
         return;
-      } else if (key === 'z') {
+      } else if (key === 'z' || code === 'KeyZ') {
         e.preventDefault();
         this.undo();
         return;
-      } else if (key === 'y') {
+      } else if (key === 'y' || code === 'KeyY') {
         e.preventDefault();
         this.redo();
         return;
-      } else if (e.code === 'Space') {
+      } else if (code === 'Space') {
         e.preventDefault();
         this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} });
         return;
@@ -1185,35 +1195,35 @@ class NeonDrawingBoard {
     }
 
     if (e.altKey) {
-      if (e.code === 'Space') {
+      if (code === 'Space') {
         e.preventDefault();
         this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} });
       }
       return;
     }
     
-    if (e.code === 'Space') {
+    if (code === 'Space') {
       if (!this.isSpacePan) {
         e.preventDefault();
         this.isSpacePan = true;
         this.previousTool = this.currentTool;
         this.canvasContainer.style.cursor = 'grab';
       }
-    } else if (key === 'b') {
+    } else if (key === 'b' || code === 'KeyB') {
       const btn = this.toolbar.querySelector('.tool-btn[data-tool="pen"]');
       if (btn) btn.click();
-    } else if (key === 'e') {
+    } else if (key === 'e' || code === 'KeyE') {
       const btn = this.toolbar.querySelector('.tool-btn[data-tool="eraser"]');
       if (btn) btn.click();
-    } else if (key === 'l') {
+    } else if (key === 'l' || code === 'KeyL') {
       const btn = this.toolbar.querySelector('.tool-btn[data-tool="lasso"]');
       if (btn) btn.click();
-    } else if (key === 'c') {
+    } else if (key === 'c' || code === 'KeyC') {
       const colorInput = this.toolbar.querySelector('.color-picker');
       if (colorInput) colorInput.click();
-    } else if (key === '[') {
+    } else if (key === '[' || code === 'BracketLeft') {
       this.adjustSize(-1);
-    } else if (key === ']') {
+    } else if (key === ']' || code === 'BracketRight') {
       this.adjustSize(1);
     }
   }

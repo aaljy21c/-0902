@@ -10097,6 +10097,10 @@ window.openFullscreenDrawing = function(initialData, onSaveCallback) {
     }, 300);
   };
 
+  if (window.currentDrawingBoard && typeof window.currentDrawingBoard.destroy === 'function') {
+    window.currentDrawingBoard.destroy();
+  }
+
   window.currentDrawingBoard = new NeonDrawingBoard(container, {
     initialData: initialData || [],
     onChange: (data) => {
