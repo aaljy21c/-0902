@@ -7857,6 +7857,7 @@ function renderRoutinesPanel() {
   state.routines.forEach(routine => {
     const card = document.createElement('div');
     card.className = 'routine-card';
+    card.dataset.routineId = routine.id;
 
     const left = document.createElement('div');
     left.className = 'routine-card-left';
@@ -7944,6 +7945,37 @@ function renderRoutinesPanel() {
     card.appendChild(right);
     container.appendChild(card);
   });
+
+  if (typeof Sortable !== 'undefined') {
+    if (container.sortableInstance) {
+      container.sortableInstance.destroy();
+    }
+    container.sortableInstance = Sortable.create(container, {
+      animation: 150,
+      delay: 200, // 200ms long press to drag
+      delayOnTouchOnly: true,
+      touchStartThreshold: 5,
+      fallbackTolerance: 5,
+      forceFallback: true,
+      fallbackOnBody: true,
+      ghostClass: 'sortable-ghost',
+      onEnd: (evt) => {
+        if (evt.oldIndex === evt.newIndex) return;
+        
+        const newRoutinesOrder = [];
+        Array.from(container.children).forEach(cardEl => {
+          const id = Number(cardEl.dataset.routineId);
+          const r = state.routines.find(x => x.id === id);
+          if (r) newRoutinesOrder.push(r);
+        });
+        
+        if (newRoutinesOrder.length === state.routines.length) {
+          state.routines = newRoutinesOrder;
+          saveRoutines();
+        }
+      }
+    });
+  }
 }
 
 function deleteRoutine(routineId) {

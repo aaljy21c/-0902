@@ -5348,3 +5348,29 @@ body.light-theme #font-size-modal #font-size-modal-backdrop {
   margin-top: 4px;
 }
 
+/* --- SortableJS Custom Styles --- */
+.sortable-ghost {
+  opacity: 0.25 !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 2px dashed var(--accent-color) !important;
+  border-radius: 8px !important;
+  transform: scale(0.98);
+}
+.sortable-drag {
+  opacity: 1 !important;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.5) !important;
+  transform: scale(1.03) rotate(2deg) !important;
+  background-color: var(--panel-bg, #222) !important;
+  border: 1px solid var(--accent-color) !important;
+  border-radius: 8px !important;
+  z-index: 99999 !important;
+  cursor: grabbing !important;
+}
+body.light-theme .sortable-ghost {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+body.light-theme .sortable-drag {
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+  background-color: #fff !important;
+}
+
