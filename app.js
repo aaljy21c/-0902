@@ -3768,6 +3768,32 @@ function setupEventListeners() {
   const btnTodoCancel = document.getElementById('btn-todo-edit-cancel');
   const todoEditBackdrop = document.getElementById('todo-edit-backdrop');
   const todoEditTextInput = document.getElementById('todo-edit-modal-text');
+  const btnTodoDday = document.getElementById('btn-todo-edit-dday');
+
+  if (btnTodoDday) {
+    btnTodoDday.addEventListener('click', () => {
+      const originalText = todoEditTextInput ? todoEditTextInput.value.trim() : '';
+      if (!originalText) return;
+      closeTodoEditModal();
+      
+      openDdayModal();
+      document.getElementById('dday-title-input').value = originalText;
+      
+      let dateKey = state.selectedDate;
+      if (editingTodoId) {
+        for (const d of Object.keys(state.todos)) {
+          const t = state.todos[d].find(x => x.id === editingTodoId);
+          if (t) {
+            dateKey = d;
+            break;
+          }
+        }
+      }
+      document.getElementById('dday-date-input').value = dateKey;
+      state.showDdays = true;
+      applyLayout();
+    });
+  }
 
   if (btnTodoCancel) {
     btnTodoCancel.addEventListener('click', closeTodoEditModal);

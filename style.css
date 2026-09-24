@@ -5359,7 +5359,7 @@ body.light-theme #font-size-modal #font-size-modal-backdrop {
 .sortable-drag {
   opacity: 1 !important;
   box-shadow: 0 15px 35px rgba(0,0,0,0.5) !important;
-  transform: scale(1.03) rotate(2deg) !important;
+  transform: scale(1.03) !important;
   background-color: var(--panel-bg, #222) !important;
   border: 1px solid var(--accent-color) !important;
   border-radius: 8px !important;
