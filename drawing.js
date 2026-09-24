@@ -58,6 +58,25 @@ class NeonDrawingBoard {
     this.currentTool = 'pen'; // pen, highlighter, eraser, lasso
     this.penColor = '#ffffff';
     this.penSize = 2;
+    
+    // Custom Shortcuts Initialization
+    const defaultShortcuts = {
+      undo: { key: 'z', ctrl: true, alt: false, shift: false },
+      redo: { key: 'y', ctrl: true, alt: false, shift: false },
+      zoomIn: { key: '=', ctrl: true, alt: false, shift: false },
+      zoomOut: { key: '-', ctrl: true, alt: false, shift: false },
+      pen: { key: 'p', ctrl: false, alt: false, shift: false },
+      highlighter: { key: 'h', ctrl: false, alt: false, shift: false },
+      eraser: { key: 'e', ctrl: false, alt: false, shift: false },
+      lasso: { key: 'l', ctrl: false, alt: false, shift: false },
+      recolor: { key: 'r', ctrl: false, alt: false, shift: false },
+      clear: { key: 'Delete', ctrl: false, alt: false, shift: false }
+    };
+    try {
+      this.shortcuts = JSON.parse(localStorage.getItem('neon_planner_drawing_shortcuts')) || defaultShortcuts;
+    } catch(e) {
+      this.shortcuts = defaultShortcuts;
+    }
     this.penOpacity = 1.0;
     this.highlighterColor = '#facc15';
     this.highlighterSize = 15;
@@ -261,6 +280,7 @@ class NeonDrawingBoard {
         <button class="tool-btn" data-tool="highlighter" title="형광펜">🖍️</button>
         <button class="tool-btn" data-tool="eraser" title="지우개">🧽</button>
         <button class="tool-btn" data-tool="lasso" title="올가미 선택">✂️</button>
+        <button class="tool-btn" data-tool="recolor" title="선 스타일 변경 (클릭하거나 문질러서 색/굵기 덮어쓰기)">🎨</button>
         <div class="tool-divider"></div>
         <button type="button" id="btn-layout-mode" class="drawing-tool-btn" title="모드 전환 (현재: 페이지)" style="font-size: 1.1rem;">📄</button>
         <button type="button" id="btn-drawing-close" class="drawing-tool-btn" title="닫기">❌</button>
@@ -285,6 +305,7 @@ class NeonDrawingBoard {
         <button class="action-btn" id="btn-undo" title="실행 취소">↩️</button>
         <button class="action-btn" id="btn-redo" title="다시 실행">↪️</button>
         <button class="action-btn" id="btn-clear" title="전체 지우기">🗑️</button>
+        <button class="action-btn" id="btn-shortcuts-settings" title="단축키 설정">⌨️</button>
         ${this.onClose ? `<button class="drawing-toolbar-close-btn" id="btn-close-drawing" title="저장 후 닫기">✅ 저장/닫기</button>` : ''}
       </div>
     `;
@@ -318,6 +339,14 @@ class NeonDrawingBoard {
     this.toolbar.querySelector('#btn-clear').addEventListener('click', () => {
       if (confirm('그림을 모두 지우시겠습니까?')) this.clearAll();
     });
+
+    const btnShortcuts = this.toolbar.querySelector('#btn-shortcuts-settings');
+    if (btnShortcuts) {
+      btnShortcuts.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.openShortcutsModal();
+      });
+    }
 
     const btnPenMode = this.toolbar.querySelector('#btn-pen-mode');
     if (btnPenMode) {
@@ -752,14 +781,14 @@ class NeonDrawingBoard {
 
     const renderPresets = (presets) => {
       return presets.map((color, idx) => {
-        const isActive = (this.currentTool === 'pen' && this.penColor === color) || (this.currentTool === 'highlighter' && this.highlighterColor === color);
+        const isActive = ((this.currentTool === 'pen' || this.currentTool === 'recolor') && this.penColor === color) || (this.currentTool === 'highlighter' && this.highlighterColor === color);
         const borderStyle = isActive ? '2px solid #fff' : '2px solid transparent';
         const boxShadow = isActive ? '0 0 0 2px #3b82f6' : '0 0 0 1px #555';
         return `<button class="preset-color" style="background:${color}; width:26px; height:26px; border-radius:50%; border:${borderStyle}; box-shadow:${boxShadow}; cursor:pointer; padding:0;" data-index="${idx}" data-color="${color}" title="클릭하여 선택 (다시 클릭 시 색상 변경)"></button>`;
       }).join('');
     };
 
-    if (this.currentTool === 'pen') {
+    if (this.currentTool === 'pen' || this.currentTool === 'recolor') {
       this.settingsContainer.innerHTML = `
         <div class="setting-group" style="display:flex; align-items:center; gap:6px;">
           ${renderPresets(this.penPresets)}
@@ -781,8 +810,8 @@ class NeonDrawingBoard {
       `;
     }
 
-    if (this.currentTool === 'pen' || this.currentTool === 'highlighter') {
-      const isPen = this.currentTool === 'pen';
+    if (this.currentTool === 'pen' || this.currentTool === 'recolor' || this.currentTool === 'highlighter') {
+      const isPen = this.currentTool === 'pen' || this.currentTool === 'recolor';
       const colorInputId = isPen ? '#pen-color' : '#hl-color';
       const sizeInputId = isPen ? '#pen-size' : '#hl-size';
       const opacityInputId = isPen ? '#pen-opacity' : '#hl-opacity';
@@ -970,10 +999,20 @@ class NeonDrawingBoard {
     const activeTool = this.isTempEraser ? 'eraser' : this.currentTool;
 
     if (activeTool === 'lasso' && this.selectedStrokes.length > 0) {
-      if (this.isPointInSelectionBounds(pos)) {
+      const handle = this.getLassoHandleAt(pos);
+      if (handle) {
         this.isDraggingSelection = true;
+        this.lassoDragMode = handle;
         this.dragStartPoint = pos;
         this.originalSelectionStrokes = JSON.parse(JSON.stringify(this.selectedStrokes));
+        this.originalSelectionBounds = this.getSelectionBounds();
+        return;
+      } else if (this.isPointInSelectionBounds(pos)) {
+        this.isDraggingSelection = true;
+        this.lassoDragMode = 'move';
+        this.dragStartPoint = pos;
+        this.originalSelectionStrokes = JSON.parse(JSON.stringify(this.selectedStrokes));
+        this.originalSelectionBounds = this.getSelectionBounds();
         return;
       } else {
         this.clearSelection();
@@ -998,6 +1037,8 @@ class NeonDrawingBoard {
       this.lassoPoints = [pos];
     } else if (activeTool === 'eraser') {
       this.eraseAt(pos);
+    } else if (activeTool === 'recolor') {
+      this.recolorAt(pos);
     }
 
     this.render();
@@ -1067,13 +1108,61 @@ class NeonDrawingBoard {
     */
 
     if (this.isDraggingSelection) {
-      const dx = pos.x - this.dragStartPoint.x;
-      const dy = pos.y - this.dragStartPoint.y;
+      if (this.lassoDragMode === 'move') {
+        const dx = pos.x - this.dragStartPoint.x;
+        const dy = pos.y - this.dragStartPoint.y;
 
-      this.selectedStrokes.forEach((s, idx) => {
-        const orig = this.originalSelectionStrokes[idx];
-        s.points = orig.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
-      });
+        this.selectedStrokes.forEach((s, idx) => {
+          const orig = this.originalSelectionStrokes[idx];
+          if (orig.points) {
+            s.points = orig.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+          }
+        });
+      } else if (this.lassoDragMode === 'rotate') {
+        const bounds = this.originalSelectionBounds;
+        const cx = bounds.cx;
+        const cy = bounds.cy;
+        const startAngle = Math.atan2(this.dragStartPoint.y - cy, this.dragStartPoint.x - cx);
+        const currentAngle = Math.atan2(pos.y - cy, pos.x - cx);
+        const angleDiff = currentAngle - startAngle;
+        
+        this.selectedStrokes.forEach((s, idx) => {
+          const orig = this.originalSelectionStrokes[idx];
+          if (orig.points) {
+            s.points = orig.points.map(p => {
+              const dx = p.x - cx;
+              const dy = p.y - cy;
+              return {
+                x: cx + dx * Math.cos(angleDiff) - dy * Math.sin(angleDiff),
+                y: cy + dx * Math.sin(angleDiff) + dy * Math.cos(angleDiff)
+              };
+            });
+          }
+        });
+      } else if (this.lassoDragMode && this.lassoDragMode.startsWith('resize-')) {
+        const bounds = this.originalSelectionBounds;
+        const cx = bounds.cx;
+        const cy = bounds.cy;
+        
+        // Simple uniform scaling relative to center
+        const startDist = Math.hypot(this.dragStartPoint.x - cx, this.dragStartPoint.y - cy);
+        const currentDist = Math.hypot(pos.x - cx, pos.y - cy);
+        let scale = startDist === 0 ? 1 : currentDist / startDist;
+        
+        // Prevent scaling too small
+        if (scale < 0.1) scale = 0.1;
+        
+        this.selectedStrokes.forEach((s, idx) => {
+          const orig = this.originalSelectionStrokes[idx];
+          if (orig.points) {
+            s.points = orig.points.map(p => ({
+              x: cx + (p.x - cx) * scale,
+              y: cy + (p.y - cy) * scale
+            }));
+          }
+        });
+      }
+
       this.render();
       return;
     }
@@ -1097,6 +1186,8 @@ class NeonDrawingBoard {
       this.lassoPoints.push(pos);
     } else if (activeTool === 'eraser') {
       this.eraseAt(pos);
+    } else if (activeTool === 'recolor') {
+      this.recolorAt(pos);
     }
 
     this.render();
@@ -1113,6 +1204,7 @@ class NeonDrawingBoard {
 
     if (this.isDraggingSelection) {
       this.isDraggingSelection = false;
+      this.lassoDragMode = null;
       this.saveState();
       return;
     }
@@ -1165,78 +1257,79 @@ class NeonDrawingBoard {
     if (this.cursorOverlay) this.cursorOverlay.style.display = 'none';
   }
 
+  checkShortcut(action, e) {
+    if (!this.shortcuts) return false;
+    const sc = this.shortcuts[action];
+    if (!sc || !sc.key) return false;
+    const isCtrl = e.ctrlKey || e.metaKey;
+    const isAlt = e.altKey;
+    const isShift = e.shiftKey;
+    
+    let k = e.key.toLowerCase();
+    if (k === ' ') k = 'Space';
+    if (k === 'delete') k = 'Delete';
+    
+    return sc.key.toLowerCase() === k.toLowerCase() && !!sc.ctrl === isCtrl && !!sc.alt === isAlt && !!sc.shift === isShift;
+  }
+
   onKeyDown(e) {
     if (this.readOnly) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-    const key = e.key.toLowerCase();
-    const code = e.code;
-
-    if (e.ctrlKey || e.metaKey) {
-      if (key === '=' || key === '+' || code === 'Equal' || code === 'NumpadAdd') {
-        e.preventDefault();
-        this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} });
-        return;
-      } else if (key === '-' || code === 'Minus' || code === 'NumpadSubtract') {
-        e.preventDefault();
-        this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} });
-        return;
-      } else if (key === 'z' || code === 'KeyZ') {
-        e.preventDefault();
-        this.undo();
-        return;
-      } else if (key === 'y' || code === 'KeyY') {
-        e.preventDefault();
-        this.redo();
-        return;
-      } else if (code === 'Space') {
-        e.preventDefault();
-        if (e.altKey) {
-          this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} }); // Ctrl + Alt + Space (Zoom Out)
-        } else {
-          this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} }); // Ctrl + Space (Zoom In)
-        }
-        return;
-      }
-      // Allow fall-through to fix stuck modifier keys from tablet drivers
-    }
-
-    if (e.altKey) {
-      if (code === 'Space') {
-        e.preventDefault();
-        this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} }); // Alt + Space (Zoom Out)
-        return;
-      }
-    }
-
-    if (e.shiftKey) {
-      if (code === 'Space') {
-        e.preventDefault();
-        this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} }); // Shift + Space (Zoom Out)
-        return;
-      }
-    }
-    
-    if (code === 'Space') {
+    // Hardcoded space panning
+    if (e.code === 'Space' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
       if (!this.isSpacePan) {
         e.preventDefault();
         this.isSpacePan = true;
         this.previousTool = this.currentTool;
         this.canvasContainer.style.cursor = 'grab';
       }
-    } else if (key === 'b' || code === 'KeyB') {
-      const btn = this.toolbar.querySelector('.tool-btn[data-tool="pen"]');
+      return;
+    }
+
+    if (this.checkShortcut('undo', e)) {
+      e.preventDefault();
+      this.undo();
+      return;
+    }
+    if (this.checkShortcut('redo', e)) {
+      e.preventDefault();
+      this.redo();
+      return;
+    }
+    if (this.checkShortcut('zoomIn', e)) {
+      e.preventDefault();
+      this.onWheel({ ctrlKey: true, deltaY: -100, preventDefault: () => {} });
+      return;
+    }
+    if (this.checkShortcut('zoomOut', e)) {
+      e.preventDefault();
+      this.onWheel({ ctrlKey: true, deltaY: 100, preventDefault: () => {} });
+      return;
+    }
+    if (this.checkShortcut('clear', e)) {
+      e.preventDefault();
+      if (confirm('그림을 모두 지우시겠습니까?')) this.clearAll();
+      return;
+    }
+
+    const setTool = (toolName) => {
+      e.preventDefault();
+      const btn = this.toolbar.querySelector(`.tool-btn[data-tool="${toolName}"]`);
       if (btn) btn.click();
-    } else if (key === 'e' || code === 'KeyE') {
-      const btn = this.toolbar.querySelector('.tool-btn[data-tool="eraser"]');
-      if (btn) btn.click();
-    } else if (key === 'l' || code === 'KeyL') {
-      const btn = this.toolbar.querySelector('.tool-btn[data-tool="lasso"]');
-      if (btn) btn.click();
-    } else if (key === 'c' || code === 'KeyC') {
-      const colorInput = this.toolbar.querySelector('.color-picker');
-      if (colorInput) colorInput.click();
-    } else if (key === '[' || code === 'BracketLeft') {
+    };
+
+    if (this.checkShortcut('pen', e)) return setTool('pen');
+    if (this.checkShortcut('highlighter', e)) return setTool('highlighter');
+    if (this.checkShortcut('eraser', e)) return setTool('eraser');
+    if (this.checkShortcut('lasso', e)) return setTool('lasso');
+    if (this.checkShortcut('recolor', e)) return setTool('recolor');
+
+    const key = e.key.toLowerCase();
+    const code = e.code;
+    
+    // Fallbacks for brackets size adjust
+    if (key === '[' || code === 'BracketLeft') {
       this.adjustSize(-1);
     } else if (key === ']' || code === 'BracketRight') {
       this.adjustSize(1);
@@ -1655,6 +1748,31 @@ class NeonDrawingBoard {
     }
   }
 
+  recolorAt(pos) {
+    const recolorRadius = 15;
+    let recolored = false;
+    let currentStrokes = this.getCurrentStrokes();
+    for (let i = currentStrokes.length - 1; i >= 0; i--) {
+      const stroke = currentStrokes[i];
+      if (stroke.isBg || !stroke.points) continue;
+      if (stroke.tool === 'image') continue;
+      if (this.isPointNearStroke(pos, stroke, recolorRadius)) {
+        if (stroke.color !== this.penColor || stroke.size !== this.penSize || stroke.opacity !== this.penOpacity || stroke.tool !== 'pen') {
+          stroke.tool = 'pen';
+          stroke.color = this.penColor;
+          stroke.size = this.penSize;
+          stroke.opacity = this.penOpacity;
+          recolored = true;
+          break; // Recolor one at a time
+        }
+      }
+    }
+    if (recolored) {
+      this.saveState();
+      this.render();
+    }
+  }
+
   isPointNearStroke(pt, stroke, radius) {
     for (let i = 0; i < stroke.points.length - 1; i++) {
       const p1 = stroke.points[i];
@@ -1756,10 +1874,11 @@ class NeonDrawingBoard {
     return inside;
   }
 
-  isPointInSelectionBounds(pt) {
-    if (this.selectedStrokes.length === 0) return false;
+  getSelectionBounds() {
+    if (!this.selectedStrokes || this.selectedStrokes.length === 0) return null;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     this.selectedStrokes.forEach(s => {
+      if (!s.points) return;
       s.points.forEach(p => {
         if (p.x < minX) minX = p.x;
         if (p.y < minY) minY = p.y;
@@ -1767,8 +1886,76 @@ class NeonDrawingBoard {
         if (p.y > maxY) maxY = p.y;
       });
     });
+    // Check if we didn't find any points
+    if (minX === Infinity) return null;
+    return { minX, minY, maxX, maxY, cx: (minX + maxX)/2, cy: (minY + maxY)/2, w: maxX - minX, h: maxY - minY };
+  }
+
+  getLassoHandleAt(pt) {
+    const bounds = this.getSelectionBounds();
+    if (!bounds) return null;
+    
+    const pad = 5;
+    const r = 15 / this.viewScale; // handle hit radius
+    
+    const handles = {
+      'rotate': { x: bounds.cx, y: bounds.minY - pad - 25 / this.viewScale },
+      'resize-lt': { x: bounds.minX - pad, y: bounds.minY - pad },
+      'resize-rt': { x: bounds.maxX + pad, y: bounds.minY - pad },
+      'resize-lb': { x: bounds.minX - pad, y: bounds.maxY + pad },
+      'resize-rb': { x: bounds.maxX + pad, y: bounds.maxY + pad }
+    };
+    
+    for (const [mode, pos] of Object.entries(handles)) {
+      if (Math.hypot(pt.x - pos.x, pt.y - pos.y) <= r) {
+        return mode;
+      }
+    }
+    return null;
+  }
+
+  isPointInSelectionBounds(pt) {
+    const b = this.getSelectionBounds();
+    if (!b) return false;
     const pad = 10;
-    return pt.x >= minX - pad && pt.x <= maxX + pad && pt.y >= minY - pad && pt.y <= maxY + pad;
+    return pt.x >= b.minX - pad && pt.x <= b.maxX + pad && pt.y >= b.minY - pad && pt.y <= b.maxY + pad;
+  }
+
+  drawLassoHandles(ctx, pad) {
+    const b = this.getSelectionBounds();
+    if (!b) return;
+    
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2 / this.viewScale;
+    
+    const drawHandle = (x, y, isRotate=false) => {
+      ctx.beginPath();
+      if (isRotate) {
+        ctx.arc(x, y, 6 / this.viewScale, 0, Math.PI * 2);
+      } else {
+        const s = 10 / this.viewScale;
+        ctx.rect(x - s/2, y - s/2, s, s);
+      }
+      ctx.fill();
+      ctx.stroke();
+    };
+    
+    // Draw rotate stick
+    ctx.beginPath();
+    ctx.moveTo(b.cx, b.minY - pad);
+    ctx.lineTo(b.cx, b.minY - pad - 25 / this.viewScale);
+    ctx.stroke();
+    
+    // Draw handles
+    drawHandle(b.cx, b.minY - pad - 25 / this.viewScale, true); // Rotate
+    drawHandle(b.minX - pad, b.minY - pad); // LT
+    drawHandle(b.maxX + pad, b.minY - pad); // RT
+    drawHandle(b.minX - pad, b.maxY + pad); // LB
+    drawHandle(b.maxX + pad, b.maxY + pad); // RB
+    
+    ctx.restore();
   }
 
   saveState() {
@@ -2540,6 +2727,7 @@ class NeonDrawingBoard {
               this.drawStroke(stroke, true);
               this.ctx.restore();
             });
+            this.drawLassoHandles(this.ctx, pad);
           }
         }
 
@@ -2616,6 +2804,7 @@ class NeonDrawingBoard {
           this.drawStroke(stroke, true);
           this.ctx.restore();
         });
+        this.drawLassoHandles(this.ctx, pad);
       }
     }
 
@@ -2747,6 +2936,189 @@ class NeonDrawingBoard {
     }
 
     this.ctx.restore();
+  }
+  openShortcutsModal() {
+    if (!this.shortcutsModal) {
+      this.buildShortcutsModal();
+    }
+    this.renderShortcutsUI();
+    this.shortcutsModal.classList.remove('hidden');
+  }
+
+  buildShortcutsModal() {
+    this.shortcutsModal = document.createElement('div');
+    this.shortcutsModal.className = 'todo-modal-wrapper hidden';
+    this.shortcutsModal.style.zIndex = '999999';
+    
+    const backdrop = document.createElement('div');
+    backdrop.className = 'todo-modal-backdrop';
+    backdrop.addEventListener('click', () => {
+      this.shortcutsModal.classList.add('hidden');
+      if (this.currentShortcutCaptureKey) this.endCaptureShortcut();
+    });
+    
+    const content = document.createElement('div');
+    content.className = 'todo-modal-content';
+    content.style.maxHeight = '80vh';
+    content.style.overflowY = 'auto';
+    
+    const title = document.createElement('h3');
+    title.className = 'todo-modal-title';
+    title.textContent = '단축키 설정';
+    
+    const hint = document.createElement('p');
+    hint.style.fontSize = '0.8rem';
+    hint.style.color = 'var(--text-secondary)';
+    hint.style.marginBottom = '12px';
+    hint.textContent = '입력 칸을 클릭하고 원하는 단축키를 누르세요.';
+
+    this.shortcutsListContainer = document.createElement('div');
+    this.shortcutsListContainer.style.display = 'flex';
+    this.shortcutsListContainer.style.flexDirection = 'column';
+    this.shortcutsListContainer.style.gap = '8px';
+    
+    const actions = document.createElement('div');
+    actions.className = 'todo-modal-actions';
+    
+    const btnSave = document.createElement('button');
+    btnSave.type = 'button';
+    btnSave.className = 'todo-modal-btn save';
+    btnSave.textContent = '저장';
+    btnSave.addEventListener('click', () => {
+      localStorage.setItem('neon_planner_drawing_shortcuts', JSON.stringify(this.shortcuts));
+      this.shortcutsModal.classList.add('hidden');
+    });
+    
+    const btnCancel = document.createElement('button');
+    btnCancel.type = 'button';
+    btnCancel.className = 'todo-modal-btn cancel';
+    btnCancel.textContent = '닫기';
+    btnCancel.addEventListener('click', () => {
+      this.shortcutsModal.classList.add('hidden');
+      if (this.currentShortcutCaptureKey) this.endCaptureShortcut();
+      // Reload defaults or saved
+      const defaultShortcuts = { undo: {key:'z',ctrl:true}, redo: {key:'y',ctrl:true}, zoomIn: {key:'=',ctrl:true}, zoomOut: {key:'-',ctrl:true}, pen: {key:'p'}, highlighter: {key:'h'}, eraser: {key:'e'}, lasso: {key:'l'}, clear: {key:'Delete'} };
+      this.shortcuts = JSON.parse(localStorage.getItem('neon_planner_drawing_shortcuts')) || defaultShortcuts;
+    });
+
+    actions.appendChild(btnSave);
+    actions.appendChild(btnCancel);
+    
+    content.appendChild(title);
+    content.appendChild(hint);
+    content.appendChild(this.shortcutsListContainer);
+    content.appendChild(actions);
+    
+    this.shortcutsModal.appendChild(backdrop);
+    this.shortcutsModal.appendChild(content);
+    
+    document.body.appendChild(this.shortcutsModal);
+  }
+
+  renderShortcutsUI() {
+    this.shortcutsListContainer.innerHTML = '';
+    const actionsMap = [
+      { id: 'pen', label: '펜 모드' },
+      { id: 'highlighter', label: '형광펜 모드' },
+      { id: 'eraser', label: '지우개' },
+      { id: 'lasso', label: '올가미 툴' },
+      { id: 'recolor', label: '선 스타일 변경' },
+      { id: 'zoomIn', label: '확대' },
+      { id: 'zoomOut', label: '축소' },
+      { id: 'undo', label: '실행 취소' },
+      { id: 'redo', label: '다시 실행' },
+      { id: 'clear', label: '전체 지우기' }
+    ];
+    
+    actionsMap.forEach(action => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.style.alignItems = 'center';
+      row.style.background = 'var(--box-bg, rgba(0,0,0,0.05))';
+      row.style.padding = '8px 12px';
+      row.style.borderRadius = '8px';
+      row.style.border = '1px solid var(--border-color, #ccc)';
+      
+      const label = document.createElement('span');
+      label.style.fontWeight = '500';
+      label.style.fontSize = '0.9rem';
+      label.textContent = action.label;
+      
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'todo-modal-input';
+      input.style.width = '120px';
+      input.style.textAlign = 'center';
+      input.style.cursor = 'pointer';
+      input.style.margin = '0';
+      input.readOnly = true;
+      
+      const sc = this.shortcuts[action.id] || { key: '' };
+      input.value = this.formatShortcut(sc);
+      
+      input.addEventListener('click', (e) => {
+        if (this.currentShortcutCaptureKey) this.endCaptureShortcut();
+        this.startCaptureShortcut(action.id, input);
+      });
+      
+      row.appendChild(label);
+      row.appendChild(input);
+      this.shortcutsListContainer.appendChild(row);
+    });
+  }
+  
+  formatShortcut(sc) {
+    if (!sc || !sc.key) return '없음';
+    let parts = [];
+    if (sc.ctrl) parts.push('Ctrl');
+    if (sc.alt) parts.push('Alt');
+    if (sc.shift) parts.push('Shift');
+    let keyName = sc.key.toUpperCase();
+    if (keyName === ' ') keyName = 'Space';
+    parts.push(keyName);
+    return parts.join(' + ');
+  }
+
+  startCaptureShortcut(actionId, inputEl) {
+    this.currentShortcutCaptureKey = actionId;
+    this.currentShortcutInput = inputEl;
+    inputEl.style.borderColor = 'var(--accent-color, #4facfe)';
+    inputEl.style.boxShadow = '0 0 0 2px var(--accent-glow, rgba(79, 172, 254, 0.4))';
+    inputEl.value = '입력 대기중...';
+    
+    this.captureHandler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const key = e.key;
+      if (['Control', 'Shift', 'Alt', 'Meta'].includes(key)) return;
+      
+      const sc = {
+        key: key.toLowerCase() === ' ' ? 'Space' : (key.length === 1 ? key.toLowerCase() : key),
+        ctrl: e.ctrlKey || e.metaKey,
+        alt: e.altKey,
+        shift: e.shiftKey
+      };
+      
+      this.shortcuts[actionId] = sc;
+      inputEl.value = this.formatShortcut(sc);
+      this.endCaptureShortcut();
+    };
+    
+    window.addEventListener('keydown', this.captureHandler, { capture: true });
+  }
+  
+  endCaptureShortcut() {
+    if (this.captureHandler) {
+      window.removeEventListener('keydown', this.captureHandler, { capture: true });
+      this.captureHandler = null;
+    }
+    if (this.currentShortcutInput) {
+      this.currentShortcutInput.style.borderColor = '';
+      this.currentShortcutInput.style.boxShadow = '';
+    }
+    this.currentShortcutCaptureKey = null;
+    this.currentShortcutInput = null;
   }
 }
 
