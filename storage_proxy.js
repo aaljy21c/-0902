@@ -126,21 +126,31 @@
   const customStorage = new StorageProxyClass();
   window.StorageProxy = customStorage;
   
-  // Migrate existing data from native localStorage if custom storage is empty
+  // Extract all data from native localStorage synchronously before overriding
+  const nativeData = {};
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      nativeData[key] = window.localStorage.getItem(key);
+    }
+  } catch (e) {}
+
+  // Migrate existing data from native localStorage to custom storage
   customStorage.ready.then(() => {
     try {
-      const nativeLocalStorage = window.localStorage;
-      if (customStorage.length === 0 && nativeLocalStorage.length > 0) {
-        console.log("[StorageProxy] Migrating data from native localStorage...");
-        for (let i = 0; i < nativeLocalStorage.length; i++) {
-          const key = nativeLocalStorage.key(i);
-          const value = nativeLocalStorage.getItem(key);
-          customStorage.setItem(key, value);
+      let migrated = false;
+      for (const key in nativeData) {
+        // 만약 기존 프록시 스토리지에 없는 데이터거나, 방금 생성된 빈 수식 데이터일 경우 네이티브(원본) 데이터로 덮어씁니다.
+        const existing = customStorage.getItem(key);
+        if (existing === null || (key === 'mathAppNodes' && existing.length < 300 && nativeData[key].length >= 300)) {
+          console.log(`[StorageProxy] Migrating missing key: ${key}`);
+          customStorage.setItem(key, nativeData[key]);
+          migrated = true;
         }
-        console.log("[StorageProxy] Migration complete.");
       }
+      if (migrated) console.log("[StorageProxy] Migration complete.");
     } catch (e) {
-      console.warn("[StorageProxy] Could not access native localStorage for migration.", e);
+      console.warn("[StorageProxy] Migration error.", e);
     }
   });
 
