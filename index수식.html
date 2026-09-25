@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Math Editor & File Manager</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- MathJax for rendering math formulas -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- html2pdf for converting HTML to PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --sidebar-width: 230px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar File Explorer */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+        .sidebar-actions button:hover {
+            color: var(--text);
+            background: var(--surface-hover);
+        }
+
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .tree-node {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tree-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            user-select: none;
+            border: 1px solid transparent;
+        }
+
+        .tree-item:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+
+        .tree-item.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
+        
+        .tree-item.drag-over {
+            border: 1px dashed var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .tree-item-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tree-item-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+        }
+
+        .tree-children {
+            padding-left: 1rem;
+            display: none;
+        }
+        
+        .tree-children.expanded {
+            display: block;
+        }
+
+        .item-actions {
+            display: none;
+            gap: 0.25rem;
+        }
+        .tree-item:hover .item-actions {
+            display: flex;
+        }
+        .item-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .item-actions button:hover {
+            color: var(--text);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(at 40% 20%, hsla(228,100%,74%,0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(189,100%,56%,0.1) 0px, transparent 50%);
+            overflow-y: auto;
+        }
+
+        .header {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .current-file-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .mode-select {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.5rem;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        .btn:hover { background-color: var(--primary-hover); }
+
+        .editor-container {
+            display: flex;
+            flex: 1;
+            padding: 1rem;
+            gap: 1rem;
+            height: calc(100vh - 70px);
+        }
+
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            min-height: 300px;
+        }
+
+        .panel-header {
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            padding: 1.5rem;
+            font-family: monospace;
+            font-size: var(--content-font-size, 1rem);
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .preview-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background-color: #ffffff;
+            color: #1e293b;
+            font-size: var(--content-font-size, 1.1rem);
+            line-height: 1.8;
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            width: 90%;
+            max-width: 320px;
+        }
+        .modal input {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 1rem 0;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        .btn-secondary {
+            background: var(--surface-hover);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-actions svg { width: 18px; height: 18px; }
+        .btn svg { width: 18px; height: 18px; }
+        .tree-item-icon svg { width: 18px; height: 18px; }
+        .empty-state svg { width: 64px; height: 64px; }
+        
+        #loader {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            flex-direction: column;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Mobile Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+        }
+
+        /* --- Mode Switcher Rules (Replaces media query) --- */
+        
+        body.mobile-mode .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            transform: translateX(-100%);
+        }
+        body.mobile-mode .sidebar.open {
+            transform: translateX(0);
+        }
+        body.mobile-mode .menu-toggle {
+            display: block;
+        }
+        body.mobile-mode .editor-container {
+            flex-direction: column;
+            height: auto;
+            min-height: calc(100vh - 70px);
+        }
+        body.mobile-mode .item-actions {
+            display: flex; /* Always show icons on mobile */
+        }
+        body.mobile-mode .current-file-name {
+            max-width: 150px;
+        }
+        body.mobile-mode .btn {
+            padding: 0.5rem;
+        }
+        body.mobile-mode .btn span {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar File Manager -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">탐색기</span>
+            <div class="sidebar-actions">
+                <button title="새 파일" onclick="openModal('file', 'create')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                </button>
+                <button title="새 폴더" onclick="openModal('folder', 'create')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+                </button>
+            </div>
+        </div>
+        <div class="file-tree" id="fileTree" ondrop="dropToRoot(event)" ondragover="allowDrop(event)">
+            <!-- Tree populated via JS -->
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <svg width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="current-file-name" id="currentFileTitle">파일을 선택하세요</div>
+            </div>
+            
+            <div class="header-right">
+                <select class="mode-select" id="fontSizeSelect" onchange="applyFontSize(this.value)">
+                    <option value="0.9rem">글자: 작게</option>
+                    <option value="1.1rem">글자: 보통</option>
+                    <option value="1.3rem">글자: 크게</option>
+                    <option value="1.6rem">글자: 아주 크게</option>
+                </select>
+                <select class="mode-select" id="modeSelect" onchange="applyViewMode(this.value)">
+                    <option value="auto">자동(화면맞춤)</option>
+                    <option value="pc">PC 모드 💻</option>
+                    <option value="mobile">모바일 모드 📱</option>
+                </select>
+
+                <button class="btn" id="exportBtn" style="display:none;" onclick="exportPDF()">
+                    <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>PDF 다운로드</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="editor-container" id="editorView" style="display:none;">
+            <div class="panel">
+                <div class="panel-header"><span>에디터</span></div>
+                <textarea id="editor" oninput="onEditorInput()"></textarea>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span>미리보기</span></div>
+                <div class="preview-content" id="preview"></div>
+            </div>
+        </div>
+        
+        <div class="empty-state" id="emptyView">
+            <svg width="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <p>메뉴를 열어 파일을 선택하거나 새로 생성하세요.</p>
+        </div>
+    </div>
+
+    <!-- Modal for Create/Rename -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 id="modalTitle">이름 입력</h3>
+            <input type="text" id="modalInput" autocomplete="off" onkeypress="if(event.key==='Enter') submitModal()">
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal()">취소</button>
+                <button class="btn" onclick="submitModal()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loader"><div class="spinner"></div><h2>PDF 생성 중...</h2></div>
+
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            startup: { typeset: false }
+        };
+
+        // --- Font Size Management ---
+        let currentFontSize = localStorage.getItem('mathAppFontSize') || '1.1rem';
+        document.getElementById('fontSizeSelect').value = currentFontSize;
+        applyFontSize(currentFontSize);
+
+        function applyFontSize(size) {
+            localStorage.setItem('mathAppFontSize', size);
+            document.documentElement.style.setProperty('--content-font-size', size);
+        }
+
+        // --- View Mode Management ---
+        let currentMode = localStorage.getItem('mathAppViewMode') || 'auto';
+        document.getElementById('modeSelect').value = currentMode;
+
+        function applyViewMode(mode) {
+            currentMode = mode;
+            localStorage.setItem('mathAppViewMode', mode);
+            
+            // Close sidebar if open when switching modes
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.remove('open');
+            overlay.style.display = 'none';
+
+            checkResize(); // re-eval
+        }
+
+        function checkResize() {
+            const isMobileWidth = window.innerWidth <= 768;
+            if (currentMode === 'mobile' || (currentMode === 'auto' && isMobileWidth)) {
+                document.body.classList.add('mobile-mode');
+            } else {
+                document.body.classList.remove('mobile-mode');
+            }
+        }
+
+        window.addEventListener('resize', checkResize);
+        checkResize(); // init on load
+
+        // State
+        let nodes = JSON.parse(localStorage.getItem('mathAppNodes')) || [
+            { id: '1', type: 'folder', name: '수학 노트', parentId: null, expanded: true },
+            { id: '2', type: 'file', name: '기본 공식.md', parentId: '1', content: '여기에 내용을 작성하세요.\n\n$$ E=mc^2 $$' }
+        ];
+        let activeFileId = null;
+        let dragSrcId = null;
+
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.style.display = 'none';
+            } else {
+                sidebar.classList.add('open');
+                overlay.style.display = 'block';
+            }
+        }
+
+        // Modal State
+        let modalAction = null; 
+        let modalNodeType = null; 
+        let targetNodeId = null; 
+
+        function saveState() {
+            localStorage.setItem('mathAppNodes', JSON.stringify(nodes));
+            renderTree();
+        }
+
+        const genId = () => Math.random().toString(36).substr(2, 9);
+
+        // Rendering Tree
+        function renderTree() {
+            const treeContainer = document.getElementById('fileTree');
+            treeContainer.innerHTML = '';
+            
+            const rootNodes = nodes.filter(n => n.parentId === null);
+            rootNodes.forEach(node => {
+                treeContainer.appendChild(createNodeElement(node));
+            });
+        }
+
+        const icons = {
+            folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>',
+            file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>'
+        };
+
+        function createNodeElement(node) {
+            const el = document.createElement('div');
+            el.className = 'tree-node';
+            
+            const item = document.createElement('div');
+            item.className = 'tree-item' + (node.id === activeFileId ? ' active' : '');
+            item.draggable = true;
+            
+            item.ondragstart = (e) => {
+                dragSrcId = node.id;
+                e.dataTransfer.effectAllowed = 'move';
+                e.stopPropagation();
+            };
+            item.ondragover = (e) => {
+                e.preventDefault();
+                if(node.type === 'folder' && node.id !== dragSrcId && !isDescendant(node.id, dragSrcId)) {
+                    item.classList.add('drag-over');
+                }
+            };
+            item.ondragleave = () => item.classList.remove('drag-over');
+            item.ondrop = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                item.classList.remove('drag-over');
+                if (node.type === 'folder' && node.id !== dragSrcId && !isDescendant(node.id, dragSrcId)) {
+                    moveNode(dragSrcId, node.id);
+                }
+            };
+
+            item.onclick = (e) => {
+                e.stopPropagation();
+                if (node.type === 'folder') {
+                    node.expanded = !node.expanded;
+                    saveState();
+                } else {
+                    openFile(node.id);
+                    if (document.body.classList.contains('mobile-mode')) {
+                        toggleSidebar(); // Close sidebar after selecting a file if in mobile view
+                    }
+                }
+            };
+
+            const iconStr = node.type === 'folder' 
+                ? (node.expanded ? icons.folder : icons.folder) 
+                : icons.file;
+
+            item.innerHTML = `
+                <div class="tree-item-icon">${iconStr}</div>
+                <div class="tree-item-name">${node.name}</div>
+                <div class="item-actions">
+                    <button onclick="event.stopPropagation(); openModal('${node.type}', 'rename', '${node.id}')" title="이름 변경">✏️</button>
+                    <button onclick="event.stopPropagation(); deleteNode('${node.id}')" title="삭제">❌</button>
+                </div>
+            `;
+            el.appendChild(item);
+
+            if (node.type === 'folder') {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'tree-children' + (node.expanded ? ' expanded' : '');
+                
+                const children = nodes.filter(n => n.parentId === node.id);
+                children.forEach(child => {
+                    childrenContainer.appendChild(createNodeElement(child));
+                });
+                
+                el.appendChild(childrenContainer);
+            }
+
+            return el;
+        }
+
+        function allowDrop(e) { e.preventDefault(); }
+        function dropToRoot(e) {
+            e.preventDefault();
+            const target = e.target.closest('.tree-item');
+            if(!target && dragSrcId) {
+                moveNode(dragSrcId, null);
+            }
+        }
+        function isDescendant(targetId, potentialParentId) {
+            let curr = nodes.find(n => n.id === targetId);
+            while(curr) {
+                if(curr.parentId === potentialParentId) return true;
+                curr = nodes.find(n => n.id === curr.parentId);
+            }
+            return false;
+        }
+        function moveNode(id, newParentId) {
+            const node = nodes.find(n => n.id === id);
+            if(node) {
+                node.parentId = newParentId;
+                saveState();
+            }
+        }
+
+        function deleteNode(id) {
+            if(confirm('정말 삭제하시겠습니까? (폴더인 경우 하위 파일도 모두 삭제됩니다)')) {
+                const idsToDelete = [id];
+                const findChildren = (parentId) => {
+                    const children = nodes.filter(n => n.parentId === parentId);
+                    children.forEach(c => {
+                        idsToDelete.push(c.id);
+                        findChildren(c.id);
+                    });
+                };
+                findChildren(id);
+                
+                nodes = nodes.filter(n => !idsToDelete.includes(n.id));
+                if(idsToDelete.includes(activeFileId)) {
+                    activeFileId = null;
+                    document.getElementById('editorView').style.display = 'none';
+                    document.getElementById('emptyView').style.display = 'flex';
+                    document.getElementById('exportBtn').style.display = 'none';
+                    document.getElementById('currentFileTitle').innerText = '파일을 선택하세요';
+                }
+                saveState();
+            }
+        }
+
+        function openModal(type, action, nodeId = null) {
+            modalAction = action;
+            modalNodeType = type;
+            targetNodeId = nodeId;
+            
+            const mTitle = document.getElementById('modalTitle');
+            const mInput = document.getElementById('modalInput');
+            
+            if (action === 'create') {
+                mTitle.innerText = `새 ${type === 'folder' ? '폴더' : '파일'} 이름`;
+                mInput.value = '';
+            } else {
+                const n = nodes.find(x => x.id === nodeId);
+                mTitle.innerText = '이름 변경';
+                mInput.value = n.name;
+            }
+            
+            document.getElementById('modalOverlay').style.display = 'flex';
+            mInput.focus();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        function submitModal() {
+            const val = document.getElementById('modalInput').value.trim();
+            if (!val) return;
+
+            if (modalAction === 'create') {
+                let parent = null;
+                const activeNode = activeFileId ? nodes.find(n=>n.id===activeFileId) : null;
+                if(activeNode && activeNode.parentId) {
+                    parent = activeNode.parentId;
+                }
+                
+                nodes.push({
+                    id: genId(),
+                    type: modalNodeType,
+                    name: modalNodeType === 'file' && !val.endsWith('.md') ? val + '.md' : val,
+                    parentId: parent,
+                    expanded: true,
+                    content: modalNodeType === 'file' ? '' : undefined
+                });
+            } else if (modalAction === 'rename') {
+                const node = nodes.find(n => n.id === targetNodeId);
+                node.name = val;
+                if(targetNodeId === activeFileId) {
+                    document.getElementById('currentFileTitle').innerText = val;
+                }
+            }
+
+            closeModal();
+            saveState();
+        }
+
+        let renderTimeout = null;
+        function openFile(id) {
+            activeFileId = id;
+            const file = nodes.find(n => n.id === id);
+            
+            document.getElementById('emptyView').style.display = 'none';
+            document.getElementById('editorView').style.display = 'flex';
+            document.getElementById('exportBtn').style.display = 'flex';
+            
+            document.getElementById('currentFileTitle').innerText = file.name;
+            const editor = document.getElementById('editor');
+            editor.value = file.content || '';
+            
+            renderTree(); 
+            updatePreview();
+        }
+
+        function onEditorInput() {
+            if(!activeFileId) return;
+            const val = document.getElementById('editor').value;
+            const file = nodes.find(n => n.id === activeFileId);
+            file.content = val;
+            saveState(); 
+            
+            clearTimeout(renderTimeout);
+            renderTimeout = setTimeout(updatePreview, 300);
+        }
+
+        function formatText(text) {
+            const escapeHtml = (u) => u.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            return escapeHtml(text).split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+        }
+
+        function updatePreview() {
+            const editor = document.getElementById('editor');
+            const preview = document.getElementById('preview');
+            preview.innerHTML = formatText(editor.value);
+            
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetClear([preview]);
+                window.MathJax.typesetPromise([preview]).catch(err => console.log(err));
+            }
+        }
+
+        function exportPDF() {
+            const file = nodes.find(n => n.id === activeFileId);
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex';
+            
+            const opt = {
+                margin: 1,
+                filename: file.name.replace('.md', '.pdf'),
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(document.getElementById('preview')).save().then(() => {
+                loader.style.display = 'none';
+            }).catch(err => {
+                loader.style.display = 'none';
+                alert('PDF 생성 실패');
+            });
+        }
+
+        // Init
+        renderTree();
+
+    </script>
+</body>
+</html>

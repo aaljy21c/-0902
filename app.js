@@ -598,7 +598,12 @@ function loadFromLocalStorage() {
   }
 
   const savedDevice = localStorage.getItem('neon_planner_device');
-  if (savedDevice) state.device = savedDevice;
+  const isManual = localStorage.getItem('neon_planner_manual_device') === 'true';
+  if (savedDevice && isManual) {
+    state.device = savedDevice;
+  } else {
+    state.device = window.innerWidth <= 900 ? 'phone' : 'pc';
+  }
 
   const savedFontSize = localStorage.getItem('neon_planner_font_size');
   if (savedFontSize) state.fontSize = parseInt(savedFontSize, 10) || 16;
@@ -3009,12 +3014,14 @@ function setupEventListeners() {
   btnPcView.addEventListener('click', () => {
     state.device = 'pc';
     localStorage.setItem('neon_planner_device', 'pc');
+    localStorage.setItem('neon_planner_manual_device', 'true');
     applyPreferences();
   });
 
   btnPhoneView.addEventListener('click', () => {
     state.device = 'phone';
     localStorage.setItem('neon_planner_device', 'phone');
+    localStorage.setItem('neon_planner_manual_device', 'true');
     applyPreferences();
   });
 
@@ -9061,6 +9068,14 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 window.addEventListener('resize', () => {
+  const isManual = localStorage.getItem('neon_planner_manual_device') === 'true';
+  if (!isManual) {
+    const targetDevice = window.innerWidth <= 900 ? 'phone' : 'pc';
+    if (state.device !== targetDevice) {
+      state.device = targetDevice;
+      applyPreferences();
+    }
+  }
   applyLayoutSectionOrder();
 });
 
@@ -10285,6 +10300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isPressing) {
           state.device = state.device === 'pc' ? 'phone' : 'pc';
           localStorage.setItem('neon_planner_device', state.device);
+          localStorage.setItem('neon_planner_manual_device', 'true');
           if (typeof applyPreferences === 'function') applyPreferences();
           
           if (navigator.vibrate) navigator.vibrate(50);
