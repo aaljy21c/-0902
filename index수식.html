@@ -10,7 +10,8 @@
     
     <!-- MathJax for rendering math formulas -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-svg.js"></script>
+    <script src="storage_proxy.js"></script>
     
     <!-- html2pdf for converting HTML to PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -421,6 +422,24 @@
         body.mobile-mode .btn span {
             display: none;
         }
+        body.mobile-mode textarea {
+            font-size: calc(var(--content-font-size, 1rem) * 0.85);
+            padding: 1rem;
+            line-height: 1.4;
+        }
+        body.mobile-mode .preview-content {
+            font-size: calc(var(--content-font-size, 1.1rem) * 0.85);
+            padding: 1rem;
+            line-height: 1.5;
+        }
+        body.mobile-mode .panel-header {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        body.mobile-mode .mode-select {
+            padding: 0.3rem;
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 <body>
@@ -457,6 +476,11 @@
             </div>
             
             <div class="header-right">
+                <select class="mode-select" id="editorViewModeSelect" onchange="applyEditorViewMode(this.value)">
+                    <option value="both">에디터+미리보기</option>
+                    <option value="editor">에디터만</option>
+                    <option value="preview">미리보기만</option>
+                </select>
                 <select class="mode-select" id="fontSizeSelect" onchange="applyFontSize(this.value)">
                     <option value="0.9rem">글자: 작게</option>
                     <option value="1.1rem">글자: 보통</option>
@@ -469,6 +493,11 @@
                     <option value="mobile">모바일 모드 📱</option>
                 </select>
 
+                <button class="btn" id="saveBtn" style="display:none;" onclick="explicitSave()">
+                    <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span>저장</span>
+                </button>
+
                 <button class="btn" id="exportBtn" style="display:none;" onclick="exportPDF()">
                     <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     <span>PDF 다운로드</span>
@@ -477,11 +506,11 @@
         </header>
 
         <div class="editor-container" id="editorView" style="display:none;">
-            <div class="panel">
+            <div class="panel" id="editorPanel">
                 <div class="panel-header"><span>에디터</span></div>
                 <textarea id="editor" oninput="onEditorInput()"></textarea>
             </div>
-            <div class="panel">
+            <div class="panel" id="previewPanel">
                 <div class="panel-header"><span>미리보기</span></div>
                 <div class="preview-content" id="preview"></div>
             </div>
@@ -510,22 +539,65 @@
     <script>
         window.MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            svg: { fontCache: 'global' },
             startup: { typeset: false }
         };
 
-        // --- Font Size Management ---
-        let currentFontSize = localStorage.getItem('mathAppFontSize') || '1.1rem';
-        document.getElementById('fontSizeSelect').value = currentFontSize;
-        applyFontSize(currentFontSize);
+        let nodes = [];
+        let activeFileId = null;
+        let dragSrcId = null;
+        let currentFontSize = '1.1rem';
+        let currentMode = 'auto';
+
+        function initApp() {
+            currentFontSize = localStorage.getItem('mathAppFontSize') || '1.1rem';
+            document.getElementById('fontSizeSelect').value = currentFontSize;
+            applyFontSize(currentFontSize);
+
+            currentMode = localStorage.getItem('mathAppViewMode') || 'auto';
+            document.getElementById('modeSelect').value = currentMode;
+            checkResize();
+
+            nodes = JSON.parse(localStorage.getItem('mathAppNodes')) || [
+                { id: '1', type: 'folder', name: '수학 노트', parentId: null, expanded: true },
+                { id: '2', type: 'file', name: '기본 공식.md', parentId: '1', content: '여기에 내용을 작성하세요.\n\n$$ E=mc^2 $$' }
+            ];
+            renderTree();
+        }
+
+        if (window.StorageProxy) {
+            window.StorageProxy.ready.then(initApp);
+        } else {
+            initApp();
+        }
+
+        function applyEditorViewMode(mode) {
+            const editorPanel = document.getElementById('editorPanel');
+            const previewPanel = document.getElementById('previewPanel');
+            if(mode === 'both') {
+                editorPanel.style.display = 'flex';
+                previewPanel.style.display = 'flex';
+            } else if(mode === 'editor') {
+                editorPanel.style.display = 'flex';
+                previewPanel.style.display = 'none';
+            } else if(mode === 'preview') {
+                editorPanel.style.display = 'none';
+                previewPanel.style.display = 'flex';
+            }
+        }
+
+        function explicitSave() {
+            saveState();
+            const btn = document.getElementById('saveBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<span style="color: #4ade80; font-weight: bold;">✓ 저장됨</span>';
+            setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+        }
 
         function applyFontSize(size) {
             localStorage.setItem('mathAppFontSize', size);
             document.documentElement.style.setProperty('--content-font-size', size);
         }
-
-        // --- View Mode Management ---
-        let currentMode = localStorage.getItem('mathAppViewMode') || 'auto';
-        document.getElementById('modeSelect').value = currentMode;
 
         function applyViewMode(mode) {
             currentMode = mode;
@@ -550,15 +622,6 @@
         }
 
         window.addEventListener('resize', checkResize);
-        checkResize(); // init on load
-
-        // State
-        let nodes = JSON.parse(localStorage.getItem('mathAppNodes')) || [
-            { id: '1', type: 'folder', name: '수학 노트', parentId: null, expanded: true },
-            { id: '2', type: 'file', name: '기본 공식.md', parentId: '1', content: '여기에 내용을 작성하세요.\n\n$$ E=mc^2 $$' }
-        ];
-        let activeFileId = null;
-        let dragSrcId = null;
 
         // Mobile Sidebar Toggle
         function toggleSidebar() {
@@ -714,6 +777,7 @@
                     document.getElementById('editorView').style.display = 'none';
                     document.getElementById('emptyView').style.display = 'flex';
                     document.getElementById('exportBtn').style.display = 'none';
+                    document.getElementById('saveBtn').style.display = 'none';
                     document.getElementById('currentFileTitle').innerText = '파일을 선택하세요';
                 }
                 saveState();
@@ -784,6 +848,7 @@
             document.getElementById('emptyView').style.display = 'none';
             document.getElementById('editorView').style.display = 'flex';
             document.getElementById('exportBtn').style.display = 'flex';
+            document.getElementById('saveBtn').style.display = 'flex';
             
             document.getElementById('currentFileTitle').innerText = file.name;
             const editor = document.getElementById('editor');
@@ -841,8 +906,7 @@
             });
         }
 
-        // Init
-        renderTree();
+        // Init is handled in initApp()
 
     </script>
 </body>
