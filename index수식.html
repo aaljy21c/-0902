@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Math Editor & File Manager</title>
     
     <!-- Google Fonts -->
@@ -10,12 +10,17 @@
     
     <!-- MathJax for rendering math formulas -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-svg.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="storage_proxy.js"></script>
     
     <!-- html2pdf for converting HTML to PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
+    <!-- Drawing Board -->
+    <link rel="stylesheet" href="drawing.css">
+    <script src="drawing.js"></script>
+
     <style>
         :root {
             --primary: #6366f1;
@@ -258,7 +263,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: var(--surface);
+            background: var(--editor-bg, var(--surface));
             border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
@@ -270,18 +275,46 @@
             padding: 0.75rem 1rem;
             background: rgba(15, 23, 42, 0.5);
             border-bottom: 1px solid var(--border);
-            font-weight: 600;
             color: var(--text-muted);
             font-size: 0.9rem;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .editor-toolbar select, .editor-toolbar input[type="color"], .editor-toolbar button {
+            background: var(--surface-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            outline: none;
+        }
+        .editor-toolbar select { padding: 4px; }
+        .editor-toolbar button { padding: 4px 8px; transition: background 0.2s; }
+        .editor-toolbar button:hover { background: var(--primary); color: white; }
+        .editor-toolbar .color-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255,255,255,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         textarea {
             flex: 1;
             background: transparent;
             border: none;
-            color: var(--text);
+            color: var(--editor-text, var(--text));
             padding: 1.5rem;
             font-family: monospace;
             font-size: var(--content-font-size, 1rem);
@@ -294,10 +327,17 @@
             flex: 1;
             padding: 1.5rem;
             overflow-y: auto;
-            background-color: #ffffff;
-            color: #1e293b;
+            overflow-x: auto;
+            background-color: var(--preview-bg, #ffffff);
+            color: var(--preview-text, #1e293b);
             font-size: var(--content-font-size, 1.1rem);
             line-height: 1.8;
+            word-wrap: break-word;
+        }
+        .preview-content mjx-container {
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
         }
 
         .empty-state {
@@ -481,6 +521,13 @@
                     <option value="editor">에디터만</option>
                     <option value="preview">미리보기만</option>
                 </select>
+                <select class="mode-select" id="panelThemeSelect" onchange="applyPanelTheme(this.value)">
+                    <option value="default">기본 테마</option>
+                    <option value="white">모두 흰색</option>
+                    <option value="dark">모두 어두운색</option>
+                    <option value="sepia">세피아 (눈편한)</option>
+                    <option value="blackboard">칠판색</option>
+                </select>
                 <select class="mode-select" id="fontSizeSelect" onchange="applyFontSize(this.value)">
                     <option value="0.9rem">글자: 작게</option>
                     <option value="1.1rem">글자: 보통</option>
@@ -498,6 +545,11 @@
                     <span>저장</span>
                 </button>
 
+                <button class="btn" id="drawBtn" style="display:none; background-color:#10b981;" onclick="openDrawingModal()">
+                    <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+                    <span>그림 입력</span>
+                </button>
+
                 <button class="btn" id="exportBtn" style="display:none;" onclick="exportPDF()">
                     <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     <span>PDF 다운로드</span>
@@ -507,11 +559,38 @@
 
         <div class="editor-container" id="editorView" style="display:none;">
             <div class="panel" id="editorPanel">
-                <div class="panel-header"><span>에디터</span></div>
+                <div class="panel-header">
+                    <div style="font-weight: 600;">에디터</div>
+                    <div class="editor-toolbar">
+                        <select id="toolFontSize" onchange="if(this.value) { applyFormat('size'); this.value=''; }">
+                            <option value="">크기 변경</option>
+                            <option value="12px">12px</option>
+                            <option value="16px">16px</option>
+                            <option value="20px">20px</option>
+                            <option value="24px">24px</option>
+                            <option value="32px">32px</option>
+                            <option value="40px">40px</option>
+                        </select>
+                        
+                        <div class="color-group">
+                            <span>글자색</span>
+                            <input type="color" id="toolTextColor" value="#ef4444" style="width:24px; height:24px; padding:0; border:none;">
+                            <button type="button" onclick="applyFormat('color')">적용</button>
+                        </div>
+                        
+                        <div class="color-group">
+                            <span>형광펜</span>
+                            <input type="color" id="toolBgColor" value="#fef08a" style="width:24px; height:24px; padding:0; border:none;">
+                            <button type="button" onclick="applyFormat('bg')">적용</button>
+                        </div>
+
+                        <button type="button" onclick="applyFormat('bold')" style="font-weight: bold;">B</button>
+                    </div>
+                </div>
                 <textarea id="editor" oninput="onEditorInput()"></textarea>
             </div>
             <div class="panel" id="previewPanel">
-                <div class="panel-header"><span>미리보기</span></div>
+                <div class="panel-header"><div style="font-weight: 600;">미리보기</div></div>
                 <div class="preview-content" id="preview"></div>
             </div>
         </div>
@@ -536,10 +615,24 @@
 
     <div id="loader"><div class="spinner"></div><h2>PDF 생성 중...</h2></div>
 
+    <!-- Drawing Modal -->
+    <div class="modal-overlay" id="drawingModalOverlay" style="z-index: 9999;">
+        <div class="modal" style="width: 95%; max-width: 900px; height: 90vh; display: flex; flex-direction: column; padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin:0;">그림판 (수식 에디터 삽입)</h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-secondary" onclick="closeDrawingModal()">취소</button>
+                    <button class="btn" style="background-color: #10b981;" onclick="insertDrawing()">삽입하기</button>
+                </div>
+            </div>
+            <div id="drawing-board-container" style="flex: 1; border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden;"></div>
+        </div>
+    </div>
+
     <script>
         window.MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
-            svg: { fontCache: 'global' },
+            chtml: { fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2' },
             startup: { typeset: false }
         };
 
@@ -548,11 +641,124 @@
         let dragSrcId = null;
         let currentFontSize = '1.1rem';
         let currentMode = 'auto';
+        let mathDrawingBoard = null;
+
+        function openDrawingModal() {
+            document.getElementById('drawingModalOverlay').style.display = 'flex';
+            if (!mathDrawingBoard) {
+                const container = document.getElementById('drawing-board-container');
+                mathDrawingBoard = new NeonDrawingBoard(container, {
+                    initialData: [],
+                    readOnly: false
+                });
+            } else {
+                mathDrawingBoard.resize();
+            }
+        }
+
+        function closeDrawingModal() {
+            document.getElementById('drawingModalOverlay').style.display = 'none';
+        }
+
+        function insertDrawing() {
+            if (!mathDrawingBoard) return;
+            const dataUrl = mathDrawingBoard.canvas.toDataURL('image/png');
+            const editor = document.getElementById('editor');
+            const cursorPosition = editor.selectionStart;
+            const textBefore = editor.value.substring(0, cursorPosition);
+            const textAfter = editor.value.substring(cursorPosition);
+            
+            // Insert image
+            editor.value = textBefore + '\n<img src="' + dataUrl + '" style="max-width:100%;">\n' + textAfter;
+            
+            closeDrawingModal();
+            onEditorInput();
+            
+            // Clear for next time
+            mathDrawingBoard.strokes = [];
+            mathDrawingBoard.undoStack = [];
+            mathDrawingBoard.redoStack = [];
+            mathDrawingBoard.render();
+        }
+
+        function applyPanelTheme(theme) {
+            localStorage.setItem('mathAppPanelTheme', theme);
+            let edBg = '', edText = '', pvBg = '', pvText = '';
+            if (theme === 'white') {
+                edBg = '#ffffff'; edText = '#000000';
+                pvBg = '#ffffff'; pvText = '#000000';
+            } else if (theme === 'dark') {
+                edBg = '#1e293b'; edText = '#f8fafc';
+                pvBg = '#0f172a'; pvText = '#f8fafc';
+            } else if (theme === 'sepia') {
+                edBg = '#f4ecd8'; edText = '#5b4636';
+                pvBg = '#fdf6e3'; pvText = '#657b83';
+            } else if (theme === 'blackboard') {
+                edBg = '#1a3c34'; edText = '#e0f8f0';
+                pvBg = '#1a3c34'; pvText = '#e0f8f0';
+            } else {
+                edBg = ''; edText = '';
+                pvBg = ''; pvText = '';
+            }
+            document.documentElement.style.setProperty('--editor-bg', edBg);
+            document.documentElement.style.setProperty('--editor-text', edText);
+            document.documentElement.style.setProperty('--preview-bg', pvBg);
+            document.documentElement.style.setProperty('--preview-text', pvText);
+        }
+
+        function applyFormat(type) {
+            const editor = document.getElementById('editor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selected = editor.value.substring(start, end);
+            
+            if (start === end) {
+                alert('서식을 적용할 텍스트나 수식을 먼저 드래그(선택)해주세요.');
+                return;
+            }
+
+            let prefix = '', suffix = '';
+            
+            if (type === 'color') {
+                const color = document.getElementById('toolTextColor').value;
+                prefix = `<span style="color: ${color};">`;
+                suffix = `</span>`;
+            } else if (type === 'bg') {
+                const bg = document.getElementById('toolBgColor').value;
+                prefix = `<span style="background-color: ${bg};">`;
+                suffix = `</span>`;
+            } else if (type === 'size') {
+                const size = document.getElementById('toolFontSize').value;
+                if (!size) return;
+                prefix = `<span style="font-size: ${size};">`;
+                suffix = `</span>`;
+            } else if (type === 'bold') {
+                prefix = `**`;
+                suffix = `**`;
+            }
+            
+            editor.value = editor.value.substring(0, start) + prefix + selected + suffix + editor.value.substring(end);
+            
+            editor.focus();
+            editor.setSelectionRange(start, start + prefix.length + selected.length + suffix.length);
+            
+            onEditorInput();
+        }
 
         function initApp() {
             currentFontSize = localStorage.getItem('mathAppFontSize') || '1.1rem';
             document.getElementById('fontSizeSelect').value = currentFontSize;
             applyFontSize(currentFontSize);
+            
+            const savedTheme = localStorage.getItem('mathAppPanelTheme') || 'default';
+            const themeSelect = document.getElementById('panelThemeSelect');
+            if(themeSelect) themeSelect.value = savedTheme;
+            applyPanelTheme(savedTheme);
+            
+            const savedEditorView = localStorage.getItem('mathAppEditorViewMode') || 'both';
+            const editorViewSelect = document.getElementById('editorViewModeSelect');
+            if(editorViewSelect) editorViewSelect.value = savedEditorView;
+            applyEditorViewMode(savedEditorView);
 
             currentMode = localStorage.getItem('mathAppViewMode') || 'auto';
             document.getElementById('modeSelect').value = currentMode;
@@ -572,6 +778,7 @@
         }
 
         function applyEditorViewMode(mode) {
+            localStorage.setItem('mathAppEditorViewMode', mode);
             const editorPanel = document.getElementById('editorPanel');
             const previewPanel = document.getElementById('previewPanel');
             if(mode === 'both') {
@@ -778,6 +985,7 @@
                     document.getElementById('emptyView').style.display = 'flex';
                     document.getElementById('exportBtn').style.display = 'none';
                     document.getElementById('saveBtn').style.display = 'none';
+                    document.getElementById('drawBtn').style.display = 'none';
                     document.getElementById('currentFileTitle').innerText = '파일을 선택하세요';
                 }
                 saveState();
@@ -849,6 +1057,7 @@
             document.getElementById('editorView').style.display = 'flex';
             document.getElementById('exportBtn').style.display = 'flex';
             document.getElementById('saveBtn').style.display = 'flex';
+            document.getElementById('drawBtn').style.display = 'flex';
             
             document.getElementById('currentFileTitle').innerText = file.name;
             const editor = document.getElementById('editor');
@@ -870,8 +1079,29 @@
         }
 
         function formatText(text) {
-            const escapeHtml = (u) => u.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            return escapeHtml(text).split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+            // Mask math blocks
+            let mathBlocks = [];
+            let maskedText = text.replace(/\$\$(.*?)\$\$/gs, function(match) {
+                mathBlocks.push(match);
+                return '@@MATH_BLOCK_' + (mathBlocks.length - 1) + '@@';
+            });
+            maskedText = maskedText.replace(/\$(.*?)\$/g, function(match) {
+                mathBlocks.push(match);
+                return '@@MATH_INLINE_' + (mathBlocks.length - 1) + '@@';
+            });
+            
+            // Parse Markdown
+            let html = typeof marked !== 'undefined' ? marked.parse(maskedText, { breaks: true }) : maskedText;
+            
+            // Unmask math blocks
+            html = html.replace(/@@MATH_BLOCK_(\d+)@@/g, function(match, index) {
+                return mathBlocks[index];
+            });
+            html = html.replace(/@@MATH_INLINE_(\d+)@@/g, function(match, index) {
+                return mathBlocks[index];
+            });
+            
+            return html;
         }
 
         function updatePreview() {
@@ -905,6 +1135,28 @@
                 alert('PDF 생성 실패');
             });
         }
+
+        // Handle Image Pasting in Editor
+        document.getElementById('editor').addEventListener('paste', function(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const base64Str = event.target.result;
+                        const editor = document.getElementById('editor');
+                        const cursorPosition = editor.selectionStart;
+                        const textBefore = editor.value.substring(0, cursorPosition);
+                        const textAfter = editor.value.substring(cursorPosition);
+                        editor.value = textBefore + '\n<img src="' + base64Str + '" style="max-width:100%;">\n' + textAfter;
+                        onEditorInput(); // trigger preview update
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            }
+        });
 
         // Init is handled in initApp()
 
