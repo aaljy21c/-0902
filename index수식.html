@@ -3,13 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Editor & File Manager</title>
+    <title>Math Editor & File Manager - 수식 플래너</title>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- MathJax for rendering math formulas -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <!-- MathJax Configuration (MUST be placed before loading MathJax script) -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                packages: {'[+]': ['noerrors', 'noundefined', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: { load: ['[tex]/noerrors', '[tex]/noundefined'] },
+            chtml: {
+                fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2'
+            },
+            startup: {
+                typeset: false
+            }
+        };
+    </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="storage_proxy.js"></script>
@@ -50,28 +71,36 @@
             overflow: hidden;
         }
 
-        /* Sidebar File Explorer */
+        /* --- Sidebar & Tree View --- */
         .sidebar {
             width: var(--sidebar-width);
-            background: var(--surface);
+            background-color: var(--surface);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            z-index: 100;
+            user-select: none;
             transition: transform 0.3s ease;
+            z-index: 100;
         }
 
         .sidebar-header {
             padding: 1rem;
-            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid var(--border);
         }
 
         .sidebar-title {
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1.1rem;
+            letter-spacing: -0.025em;
+            color: #fff;
+        }
+
+        .sidebar-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
         .sidebar-actions button {
@@ -79,12 +108,14 @@
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            padding: 0.25rem;
+            padding: 4px;
             border-radius: 4px;
+            transition: all 0.2s;
         }
+
         .sidebar-actions button:hover {
             color: var(--text);
-            background: var(--surface-hover);
+            background-color: var(--surface-hover);
         }
 
         .file-tree {
@@ -94,43 +125,36 @@
         }
 
         .tree-node {
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 2px;
         }
 
         .tree-item {
             display: flex;
             align-items: center;
-            padding: 0.5rem;
+            padding: 0.4rem 0.5rem;
             border-radius: 6px;
             cursor: pointer;
             color: var(--text-muted);
-            user-select: none;
-            border: 1px solid transparent;
+            font-size: 0.9rem;
+            transition: all 0.15s ease;
+            position: relative;
         }
 
         .tree-item:hover {
-            background: var(--surface-hover);
+            background-color: var(--surface-hover);
             color: var(--text);
         }
 
         .tree-item.active {
-            background: rgba(99, 102, 241, 0.2);
-            color: var(--primary);
-        }
-        
-        .tree-item.drag-over {
-            border: 1px dashed var(--primary);
-            background: rgba(99, 102, 241, 0.1);
+            background-color: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            font-weight: 500;
         }
 
         .tree-item-icon {
-            width: 20px;
-            height: 20px;
             margin-right: 0.5rem;
             display: flex;
             align-items: center;
-            justify-content: center;
         }
 
         .tree-item-name {
@@ -138,54 +162,60 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: 0.9rem;
+        }
+
+        .item-actions {
+            display: none;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .tree-item:hover .item-actions {
+            display: flex;
+        }
+
+        .item-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 4px;
+        }
+
+        .item-actions button:hover {
+            color: var(--text);
         }
 
         .tree-children {
             padding-left: 1rem;
             display: none;
         }
-        
+
         .tree-children.expanded {
             display: block;
         }
 
-        .item-actions {
-            display: none;
-            gap: 0.25rem;
-        }
-        .tree-item:hover .item-actions {
-            display: flex;
-        }
-        .item-actions button {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-        .item-actions button:hover {
-            color: var(--text);
+        /* Drag and Drop styling */
+        .tree-item.drag-over {
+            outline: 2px dashed var(--primary);
         }
 
-        /* Main Content */
+        /* --- Main Content Area --- */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background-image: 
-                radial-gradient(at 40% 20%, hsla(228,100%,74%,0.1) 0px, transparent 50%),
-                radial-gradient(at 80% 0%, hsla(189,100%,56%,0.1) 0px, transparent 50%);
-            overflow-y: auto;
+            overflow: hidden;
+            background-color: var(--bg-color);
         }
 
         .header {
-            padding: 1rem;
+            height: 60px;
+            padding: 0 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
@@ -219,7 +249,8 @@
         .header-right {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.6rem;
+            flex-wrap: wrap;
         }
 
         .mode-select {
@@ -238,23 +269,40 @@
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.9rem;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
+            gap: 0.4rem;
+            font-size: 0.85rem;
             white-space: nowrap;
         }
         .btn:hover { background-color: var(--primary-hover); }
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: var(--surface-hover);
+        }
 
         .editor-container {
             display: flex;
             flex: 1;
-            padding: 1rem;
+            padding: 0.8rem 1rem;
             gap: 1rem;
             height: calc(100vh - 70px);
         }
@@ -272,19 +320,27 @@
         }
 
         .panel-header {
-            padding: 0.75rem 1rem;
-            background: rgba(15, 23, 42, 0.5);
+            padding: 0.6rem 0.9rem;
+            background: rgba(15, 23, 42, 0.65);
             border-bottom: 1px solid var(--border);
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
+        }
+
+        .panel-header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text);
         }
 
         .editor-toolbar {
             display: flex;
-            gap: 6px;
+            gap: 5px;
             flex-wrap: wrap;
             align-items: center;
         }
@@ -294,13 +350,45 @@
             color: var(--text);
             border: 1px solid var(--border);
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             cursor: pointer;
             outline: none;
         }
-        .editor-toolbar select { padding: 4px; }
-        .editor-toolbar button { padding: 4px 8px; transition: background 0.2s; }
+        .editor-toolbar select { padding: 4px 6px; }
+        .editor-toolbar button { 
+            padding: 4px 8px; 
+            transition: background 0.15s, color 0.15s; 
+            font-weight: 500;
+        }
         .editor-toolbar button:hover { background: var(--primary); color: white; }
+        .editor-toolbar button.btn-math-primary {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: #818cf8;
+            color: #c7d2fe;
+            font-weight: 600;
+        }
+        .editor-toolbar button.btn-math-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .editor-toolbar button.btn-math-magic {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            color: #6ee7b7;
+            font-weight: 600;
+        }
+        .editor-toolbar button.btn-math-magic:hover {
+            background: #10b981;
+            color: white;
+        }
+
+        .toolbar-sep {
+            width: 1px;
+            height: 18px;
+            background: var(--border);
+            margin: 0 2px;
+        }
+
         .editor-toolbar .color-group {
             display: flex;
             align-items: center;
@@ -315,87 +403,133 @@
             background: transparent;
             border: none;
             color: var(--editor-text, var(--text));
-            padding: 1.5rem;
-            font-family: monospace;
-            font-size: var(--content-font-size, 1rem);
-            line-height: 1.6;
+            padding: 1.2rem;
+            font-family: 'Consolas', 'Menlo', monospace;
+            font-size: var(--content-font-size, 1.05rem);
             resize: none;
             outline: none;
+            line-height: 1.6;
         }
 
         .preview-content {
             flex: 1;
             padding: 1.5rem;
             overflow-y: auto;
-            overflow-x: auto;
-            background-color: var(--preview-bg, #ffffff);
-            color: var(--preview-text, #1e293b);
+            color: var(--preview-text, var(--text));
+            background: var(--preview-bg, transparent);
             font-size: var(--content-font-size, 1.1rem);
-            line-height: 1.8;
-            word-wrap: break-word;
+            line-height: 1.7;
+            word-break: break-word;
         }
+
+        .preview-content h1, .preview-content h2, .preview-content h3 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+        .preview-content p {
+            margin-bottom: 0.8rem;
+        }
+        .preview-content ul, .preview-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+        .preview-content blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: var(--text-muted);
+        }
+        .preview-content code {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .preview-content pre code {
+            display: block;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        .preview-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .preview-content th, .preview-content td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .preview-content th {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* MathJax Container Tuning */
         .preview-content mjx-container {
-            max-width: 100%;
+            margin: 0.4em 0 !important;
+            outline: none !important;
+        }
+        .preview-content mjx-container[display="true"] {
+            margin: 1em 0 !important;
             overflow-x: auto;
             overflow-y: hidden;
+            padding: 0.4rem 0;
         }
 
         .empty-state {
             flex: 1;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
             flex-direction: column;
-            gap: 1rem;
-            text-align: center;
-            padding: 2rem;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-muted);
         }
 
-        /* Modal */
+        /* Modal styling */
         .modal-overlay {
-            display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            align-items: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
             justify-content: center;
+            align-items: center;
+            z-index: 200;
         }
+
         .modal {
             background: var(--surface);
-            padding: 2rem;
-            border-radius: 12px;
             border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
             width: 90%;
-            max-width: 320px;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
+
+        .modal h3 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
         .modal input {
             width: 100%;
-            padding: 0.75rem;
-            margin: 1rem 0;
-            background: var(--bg-color);
-            border: 1px solid var(--border);
-            color: white;
+            padding: 0.6rem;
             border-radius: 6px;
-            font-size: 1rem;
+            border: 1px solid var(--border);
+            background: var(--bg-color);
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            outline: none;
         }
+
         .modal-actions {
             display: flex;
             justify-content: flex-end;
             gap: 0.5rem;
         }
-        .btn-secondary {
-            background: var(--surface-hover);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
 
-        .sidebar-actions svg { width: 18px; height: 18px; }
         .btn svg { width: 18px; height: 18px; }
         .tree-item-icon svg { width: 18px; height: 18px; }
         .empty-state svg { width: 64px; height: 64px; }
@@ -430,8 +564,28 @@
             z-index: 90;
         }
 
-        /* --- Mode Switcher Rules (Replaces media query) --- */
-        
+        /* Toast notification */
+        #saveToast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 9999;
+            animation: toastFade 0.3s ease;
+        }
+        @keyframes toastFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Mode Switcher Rules --- */
         body.mobile-mode .sidebar {
             position: fixed;
             top: 0;
@@ -451,10 +605,10 @@
             min-height: calc(100vh - 70px);
         }
         body.mobile-mode .item-actions {
-            display: flex; /* Always show icons on mobile */
+            display: flex;
         }
         body.mobile-mode .current-file-name {
-            max-width: 150px;
+            max-width: 140px;
         }
         body.mobile-mode .btn {
             padding: 0.5rem;
@@ -463,12 +617,12 @@
             display: none;
         }
         body.mobile-mode textarea {
-            font-size: calc(var(--content-font-size, 1rem) * 0.85);
+            font-size: calc(var(--content-font-size, 1rem) * 0.9);
             padding: 1rem;
             line-height: 1.4;
         }
         body.mobile-mode .preview-content {
-            font-size: calc(var(--content-font-size, 1.1rem) * 0.85);
+            font-size: calc(var(--content-font-size, 1.1rem) * 0.9);
             padding: 1rem;
             line-height: 1.5;
         }
@@ -490,7 +644,7 @@
     <!-- Sidebar File Manager -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <span class="sidebar-title">탐색기</span>
+            <span class="sidebar-title">📁 수식 탐색기</span>
             <div class="sidebar-actions">
                 <button title="새 파일" onclick="openModal('file', 'create')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
@@ -509,7 +663,7 @@
     <div class="main-content">
         <header class="header">
             <div class="header-left">
-                <button class="menu-toggle" onclick="toggleSidebar()">
+                <button class="menu-toggle" onclick="toggleSidebar()" title="목록 열기">
                     <svg width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
                 <div class="current-file-name" id="currentFileTitle">파일을 선택하세요</div>
@@ -540,17 +694,25 @@
                     <option value="mobile">모바일 모드 📱</option>
                 </select>
 
-                <button class="btn" id="saveBtn" style="display:none;" onclick="explicitSave()">
+                <button class="btn" id="saveBtn" style="display:none;" onclick="explicitSave()" title="현재 내용 저장">
                     <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                     <span>저장</span>
                 </button>
 
-                <button class="btn" id="drawBtn" style="display:none; background-color:#10b981;" onclick="openDrawingModal()">
+                <button class="btn" id="drawBtn" style="display:none; background-color:#10b981;" onclick="openDrawingModal()" title="그림판으로 그린 이미지 삽입">
                     <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
                     <span>그림 입력</span>
                 </button>
 
-                <button class="btn" id="exportBtn" style="display:none;" onclick="exportPDF()">
+                <button class="btn-secondary" onclick="backupMathData()" title="모든 수식 데이터를 JSON 백업 파일로 다운로드">
+                    <span>💾 백업</span>
+                </button>
+
+                <button class="btn-secondary" onclick="restoreMathData()" title="백업 파일에서 수식 복원">
+                    <span>📂 복원</span>
+                </button>
+
+                <button class="btn" id="exportBtn" style="display:none;" onclick="exportPDF()" title="PDF 문서로 다운로드">
                     <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     <span>PDF 다운로드</span>
                 </button>
@@ -560,8 +722,12 @@
         <div class="editor-container" id="editorView" style="display:none;">
             <div class="panel" id="editorPanel">
                 <div class="panel-header">
-                    <div style="font-weight: 600;">에디터</div>
+                    <div class="panel-header-title">
+                        <span>📝 에디터</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">실시간 자동저장 중</span>
+                    </div>
                     <div class="editor-toolbar">
+                        <!-- 텍스트 서식 -->
                         <select id="toolFontSize" onchange="if(this.value) { applyFormat('size'); this.value=''; }">
                             <option value="">크기 변경</option>
                             <option value="12px">12px</option>
@@ -574,30 +740,75 @@
                         
                         <div class="color-group">
                             <span>글자색</span>
-                            <input type="color" id="toolTextColor" value="#ef4444" style="width:24px; height:24px; padding:0; border:none;">
+                            <input type="color" id="toolTextColor" value="#ef4444" style="width:22px; height:22px; padding:0; border:none;">
                             <button type="button" onclick="applyFormat('color')">적용</button>
                         </div>
                         
                         <div class="color-group">
                             <span>형광펜</span>
-                            <input type="color" id="toolBgColor" value="#fef08a" style="width:24px; height:24px; padding:0; border:none;">
+                            <input type="color" id="toolBgColor" value="#fef08a" style="width:22px; height:22px; padding:0; border:none;">
                             <button type="button" onclick="applyFormat('bg')">적용</button>
                         </div>
 
-                        <button type="button" onclick="applyFormat('bold')" style="font-weight: bold;">B</button>
+                        <button type="button" onclick="applyFormat('bold')" style="font-weight: bold;" title="굵게">B</button>
+
+                        <div class="toolbar-sep"></div>
+
+                        <!-- 수식 입력 툴바 -->
+                        <button type="button" class="btn-math-primary" onclick="insertMathSnippet('inline')" title="인라인 수식 ($...$)">$ 수식</button>
+                        <button type="button" class="btn-math-primary" onclick="insertMathSnippet('block')" title="블록 수식 ($$...$$)">$$ 블록</button>
+                        <button type="button" onclick="insertMathSnippet('frac')" title="분수 \frac{a}{b}">a/b 분수</button>
+                        <button type="button" onclick="insertMathSnippet('pow')" title="지수 x^2">x² 제곱</button>
+                        <button type="button" onclick="insertMathSnippet('sqrt')" title="제곱근 \sqrt{x}">√x 루트</button>
+                        <button type="button" onclick="insertMathSnippet('int')" title="적분 \int">∫ 적분</button>
+                        <button type="button" onclick="insertMathSnippet('sum')" title="시그마 \sum">∑ 시그마</button>
+
+                        <!-- 수학 기호 선택 -->
+                        <select onchange="if(this.value) { insertMathSnippet(this.value); this.value=''; }" title="수학 특수기호 삽입">
+                            <option value="">기호 삽입 ▼</option>
+                            <option value="\pm">± (플러스마이너스)</option>
+                            <option value="\times">× (곱하기)</option>
+                            <option value="\div">÷ (나누기)</option>
+                            <option value="\neq">≠ (같지않음)</option>
+                            <option value="\le">≤ (작거나같음)</option>
+                            <option value="\ge">≥ (크거나같음)</option>
+                            <option value="\approx">≈ (근사값)</option>
+                            <option value="\infty">∞ (무한대)</option>
+                            <option value="\pi">π (파이)</option>
+                            <option value="\alpha">α (알파)</option>
+                            <option value="\beta">β (베타)</option>
+                            <option value="\theta">θ (세타)</option>
+                            <option value="\Delta">Δ (델타)</option>
+                            <option value="\rightarrow">→ (화살표)</option>
+                            <option value="matrix">행렬 (2x2 Matrix)</option>
+                            <option value="cases">조건식 (Cases)</option>
+                        </select>
+
+                        <div class="toolbar-sep"></div>
+
+                        <!-- 구글/AI 수식 정리 도구 -->
+                        <button type="button" class="btn-math-magic" onclick="cleanGoogleMath()" title="구글 문서, Gemini AI 등에서 복사한 수식의 깨진 달러표시, 이스케이프(\[, \( 등)를 표준 수식으로 자동 변환">✨ 구글수식 정리</button>
                     </div>
                 </div>
-                <textarea id="editor" oninput="onEditorInput()"></textarea>
+                <textarea id="editor" oninput="onEditorInput()" placeholder="수식 또는 마크다운을 입력하세요.
+예시:
+- 인라인 수식: $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
+- 블록 수식:
+$$
+E = mc^2
+$$"></textarea>
             </div>
             <div class="panel" id="previewPanel">
-                <div class="panel-header"><div style="font-weight: 600;">미리보기</div></div>
-                <div class="preview-content" id="preview"></div>
+                <div class="panel-header">
+                    <div style="font-weight: 600;">👁️ 수식 미리보기</div>
+                </div>
+                <div class="preview-content tex2jax_process" id="preview"></div>
             </div>
         </div>
         
         <div class="empty-state" id="emptyView">
             <svg width="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <p>메뉴를 열어 파일을 선택하거나 새로 생성하세요.</p>
+            <p style="margin-top:10px;">왼쪽 탐색기에서 파일을 선택하거나 새 파일을 생성하세요.</p>
         </div>
     </div>
 
@@ -629,19 +840,28 @@
         </div>
     </div>
 
-    <script>
-        window.MathJax = {
-            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
-            chtml: { fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2' },
-            startup: { typeset: false }
-        };
+    <!-- Toast message -->
+    <div id="saveToast">✓ 안전하게 저장되었습니다</div>
 
+    <script>
         let nodes = [];
         let activeFileId = null;
         let dragSrcId = null;
         let currentFontSize = '1.1rem';
         let currentMode = 'auto';
         let mathDrawingBoard = null;
+
+        // Show save toast
+        function showToast(msg) {
+            const toast = document.getElementById('saveToast');
+            if (!toast) return;
+            toast.innerText = msg || '✓ 안전하게 저장되었습니다';
+            toast.style.display = 'block';
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 1800);
+        }
 
         function openDrawingModal() {
             document.getElementById('drawingModalOverlay').style.display = 'flex';
@@ -712,8 +932,8 @@
             const end = editor.selectionEnd;
             const selected = editor.value.substring(start, end);
             
-            if (start === end) {
-                alert('서식을 적용할 텍스트나 수식을 먼저 드래그(선택)해주세요.');
+            if (start === end && type !== 'bold') {
+                alert('서식을 적용할 텍스트를 먼저 드래그(선택)해주세요.');
                 return;
             }
 
@@ -738,13 +958,165 @@
             }
             
             editor.value = editor.value.substring(0, start) + prefix + selected + suffix + editor.value.substring(end);
-            
             editor.focus();
             editor.setSelectionRange(start, start + prefix.length + selected.length + suffix.length);
+            onEditorInput();
+        }
+
+        // --- Math Insertion Helper ---
+        function insertMathSnippet(snippetType) {
+            const editor = document.getElementById('editor');
+            if (!editor) return;
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selected = editor.value.substring(start, end);
+            
+            let before = '', after = '', defaultText = '';
+            
+            switch(snippetType) {
+                case 'inline':
+                    before = '$';
+                    after = '$';
+                    defaultText = selected || 'x';
+                    break;
+                case 'block':
+                    before = '$$\n';
+                    after = '\n$$';
+                    defaultText = selected || 'E = mc^2';
+                    break;
+                case 'frac':
+                    before = '\\frac{';
+                    after = '}{b}';
+                    defaultText = selected || 'a';
+                    break;
+                case 'sqrt':
+                    before = '\\sqrt{';
+                    after = '}';
+                    defaultText = selected || 'x';
+                    break;
+                case 'pow':
+                    before = '{';
+                    after = '}^{2}';
+                    defaultText = selected || 'x';
+                    break;
+                case 'int':
+                    before = '\\int_{';
+                    after = '}^{b} f(x)\\,dx';
+                    defaultText = selected || 'a';
+                    break;
+                case 'sum':
+                    before = '\\sum_{';
+                    after = '}^{n} a_i';
+                    defaultText = selected || 'i=1';
+                    break;
+                case 'matrix':
+                    before = '$$\\begin{pmatrix}\n  ';
+                    after = ' & b \\\\\n  c & d\n\\end{pmatrix}$$';
+                    defaultText = selected || 'a';
+                    break;
+                case 'cases':
+                    before = '$$\\begin{cases}\n  ';
+                    after = ' & \\text{if } x > 0 \\\\\n  -x & \\text{otherwise}\n\\end{cases}$$';
+                    defaultText = selected || 'x';
+                    break;
+                default:
+                    // Direct math symbols (\pm, \times, \alpha, etc.)
+                    before = snippetType + ' ';
+                    defaultText = '';
+                    after = '';
+            }
+            
+            const insertText = before + defaultText + after;
+            editor.value = editor.value.substring(0, start) + insertText + editor.value.substring(end);
+            editor.focus();
+            
+            const newCursor = start + before.length + defaultText.length;
+            editor.setSelectionRange(newCursor, newCursor);
             
             onEditorInput();
         }
 
+        // --- Clean Google & AI Math Expressions ---
+        function cleanGoogleMath() {
+            const editor = document.getElementById('editor');
+            if (!editor) return;
+            let val = editor.value;
+            if (!val || !val.trim()) {
+                alert('정리할 수식 내용이 없습니다.');
+                return;
+            }
+
+            // 1. Remove markdown code fence ```latex or ```math
+            val = val.replace(/```(?:latex|math)?\s*([\s\S]*?)```/g, '$1');
+            
+            // 2. Convert \[ ... \] to $$ ... $$ (display math)
+            val = val.replace(/\\\[([\s\S]*?)\\\]/g, function(match, inner) {
+                return '$$\n' + inner.trim() + '\n$$';
+            });
+            
+            // 3. Convert \( ... \) to $ ... $ (inline math)
+            val = val.replace(/\\\(([\s\S]*?)\\\)/g, function(match, inner) {
+                return '$' + inner.trim() + '$';
+            });
+            
+            // 4. Unescape escaped dollar signs \$ -> $
+            val = val.replace(/\\\$/g, '$');
+            
+            // 5. Unescape double backslash delimiters \\( or \\) -> $
+            val = val.replace(/\\\\([()])/g, '$');
+
+            // 6. Clean up trailing spaces inside $$ delimiters
+            val = val.replace(/\$\$\s*\n\s*/g, '$$\n').replace(/\s*\n\s*\$\$/g, '\n$$');
+
+            editor.value = val;
+            onEditorInput();
+            showToast('✨ 구글 수식이 표준 포맷으로 정리되었습니다!');
+        }
+
+        // --- Backup & Restore ---
+        function backupMathData() {
+            saveState();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(nodes, null, 2));
+            const dlAnchor = document.createElement('a');
+            const now = new Date();
+            const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `플래너_수식노트_백업_${dateStr}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast('💾 수식 노트가 JSON 파일로 다운로드되었습니다.');
+        }
+
+        function restoreMathData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        if (Array.isArray(imported) && imported.length > 0) {
+                            nodes = imported;
+                            saveState();
+                            initApp();
+                            showToast('📂 수식 노트가 성공적으로 복원되었습니다!');
+                        } else {
+                            alert('올바른 수식 백업 JSON 파일이 아닙니다.');
+                        }
+                    } catch(err) {
+                        alert('백업 파일을 읽는 중 오류가 발생했습니다: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // --- App Initialization & Persistence ---
         function initApp() {
             currentFontSize = localStorage.getItem('mathAppFontSize') || '1.1rem';
             document.getElementById('fontSizeSelect').value = currentFontSize;
@@ -764,18 +1136,54 @@
             document.getElementById('modeSelect').value = currentMode;
             checkResize();
 
-            nodes = JSON.parse(localStorage.getItem('mathAppNodes')) || [
-                { id: '1', type: 'folder', name: '수학 노트', parentId: null, expanded: true },
-                { id: '2', type: 'file', name: '기본 공식.md', parentId: '1', content: '여기에 내용을 작성하세요.\n\n$$ E=mc^2 $$' }
-            ];
+            try {
+                const stored = localStorage.getItem('mathAppNodes');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        nodes = parsed;
+                    }
+                }
+            } catch(e) {
+                console.warn("[initApp] Failed to parse mathAppNodes:", e);
+            }
+
+            if (!nodes || nodes.length === 0) {
+                nodes = [
+                    { id: '1', type: 'folder', name: '수학 공식 모음', parentId: null, expanded: true },
+                    { id: '2', type: 'file', name: '기본 수학 공식.md', parentId: '1', content: '# 수학 공식 모음\n\n### 1. 이차방정식 근의 공식\n$$ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$\n\n### 2. 피타고라스 정리\n$a^2 + b^2 = c^2$\n\n### 3. 오일러 공식\n$$ e^{i\\pi} + 1 = 0 $$\n\n구글 및 AI에서 복사한 수식을 그대로 붙여넣거나 에디터 툴바의 **[✨ 구글수식 정리]** 버튼을 눌러보세요!' }
+                ];
+                saveState();
+            }
+
             renderTree();
+
+            // Auto-restore last active file or open the first file
+            const lastActiveId = localStorage.getItem('mathAppLastActiveFileId');
+            let targetFile = null;
+            if (lastActiveId) {
+                targetFile = nodes.find(n => n.id === lastActiveId && n.type === 'file');
+            }
+            if (!targetFile) {
+                targetFile = nodes.find(n => n.type === 'file');
+            }
+
+            if (targetFile) {
+                openFile(targetFile.id);
+            }
         }
 
-        if (window.StorageProxy) {
+        // Initialize when storage proxy is ready
+        if (window.StorageProxy && window.StorageProxy.ready) {
             window.StorageProxy.ready.then(initApp);
         } else {
             initApp();
         }
+
+        // Window unload hook to ensure last edit is saved
+        window.addEventListener('beforeunload', () => {
+            saveState();
+        });
 
         function applyEditorViewMode(mode) {
             localStorage.setItem('mathAppEditorViewMode', mode);
@@ -797,8 +1205,9 @@
             saveState();
             const btn = document.getElementById('saveBtn');
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<span style="color: #4ade80; font-weight: bold;">✓ 저장됨</span>';
-            setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+            btn.innerHTML = '<span style="color: #4ade80; font-weight: bold;">✓ 저장완료</span>';
+            showToast('✓ 모든 수식이 안전하게 저장되었습니다!');
+            setTimeout(() => { btn.innerHTML = originalHTML; }, 1800);
         }
 
         function applyFontSize(size) {
@@ -810,13 +1219,12 @@
             currentMode = mode;
             localStorage.setItem('mathAppViewMode', mode);
             
-            // Close sidebar if open when switching modes
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.remove('open');
             overlay.style.display = 'none';
 
-            checkResize(); // re-eval
+            checkResize();
         }
 
         function checkResize() {
@@ -849,7 +1257,23 @@
         let targetNodeId = null; 
 
         function saveState() {
-            localStorage.setItem('mathAppNodes', JSON.stringify(nodes));
+            if (activeFileId) {
+                const file = nodes.find(n => n.id === activeFileId);
+                if (file) {
+                    const editor = document.getElementById('editor');
+                    if (editor) {
+                        file.content = editor.value;
+                    }
+                }
+            }
+            try {
+                localStorage.setItem('mathAppNodes', JSON.stringify(nodes));
+                if (activeFileId) {
+                    localStorage.setItem('mathAppLastActiveFileId', activeFileId);
+                }
+            } catch(e) {
+                console.error("[saveState] Storage error:", e);
+            }
             renderTree();
         }
 
@@ -858,6 +1282,7 @@
         // Rendering Tree
         function renderTree() {
             const treeContainer = document.getElementById('fileTree');
+            if (!treeContainer) return;
             treeContainer.innerHTML = '';
             
             const rootNodes = nodes.filter(n => n.parentId === null);
@@ -908,14 +1333,12 @@
                 } else {
                     openFile(node.id);
                     if (document.body.classList.contains('mobile-mode')) {
-                        toggleSidebar(); // Close sidebar after selecting a file if in mobile view
+                        toggleSidebar();
                     }
                 }
             };
 
-            const iconStr = node.type === 'folder' 
-                ? (node.expanded ? icons.folder : icons.folder) 
-                : icons.file;
+            const iconStr = node.type === 'folder' ? icons.folder : icons.file;
 
             item.innerHTML = `
                 <div class="tree-item-icon">${iconStr}</div>
@@ -981,12 +1404,17 @@
                 nodes = nodes.filter(n => !idsToDelete.includes(n.id));
                 if(idsToDelete.includes(activeFileId)) {
                     activeFileId = null;
-                    document.getElementById('editorView').style.display = 'none';
-                    document.getElementById('emptyView').style.display = 'flex';
-                    document.getElementById('exportBtn').style.display = 'none';
-                    document.getElementById('saveBtn').style.display = 'none';
-                    document.getElementById('drawBtn').style.display = 'none';
-                    document.getElementById('currentFileTitle').innerText = '파일을 선택하세요';
+                    const remainingFile = nodes.find(n => n.type === 'file');
+                    if (remainingFile) {
+                        openFile(remainingFile.id);
+                    } else {
+                        document.getElementById('editorView').style.display = 'none';
+                        document.getElementById('emptyView').style.display = 'flex';
+                        document.getElementById('exportBtn').style.display = 'none';
+                        document.getElementById('saveBtn').style.display = 'none';
+                        document.getElementById('drawBtn').style.display = 'none';
+                        document.getElementById('currentFileTitle').innerText = '파일을 선택하세요';
+                    }
                 }
                 saveState();
             }
@@ -1006,7 +1434,7 @@
             } else {
                 const n = nodes.find(x => x.id === nodeId);
                 mTitle.innerText = '이름 변경';
-                mInput.value = n.name;
+                mInput.value = n ? n.name : '';
             }
             
             document.getElementById('modalOverlay').style.display = 'flex';
@@ -1028,30 +1456,40 @@
                     parent = activeNode.parentId;
                 }
                 
+                const newId = genId();
+                const newName = modalNodeType === 'file' && !val.endsWith('.md') ? val + '.md' : val;
                 nodes.push({
-                    id: genId(),
+                    id: newId,
                     type: modalNodeType,
-                    name: modalNodeType === 'file' && !val.endsWith('.md') ? val + '.md' : val,
+                    name: newName,
                     parentId: parent,
                     expanded: true,
                     content: modalNodeType === 'file' ? '' : undefined
                 });
+                closeModal();
+                saveState();
+                if (modalNodeType === 'file') {
+                    openFile(newId);
+                }
             } else if (modalAction === 'rename') {
                 const node = nodes.find(n => n.id === targetNodeId);
-                node.name = val;
-                if(targetNodeId === activeFileId) {
-                    document.getElementById('currentFileTitle').innerText = val;
+                if (node) {
+                    node.name = val;
+                    if(targetNodeId === activeFileId) {
+                        document.getElementById('currentFileTitle').innerText = val;
+                    }
                 }
+                closeModal();
+                saveState();
             }
-
-            closeModal();
-            saveState();
         }
 
         let renderTimeout = null;
         function openFile(id) {
             activeFileId = id;
+            localStorage.setItem('mathAppLastActiveFileId', id);
             const file = nodes.find(n => n.id === id);
+            if (!file) return;
             
             document.getElementById('emptyView').style.display = 'none';
             document.getElementById('editorView').style.display = 'flex';
@@ -1071,57 +1509,123 @@
             if(!activeFileId) return;
             const val = document.getElementById('editor').value;
             const file = nodes.find(n => n.id === activeFileId);
-            file.content = val;
+            if (file) {
+                file.content = val;
+            }
+            
+            // Auto save state immediately to proxy & local storage
             saveState(); 
             
             clearTimeout(renderTimeout);
-            renderTimeout = setTimeout(updatePreview, 300);
+            renderTimeout = setTimeout(updatePreview, 120);
         }
 
+        // --- Robust Math Tokenization & Markdown Parsing ---
         function formatText(text) {
-            // Mask math blocks
-            let mathBlocks = [];
-            let maskedText = text.replace(/\$\$(.*?)\$\$/gs, function(match) {
-                mathBlocks.push(match);
-                return '@@MATH_BLOCK_' + (mathBlocks.length - 1) + '@@';
-            });
-            maskedText = maskedText.replace(/\$(.*?)\$/g, function(match) {
-                mathBlocks.push(match);
-                return '@@MATH_INLINE_' + (mathBlocks.length - 1) + '@@';
-            });
+            if (!text) return '';
             
-            // Parse Markdown
-            let html = typeof marked !== 'undefined' ? marked.parse(maskedText, { breaks: true }) : maskedText;
+            const mathTokens = [];
+            let tokenIndex = 0;
             
-            // Unmask math blocks
-            html = html.replace(/@@MATH_BLOCK_(\d+)@@/g, function(match, index) {
-                return mathBlocks[index];
+            function saveMath(matched) {
+                const placeholder = `%%MATH_TOKEN_${tokenIndex++}%%`;
+                mathTokens.push({ placeholder, content: matched });
+                return placeholder;
+            }
+
+            // 1. Block math: $$ ... $$ (supports multi-line)
+            let processed = text.replace(/\$\$([\s\S]*?)\$\$/g, function(match) {
+                return saveMath(match);
             });
-            html = html.replace(/@@MATH_INLINE_(\d+)@@/g, function(match, index) {
-                return mathBlocks[index];
+
+            // 2. LaTeX Display Math: \[ ... \]
+            processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, function(match) {
+                return saveMath(match);
             });
-            
+
+            // 3. LaTeX environments: \begin{env} ... \end{env}
+            processed = processed.replace(/\\begin\{([a-zA-Z0-9*]+)\}([\s\S]*?)\\end\{\1\}/g, function(match) {
+                return saveMath(match);
+            });
+
+            // 4. LaTeX Inline Math: \( ... \)
+            processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, function(match) {
+                return saveMath(match);
+            });
+
+            // 5. Inline math: $ ... $ (단일 라인 내의 달러 수식, \$ 제외)
+            processed = processed.replace(/(?<!\\)\$([^\$\n]+?)(?<!\\)\$/g, function(match) {
+                return saveMath(match);
+            });
+
+            // 6. Markdown parse safely without breaking math formulas
+            let html = typeof marked !== 'undefined' ? marked.parse(processed, { breaks: true, gfm: true }) : processed;
+
+            // 7. Unmask math tokens back to exact original content
+            for (let i = 0; i < mathTokens.length; i++) {
+                const item = mathTokens[i];
+                html = html.split(item.placeholder).join(item.content);
+            }
+
             return html;
         }
+
+        // --- MathJax Typesetting Queue ---
+        let isMathTypesetting = false;
+        let needsMathTypeset = false;
 
         function updatePreview() {
             const editor = document.getElementById('editor');
             const preview = document.getElementById('preview');
+            if (!editor || !preview) return;
+
             preview.innerHTML = formatText(editor.value);
-            
-            if (window.MathJax && window.MathJax.typesetPromise) {
+            triggerMathJax();
+        }
+
+        function triggerMathJax() {
+            const preview = document.getElementById('preview');
+            if (!preview) return;
+
+            if (!window.MathJax || !window.MathJax.typesetPromise) {
+                // If MathJax CDN is still initializing, retry shortly
+                setTimeout(triggerMathJax, 150);
+                return;
+            }
+
+            if (isMathTypesetting) {
+                needsMathTypeset = true;
+                return;
+            }
+
+            isMathTypesetting = true;
+            try {
                 window.MathJax.typesetClear([preview]);
-                window.MathJax.typesetPromise([preview]).catch(err => console.log(err));
+                window.MathJax.typesetPromise([preview])
+                    .catch(err => {
+                        console.warn("[MathJax] Render note:", err);
+                    })
+                    .finally(() => {
+                        isMathTypesetting = false;
+                        if (needsMathTypeset) {
+                            needsMathTypeset = false;
+                            triggerMathJax();
+                        }
+                    });
+            } catch (e) {
+                isMathTypesetting = false;
+                console.warn("[MathJax] Exception:", e);
             }
         }
 
         function exportPDF() {
             const file = nodes.find(n => n.id === activeFileId);
+            if (!file) return;
             const loader = document.getElementById('loader');
             loader.style.display = 'flex';
             
             const opt = {
-                margin: 1,
+                margin: 0.8,
                 filename: file.name.replace('.md', '.pdf'),
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
@@ -1132,7 +1636,7 @@
                 loader.style.display = 'none';
             }).catch(err => {
                 loader.style.display = 'none';
-                alert('PDF 생성 실패');
+                alert('PDF 생성 실패: ' + err.message);
             });
         }
 
@@ -1151,15 +1655,12 @@
                         const textBefore = editor.value.substring(0, cursorPosition);
                         const textAfter = editor.value.substring(cursorPosition);
                         editor.value = textBefore + '\n<img src="' + base64Str + '" style="max-width:100%;">\n' + textAfter;
-                        onEditorInput(); // trigger preview update
+                        onEditorInput();
                     };
                     reader.readAsDataURL(blob);
                 }
             }
         });
-
-        // Init is handled in initApp()
-
     </script>
 </body>
 </html>
