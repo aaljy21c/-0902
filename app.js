@@ -1397,6 +1397,10 @@ function triggerGDriveAutoSync(isAutoPopulate = false) {
         ddays: JSON.parse(localStorage.getItem('neon_planner_ddays') || '[]'),
         routines: JSON.parse(localStorage.getItem('neon_planner_routines') || '[]'),
         routinesPopulatedDates: JSON.parse(localStorage.getItem('neon_planner_populated_dates') || '{}'),
+        mathAppNodes: JSON.parse(localStorage.getItem('mathAppNodes') || '[]'),
+        mathAppLastActiveFileId: localStorage.getItem('mathAppLastActiveFileId') || '',
+        mathAppFontSize: localStorage.getItem('mathAppFontSize') || '1.1rem',
+        mathAppPanelTheme: localStorage.getItem('mathAppPanelTheme') || 'default',
         preferences: {
           theme: localStorage.getItem('neon_planner_theme') || 'dark',
           fontSize: localStorage.getItem('neon_planner_font_size') || '16',
@@ -1549,6 +1553,12 @@ async function performAutoRestoreAndBackup() {
           if (restoreData.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(restoreData.ddays));
           if (restoreData.routines) localStorage.setItem('neon_planner_routines', JSON.stringify(restoreData.routines));
           if (restoreData.routinesPopulatedDates) localStorage.setItem('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
+          if (restoreData.mathAppNodes && Array.isArray(restoreData.mathAppNodes) && restoreData.mathAppNodes.length > 0) {
+            localStorage.setItem('mathAppNodes', JSON.stringify(restoreData.mathAppNodes));
+          }
+          if (restoreData.mathAppLastActiveFileId) localStorage.setItem('mathAppLastActiveFileId', restoreData.mathAppLastActiveFileId);
+          if (restoreData.mathAppFontSize) localStorage.setItem('mathAppFontSize', restoreData.mathAppFontSize);
+          if (restoreData.mathAppPanelTheme) localStorage.setItem('mathAppPanelTheme', restoreData.mathAppPanelTheme);
           if (restoreData.preferences) {
             const prefs = restoreData.preferences;
             if (prefs.theme) localStorage.setItem('neon_planner_theme', prefs.theme);
@@ -1726,6 +1736,12 @@ async function autoSyncWithDrive() {
       if (restoreData.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(restoreData.ddays));
       if (restoreData.routines) localStorage.setItem('neon_planner_routines', JSON.stringify(restoreData.routines));
       if (restoreData.routinesPopulatedDates) localStorage.setItem('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
+      if (restoreData.mathAppNodes && Array.isArray(restoreData.mathAppNodes) && restoreData.mathAppNodes.length > 0) {
+        localStorage.setItem('mathAppNodes', JSON.stringify(restoreData.mathAppNodes));
+      }
+      if (restoreData.mathAppLastActiveFileId) localStorage.setItem('mathAppLastActiveFileId', restoreData.mathAppLastActiveFileId);
+      if (restoreData.mathAppFontSize) localStorage.setItem('mathAppFontSize', restoreData.mathAppFontSize);
+      if (restoreData.mathAppPanelTheme) localStorage.setItem('mathAppPanelTheme', restoreData.mathAppPanelTheme);
       
       if (restoreData.preferences) {
         const prefs = restoreData.preferences;
@@ -4357,6 +4373,12 @@ function setupEventListeners() {
           tabIcons: JSON.parse(localStorage.getItem('neon_planner_tab_icons') || '{}'),
           appTitle: localStorage.getItem('neon_planner_app_title') || '',
           ddays: JSON.parse(localStorage.getItem('neon_planner_ddays') || '[]'),
+          routines: JSON.parse(localStorage.getItem('neon_planner_routines') || '[]'),
+          routinesPopulatedDates: JSON.parse(localStorage.getItem('neon_planner_populated_dates') || '{}'),
+          mathAppNodes: JSON.parse(localStorage.getItem('mathAppNodes') || '[]'),
+          mathAppLastActiveFileId: localStorage.getItem('mathAppLastActiveFileId') || '',
+          mathAppFontSize: localStorage.getItem('mathAppFontSize') || '1.1rem',
+          mathAppPanelTheme: localStorage.getItem('mathAppPanelTheme') || 'default',
           preferences: {
             theme: localStorage.getItem('neon_planner_theme') || 'dark',
             fontSize: localStorage.getItem('neon_planner_font_size') || '16',
@@ -4495,6 +4517,14 @@ function setupEventListeners() {
         if (restoreData.tabIcons) localStorage.setItem('neon_planner_tab_icons', JSON.stringify(restoreData.tabIcons));
         if (restoreData.appTitle) localStorage.setItem('neon_planner_app_title', restoreData.appTitle);
         if (restoreData.ddays) localStorage.setItem('neon_planner_ddays', JSON.stringify(restoreData.ddays));
+        if (restoreData.routines) localStorage.setItem('neon_planner_routines', JSON.stringify(restoreData.routines));
+        if (restoreData.routinesPopulatedDates) localStorage.setItem('neon_planner_populated_dates', JSON.stringify(restoreData.routinesPopulatedDates));
+        if (restoreData.mathAppNodes && Array.isArray(restoreData.mathAppNodes) && restoreData.mathAppNodes.length > 0) {
+          localStorage.setItem('mathAppNodes', JSON.stringify(restoreData.mathAppNodes));
+        }
+        if (restoreData.mathAppLastActiveFileId) localStorage.setItem('mathAppLastActiveFileId', restoreData.mathAppLastActiveFileId);
+        if (restoreData.mathAppFontSize) localStorage.setItem('mathAppFontSize', restoreData.mathAppFontSize);
+        if (restoreData.mathAppPanelTheme) localStorage.setItem('mathAppPanelTheme', restoreData.mathAppPanelTheme);
         
         if (restoreData.preferences) {
           const prefs = restoreData.preferences;

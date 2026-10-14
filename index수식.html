@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Math Editor & File Manager - 수식 플래너</title>
     
     <!-- Google Fonts -->
@@ -63,7 +63,7 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
             color: var(--text);
             height: 100vh;
@@ -84,7 +84,7 @@
         }
 
         .sidebar-header {
-            padding: 1rem;
+            padding: 0.9rem 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -93,14 +93,14 @@
 
         .sidebar-title {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             letter-spacing: -0.025em;
             color: #fff;
         }
 
         .sidebar-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         .sidebar-actions button {
@@ -108,7 +108,7 @@
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            padding: 4px;
+            padding: 5px;
             border-radius: 4px;
             transition: all 0.2s;
         }
@@ -131,7 +131,7 @@
         .tree-item {
             display: flex;
             align-items: center;
-            padding: 0.4rem 0.5rem;
+            padding: 0.45rem 0.5rem;
             border-radius: 6px;
             cursor: pointer;
             color: var(--text-muted);
@@ -148,13 +148,14 @@
         .tree-item.active {
             background-color: rgba(99, 102, 241, 0.15);
             color: #818cf8;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .tree-item-icon {
             margin-right: 0.5rem;
             display: flex;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .tree-item-name {
@@ -168,6 +169,7 @@
             display: none;
             align-items: center;
             gap: 2px;
+            flex-shrink: 0;
         }
 
         .tree-item:hover .item-actions {
@@ -179,7 +181,7 @@
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            padding: 2px;
+            padding: 3px;
             border-radius: 4px;
         }
 
@@ -196,7 +198,6 @@
             display: block;
         }
 
-        /* Drag and Drop styling */
         .tree-item.drag-over {
             outline: 2px dashed var(--primary);
         }
@@ -208,11 +209,12 @@
             flex-direction: column;
             overflow: hidden;
             background-color: var(--bg-color);
+            min-width: 0; /* Prevents flex overflow */
         }
 
         .header {
-            height: 60px;
-            padding: 0 1.5rem;
+            min-height: 58px;
+            padding: 0 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -220,12 +222,16 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            background: var(--bg-color);
+            gap: 0.5rem;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.6rem;
+            flex-shrink: 0;
+            min-width: 0;
         }
 
         .menu-toggle {
@@ -234,23 +240,39 @@
             border: none;
             color: var(--text);
             cursor: pointer;
-            padding: 0.25rem;
+            padding: 0.4rem;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .menu-toggle:hover {
+            background: var(--surface-hover);
         }
 
         .current-file-name {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 250px;
+            max-width: 180px;
         }
 
+        /* Header Right: Horizontal scroll container on mobile, flex on PC */
         .header-right {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            flex-wrap: wrap;
+            gap: 0.4rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 4px 0;
+            flex: 1;
+            justify-content: flex-end;
+        }
+        .header-right::-webkit-scrollbar {
+            display: none;
         }
 
         .mode-select {
@@ -259,52 +281,105 @@
             border: 1px solid var(--border);
             padding: 0.4rem 0.5rem;
             border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
+            font-family: inherit;
+            font-size: 0.82rem;
             outline: none;
             cursor: pointer;
+            flex-shrink: 0;
+            white-space: nowrap;
+            height: 34px;
         }
 
         .btn {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 0.5rem 0.9rem;
-            border-radius: 8px;
+            padding: 0.45rem 0.8rem;
+            border-radius: 7px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            font-size: 0.85rem;
+            gap: 0.35rem;
+            font-size: 0.83rem;
             white-space: nowrap;
+            flex-shrink: 0;
+            height: 34px;
         }
         .btn:hover { background-color: var(--primary-hover); }
+
         .btn-secondary {
             background: var(--surface);
             color: var(--text);
             border: 1px solid var(--border);
-            padding: 0.5rem 0.8rem;
-            border-radius: 8px;
+            padding: 0.45rem 0.75rem;
+            border-radius: 7px;
             font-weight: 500;
             cursor: pointer;
-            font-size: 0.85rem;
-            display: flex;
+            font-size: 0.83rem;
+            display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.35rem;
             transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            height: 34px;
         }
         .btn-secondary:hover {
             background: var(--surface-hover);
         }
 
+        .btn-sync {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            font-weight: 600;
+        }
+        .btn-sync:hover {
+            background: #10b981;
+            color: white;
+        }
+
+        /* Mobile Segmented View Switcher (Editor vs Preview) */
+        .mobile-view-tabs {
+            display: none;
+            background: var(--surface);
+            padding: 4px;
+            border-bottom: 1px solid var(--border);
+            gap: 4px;
+            justify-content: center;
+        }
+        .mobile-view-tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .mobile-view-tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
         .editor-container {
             display: flex;
             flex: 1;
-            padding: 0.8rem 1rem;
-            gap: 1rem;
-            height: calc(100vh - 70px);
+            padding: 0.8rem;
+            gap: 0.8rem;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+            min-width: 0;
         }
 
         .panel {
@@ -313,21 +388,23 @@
             flex-direction: column;
             background: var(--editor-bg, var(--surface));
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            min-height: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            min-height: 200px;
+            min-width: 0;
         }
 
         .panel-header {
-            padding: 0.6rem 0.9rem;
-            background: rgba(15, 23, 42, 0.65);
+            padding: 0.5rem 0.8rem;
+            background: rgba(15, 23, 42, 0.7);
             border-bottom: 1px solid var(--border);
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.83rem;
             display: flex;
             flex-direction: column;
             gap: 6px;
+            flex-shrink: 0;
         }
 
         .panel-header-title {
@@ -338,26 +415,47 @@
             color: var(--text);
         }
 
+        /* Editor Toolbar: Smooth horizontal swipe on mobile */
         .editor-toolbar {
             display: flex;
             gap: 5px;
-            flex-wrap: wrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
             align-items: center;
+            padding: 2px 0 4px 0;
+            scrollbar-width: thin;
+        }
+        .editor-toolbar::-webkit-scrollbar {
+            height: 3px;
+        }
+        .editor-toolbar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
         }
         
-        .editor-toolbar select, .editor-toolbar input[type="color"], .editor-toolbar button {
+        .editor-toolbar select, 
+        .editor-toolbar button,
+        .editor-toolbar .color-group {
             background: var(--surface-hover);
             color: var(--text);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 5px;
             font-size: 0.78rem;
             cursor: pointer;
             outline: none;
+            height: 29px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .editor-toolbar select { padding: 4px 6px; }
+        .editor-toolbar select { padding: 2px 6px; }
         .editor-toolbar button { 
-            padding: 4px 8px; 
-            transition: background 0.15s, color 0.15s; 
+            padding: 3px 8px; 
+            transition: all 0.15s; 
             font-weight: 500;
         }
         .editor-toolbar button:hover { background: var(--primary); color: white; }
@@ -387,15 +485,15 @@
             height: 18px;
             background: var(--border);
             margin: 0 2px;
+            flex-shrink: 0;
         }
 
         .editor-toolbar .color-group {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             background: rgba(255,255,255,0.05);
             padding: 2px 6px;
-            border-radius: 4px;
         }
 
         textarea {
@@ -403,17 +501,18 @@
             background: transparent;
             border: none;
             color: var(--editor-text, var(--text));
-            padding: 1.2rem;
+            padding: 1rem;
             font-family: 'Consolas', 'Menlo', monospace;
             font-size: var(--content-font-size, 1.05rem);
             resize: none;
             outline: none;
             line-height: 1.6;
+            width: 100%;
         }
 
         .preview-content {
             flex: 1;
-            padding: 1.5rem;
+            padding: 1.2rem;
             overflow-y: auto;
             color: var(--preview-text, var(--text));
             background: var(--preview-bg, transparent);
@@ -423,21 +522,21 @@
         }
 
         .preview-content h1, .preview-content h2, .preview-content h3 {
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
+            margin-top: 0.8rem;
+            margin-bottom: 0.4rem;
             color: #fff;
         }
         .preview-content p {
             margin-bottom: 0.8rem;
         }
         .preview-content ul, .preview-content ol {
-            margin-left: 1.5rem;
+            margin-left: 1.3rem;
             margin-bottom: 0.8rem;
         }
         .preview-content blockquote {
             border-left: 4px solid var(--primary);
-            padding-left: 1rem;
-            margin: 1rem 0;
+            padding-left: 0.8rem;
+            margin: 0.8rem 0;
             color: var(--text-muted);
         }
         .preview-content code {
@@ -448,7 +547,7 @@
         }
         .preview-content pre code {
             display: block;
-            padding: 1rem;
+            padding: 0.8rem;
             overflow-x: auto;
         }
         .preview-content table {
@@ -458,7 +557,7 @@
         }
         .preview-content th, .preview-content td {
             border: 1px solid var(--border);
-            padding: 8px 12px;
+            padding: 6px 10px;
             text-align: left;
         }
         .preview-content th {
@@ -467,14 +566,14 @@
 
         /* MathJax Container Tuning */
         .preview-content mjx-container {
-            margin: 0.4em 0 !important;
+            margin: 0.3em 0 !important;
             outline: none !important;
         }
         .preview-content mjx-container[display="true"] {
-            margin: 1em 0 !important;
+            margin: 0.8em 0 !important;
             overflow-x: auto;
             overflow-y: hidden;
-            padding: 0.4rem 0;
+            padding: 0.3rem 0;
         }
 
         .empty-state {
@@ -484,13 +583,15 @@
             justify-content: center;
             align-items: center;
             color: var(--text-muted);
+            padding: 1rem;
+            text-align: center;
         }
 
         /* Modal styling */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.65);
             backdrop-filter: blur(4px);
             display: none;
             justify-content: center;
@@ -502,7 +603,7 @@
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 1.3rem;
             width: 90%;
             max-width: 400px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -510,7 +611,7 @@
 
         .modal h3 {
             margin-bottom: 1rem;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
 
         .modal input {
@@ -520,8 +621,9 @@
             border: 1px solid var(--border);
             background: var(--bg-color);
             color: var(--text);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
             outline: none;
+            font-size: 0.95rem;
         }
 
         .modal-actions {
@@ -530,15 +632,15 @@
             gap: 0.5rem;
         }
 
-        .btn svg { width: 18px; height: 18px; }
+        .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
         .tree-item-icon svg { width: 18px; height: 18px; }
-        .empty-state svg { width: 64px; height: 64px; }
+        .empty-state svg { width: 56px; height: 56px; }
         
         #loader {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             z-index: 300;
             justify-content: center;
             align-items: center;
@@ -546,8 +648,8 @@
             flex-direction: column;
         }
         .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(255,255,255,0.1);
+            width: 36px; height: 36px;
+            border: 3px solid rgba(255,255,255,0.1);
             border-radius: 50%;
             border-top-color: var(--primary);
             animation: spin 1s infinite;
@@ -560,7 +662,7 @@
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             z-index: 90;
         }
 
@@ -571,68 +673,83 @@
             right: 20px;
             background: #10b981;
             color: white;
-            padding: 10px 18px;
+            padding: 9px 16px;
             border-radius: 8px;
             font-weight: 600;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 0.88rem;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
             display: none;
             z-index: 9999;
-            animation: toastFade 0.3s ease;
+            animation: toastFade 0.25s ease;
+            white-space: nowrap;
         }
         @keyframes toastFade {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- Mode Switcher Rules --- */
+        /* --- Comprehensive Mobile Mode Rules --- */
         body.mobile-mode .sidebar {
             position: fixed;
             top: 0;
             bottom: 0;
             left: 0;
+            width: 80%;
+            max-width: 280px;
             transform: translateX(-100%);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.5);
         }
         body.mobile-mode .sidebar.open {
             transform: translateX(0);
         }
         body.mobile-mode .menu-toggle {
-            display: block;
+            display: inline-flex;
+        }
+        body.mobile-mode .header {
+            min-height: 52px;
+            padding: 0 0.6rem;
+        }
+        body.mobile-mode .current-file-name {
+            max-width: 130px;
+            font-size: 0.92rem;
+        }
+        body.mobile-mode .mobile-view-tabs {
+            display: flex;
         }
         body.mobile-mode .editor-container {
             flex-direction: column;
-            height: auto;
-            min-height: calc(100vh - 70px);
+            padding: 0.5rem;
+            gap: 0.5rem;
+            height: calc(100vh - 98px);
+        }
+        body.mobile-mode .btn,
+        body.mobile-mode .btn-secondary,
+        body.mobile-mode .mode-select {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.78rem;
+            height: 32px;
+        }
+        body.mobile-mode textarea {
+            font-size: calc(var(--content-font-size, 1rem) * 0.95);
+            padding: 0.8rem;
+            line-height: 1.5;
+        }
+        body.mobile-mode .preview-content {
+            font-size: calc(var(--content-font-size, 1.1rem) * 0.95);
+            padding: 0.9rem;
+            line-height: 1.6;
+        }
+        body.mobile-mode .panel-header {
+            padding: 0.4rem 0.6rem;
         }
         body.mobile-mode .item-actions {
             display: flex;
         }
-        body.mobile-mode .current-file-name {
-            max-width: 140px;
-        }
-        body.mobile-mode .btn {
-            padding: 0.5rem;
-        }
-        body.mobile-mode .btn span {
-            display: none;
-        }
-        body.mobile-mode textarea {
-            font-size: calc(var(--content-font-size, 1rem) * 0.9);
-            padding: 1rem;
-            line-height: 1.4;
-        }
-        body.mobile-mode .preview-content {
-            font-size: calc(var(--content-font-size, 1.1rem) * 0.9);
-            padding: 1rem;
-            line-height: 1.5;
-        }
-        body.mobile-mode .panel-header {
-            padding: 0.5rem 0.8rem;
-            font-size: 0.8rem;
-        }
-        body.mobile-mode .mode-select {
-            padding: 0.3rem;
-            font-size: 0.75rem;
+        body.mobile-mode #saveToast {
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+            bottom: 15px;
         }
     </style>
 </head>
@@ -664,17 +781,29 @@
         <header class="header">
             <div class="header-left">
                 <button class="menu-toggle" onclick="toggleSidebar()" title="목록 열기">
-                    <svg width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    <svg width="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
                 <div class="current-file-name" id="currentFileTitle">파일을 선택하세요</div>
             </div>
             
             <div class="header-right">
+                <!-- 클라우드(Google Drive) 동기화 버튼 -->
+                <button class="btn btn-sync" id="cloudSyncBtn" onclick="syncWithGoogleDrive()" title="PC와 핸드폰 간의 수식 데이터 실시간 클라우드 동기화">
+                    <span id="cloudSyncIcon">☁️</span>
+                    <span id="cloudSyncText">동기화</span>
+                </button>
+
+                <button class="btn" id="saveBtn" style="display:none;" onclick="explicitSave()" title="현재 내용 저장">
+                    <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span>저장</span>
+                </button>
+
                 <select class="mode-select" id="editorViewModeSelect" onchange="applyEditorViewMode(this.value)">
                     <option value="both">에디터+미리보기</option>
                     <option value="editor">에디터만</option>
                     <option value="preview">미리보기만</option>
                 </select>
+
                 <select class="mode-select" id="panelThemeSelect" onchange="applyPanelTheme(this.value)">
                     <option value="default">기본 테마</option>
                     <option value="white">모두 흰색</option>
@@ -682,26 +811,22 @@
                     <option value="sepia">세피아 (눈편한)</option>
                     <option value="blackboard">칠판색</option>
                 </select>
+
                 <select class="mode-select" id="fontSizeSelect" onchange="applyFontSize(this.value)">
                     <option value="0.9rem">글자: 작게</option>
                     <option value="1.1rem">글자: 보통</option>
                     <option value="1.3rem">글자: 크게</option>
                     <option value="1.6rem">글자: 아주 크게</option>
                 </select>
+
                 <select class="mode-select" id="modeSelect" onchange="applyViewMode(this.value)">
-                    <option value="auto">자동(화면맞춤)</option>
+                    <option value="auto">자동맞춤</option>
                     <option value="pc">PC 모드 💻</option>
-                    <option value="mobile">모바일 모드 📱</option>
+                    <option value="mobile">모바일 📱</option>
                 </select>
 
-                <button class="btn" id="saveBtn" style="display:none;" onclick="explicitSave()" title="현재 내용 저장">
-                    <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                    <span>저장</span>
-                </button>
-
-                <button class="btn" id="drawBtn" style="display:none; background-color:#10b981;" onclick="openDrawingModal()" title="그림판으로 그린 이미지 삽입">
-                    <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
-                    <span>그림 입력</span>
+                <button class="btn-secondary" id="drawBtn" style="display:none;" onclick="openDrawingModal()" title="그림판으로 그린 이미지 삽입">
+                    <span>🎨 그림</span>
                 </button>
 
                 <button class="btn-secondary" onclick="backupMathData()" title="모든 수식 데이터를 JSON 백업 파일로 다운로드">
@@ -713,48 +838,61 @@
                 </button>
 
                 <button class="btn" id="exportBtn" style="display:none;" onclick="exportPDF()" title="PDF 문서로 다운로드">
-                    <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    <span>PDF 다운로드</span>
+                    <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>PDF</span>
                 </button>
             </div>
         </header>
+
+        <!-- 모바일 전용 원터치 뷰 전환 탭 (에디터 ↔ 미리보기) -->
+        <div class="mobile-view-tabs" id="mobileViewTabs">
+            <button type="button" class="mobile-view-tab-btn active" id="tabMobileEditor" onclick="setMobileView('editor')">
+                ✏️ 수식 편집
+            </button>
+            <button type="button" class="mobile-view-tab-btn" id="tabMobilePreview" onclick="setMobileView('preview')">
+                👁️ 수식 미리보기
+            </button>
+            <button type="button" class="mobile-view-tab-btn" id="tabMobileBoth" onclick="setMobileView('both')">
+                ↕️ 둘 다 보기
+            </button>
+        </div>
 
         <div class="editor-container" id="editorView" style="display:none;">
             <div class="panel" id="editorPanel">
                 <div class="panel-header">
                     <div class="panel-header-title">
                         <span>📝 에디터</span>
-                        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">실시간 자동저장 중</span>
+                        <span id="autoSaveIndicator" style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">실시간 자동저장 중</span>
                     </div>
+                    <!-- 툴바: 가로 스와이프로 모바일에서도 한 줄로 유려하게 스크롤 -->
                     <div class="editor-toolbar">
                         <!-- 텍스트 서식 -->
                         <select id="toolFontSize" onchange="if(this.value) { applyFormat('size'); this.value=''; }">
-                            <option value="">크기 변경</option>
+                            <option value="">글자크기</option>
                             <option value="12px">12px</option>
                             <option value="16px">16px</option>
                             <option value="20px">20px</option>
                             <option value="24px">24px</option>
                             <option value="32px">32px</option>
-                            <option value="40px">40px</option>
                         </select>
                         
                         <div class="color-group">
                             <span>글자색</span>
-                            <input type="color" id="toolTextColor" value="#ef4444" style="width:22px; height:22px; padding:0; border:none;">
+                            <input type="color" id="toolTextColor" value="#ef4444" style="width:20px; height:20px; padding:0; border:none; cursor:pointer;">
                             <button type="button" onclick="applyFormat('color')">적용</button>
                         </div>
                         
                         <div class="color-group">
                             <span>형광펜</span>
-                            <input type="color" id="toolBgColor" value="#fef08a" style="width:22px; height:22px; padding:0; border:none;">
+                            <input type="color" id="toolBgColor" value="#fef08a" style="width:20px; height:20px; padding:0; border:none; cursor:pointer;">
                             <button type="button" onclick="applyFormat('bg')">적용</button>
                         </div>
 
-                        <button type="button" onclick="applyFormat('bold')" style="font-weight: bold;" title="굵게">B</button>
+                        <button type="button" onclick="applyFormat('bold')" style="font-weight: bold; width:30px;" title="굵게">B</button>
 
                         <div class="toolbar-sep"></div>
 
-                        <!-- 수식 입력 툴바 -->
+                        <!-- 수식 입력 버튼들 -->
                         <button type="button" class="btn-math-primary" onclick="insertMathSnippet('inline')" title="인라인 수식 ($...$)">$ 수식</button>
                         <button type="button" class="btn-math-primary" onclick="insertMathSnippet('block')" title="블록 수식 ($$...$$)">$$ 블록</button>
                         <button type="button" onclick="insertMathSnippet('frac')" title="분수 \frac{a}{b}">a/b 분수</button>
@@ -765,8 +903,8 @@
 
                         <!-- 수학 기호 선택 -->
                         <select onchange="if(this.value) { insertMathSnippet(this.value); this.value=''; }" title="수학 특수기호 삽입">
-                            <option value="">기호 삽입 ▼</option>
-                            <option value="\pm">± (플러스마이너스)</option>
+                            <option value="">기호 선택 ▼</option>
+                            <option value="\pm">± (더하기빼기)</option>
                             <option value="\times">× (곱하기)</option>
                             <option value="\div">÷ (나누기)</option>
                             <option value="\neq">≠ (같지않음)</option>
@@ -808,7 +946,7 @@ $$"></textarea>
         
         <div class="empty-state" id="emptyView">
             <svg width="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <p style="margin-top:10px;">왼쪽 탐색기에서 파일을 선택하거나 새 파일을 생성하세요.</p>
+            <p style="margin-top:10px;">왼쪽 상단 ☰ 메뉴를 열어 파일을 선택하거나 새 파일을 생성하세요.</p>
         </div>
     </div>
 
@@ -850,6 +988,7 @@ $$"></textarea>
         let currentFontSize = '1.1rem';
         let currentMode = 'auto';
         let mathDrawingBoard = null;
+        let isSyncing = false;
 
         // Show save toast
         function showToast(msg) {
@@ -861,6 +1000,33 @@ $$"></textarea>
             window._toastTimer = setTimeout(() => {
                 toast.style.display = 'none';
             }, 1800);
+        }
+
+        // --- Mobile View Segmented Switcher ---
+        function setMobileView(mode) {
+            const editorPanel = document.getElementById('editorPanel');
+            const previewPanel = document.getElementById('previewPanel');
+            const tabEd = document.getElementById('tabMobileEditor');
+            const tabPv = document.getElementById('tabMobilePreview');
+            const tabBoth = document.getElementById('tabMobileBoth');
+
+            [tabEd, tabPv, tabBoth].forEach(btn => btn && btn.classList.remove('active'));
+
+            if (mode === 'editor') {
+                if (editorPanel) editorPanel.style.display = 'flex';
+                if (previewPanel) previewPanel.style.display = 'none';
+                if (tabEd) tabEd.classList.add('active');
+            } else if (mode === 'preview') {
+                if (editorPanel) editorPanel.style.display = 'none';
+                if (previewPanel) previewPanel.style.display = 'flex';
+                if (tabPv) tabPv.classList.add('active');
+                triggerMathJax();
+            } else {
+                if (editorPanel) editorPanel.style.display = 'flex';
+                if (previewPanel) previewPanel.style.display = 'flex';
+                if (tabBoth) tabBoth.classList.add('active');
+                triggerMathJax();
+            }
         }
 
         function openDrawingModal() {
@@ -1020,7 +1186,6 @@ $$"></textarea>
                     defaultText = selected || 'x';
                     break;
                 default:
-                    // Direct math symbols (\pm, \times, \alpha, etc.)
                     before = snippetType + ' ';
                     defaultText = '';
                     after = '';
@@ -1073,7 +1238,107 @@ $$"></textarea>
             showToast('✨ 구글 수식이 표준 포맷으로 정리되었습니다!');
         }
 
-        // --- Backup & Restore ---
+        // --- Google Drive PC <-> Phone Realtime Synchronization ---
+        async function syncWithGoogleDrive(silent = false) {
+            const token = localStorage.getItem('neon_planner_gdrive_access_token');
+            const syncBtn = document.getElementById('cloudSyncBtn');
+            const syncIcon = document.getElementById('cloudSyncIcon');
+            const syncText = document.getElementById('cloudSyncText');
+
+            if (!token) {
+                if (!silent) {
+                    alert('구글 드라이브 연동이 필요합니다.\n\n플래너 메인 화면의 [⚙️ 설정 > 구글 로그인]을 먼저 진행하시면 PC와 핸드폰이 실시간으로 자동 연동됩니다!');
+                }
+                return;
+            }
+
+            if (isSyncing) return;
+            isSyncing = true;
+
+            if (syncIcon) syncIcon.textContent = '🔄';
+            if (syncText) syncText.textContent = '동기화 중';
+
+            try {
+                // Ensure current state is saved locally first
+                saveState(true);
+
+                // 1. Search for backup file on Google Drive
+                const searchUrl = "https://www.googleapis.com/drive/v3/files?q=name='neon_planner_backup.json'+and+trashed=false&spaces=appDataFolder&fields=files(id,modifiedTime)";
+                const searchRes = await fetch(searchUrl, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache' }
+                });
+
+                if (searchRes.status === 401 || searchRes.status === 403) {
+                    if (!silent) alert('구글 로그인 세션이 만료되었습니다. 플래너 메인 화면에서 재로그인 해주세요.');
+                    throw new Error('Google token expired');
+                }
+
+                const searchData = await searchRes.json();
+                const existingFile = searchData.files && searchData.files[0];
+
+                if (existingFile) {
+                    // 2. Fetch existing backup from Drive
+                    const contentUrl = `https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`;
+                    const contentRes = await fetch(contentUrl, {
+                        headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache' }
+                    });
+
+                    if (contentRes.ok) {
+                        const driveData = await contentRes.json();
+                        const driveModified = parseInt(driveData.lastModified || '0', 10);
+                        const localModified = parseInt(localStorage.getItem('neon_planner_last_modified') || '0', 10);
+
+                        // If drive has newer mathAppNodes from another device (PC or Phone)
+                        if (driveModified > localModified && driveData.mathAppNodes && driveData.mathAppNodes.length > 0) {
+                            nodes = driveData.mathAppNodes;
+                            localStorage.setItem('mathAppNodes', JSON.stringify(nodes));
+                            if (driveData.mathAppLastActiveFileId) {
+                                localStorage.setItem('mathAppLastActiveFileId', driveData.mathAppLastActiveFileId);
+                            }
+                            if (driveData.mathAppFontSize) applyFontSize(driveData.mathAppFontSize);
+                            if (driveData.mathAppPanelTheme) applyPanelTheme(driveData.mathAppPanelTheme);
+                            localStorage.setItem('neon_planner_last_modified', driveModified.toString());
+
+                            renderTree();
+                            const targetId = driveData.mathAppLastActiveFileId || (nodes[0] && nodes[0].id);
+                            if (targetId) openFile(targetId);
+
+                            showToast('✨ PC/핸드폰의 최신 수식이 동기화되었습니다!');
+                            return;
+                        } else {
+                            // Local is newer: Upload local mathAppNodes to Drive
+                            driveData.mathAppNodes = nodes;
+                            driveData.mathAppLastActiveFileId = activeFileId || '';
+                            driveData.mathAppFontSize = localStorage.getItem('mathAppFontSize') || '1.1rem';
+                            driveData.mathAppPanelTheme = localStorage.getItem('mathAppPanelTheme') || 'default';
+                            const newMod = Math.max(Date.now(), localModified + 1);
+                            driveData.lastModified = newMod;
+                            localStorage.setItem('neon_planner_last_modified', newMod.toString());
+
+                            const updateUrl = `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`;
+                            await fetch(updateUrl, {
+                                method: 'PATCH',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(driveData)
+                            });
+
+                            if (!silent) showToast('☁️ 구글 드라이브에 클라우드 백업 완료!');
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("[CloudSync] Sync error:", err);
+            } finally {
+                isSyncing = false;
+                if (syncIcon) syncIcon.textContent = '☁️';
+                if (syncText) syncText.textContent = '동기화';
+            }
+        }
+
+        // --- Backup & Restore (Local File) ---
         function backupMathData() {
             saveState();
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(nodes, null, 2));
@@ -1104,6 +1369,8 @@ $$"></textarea>
                             saveState();
                             initApp();
                             showToast('📂 수식 노트가 성공적으로 복원되었습니다!');
+                            // Trigger sync to cloud
+                            syncWithGoogleDrive(true);
                         } else {
                             alert('올바른 수식 백업 JSON 파일이 아닙니다.');
                         }
@@ -1171,6 +1438,11 @@ $$"></textarea>
             if (targetFile) {
                 openFile(targetFile.id);
             }
+
+            // Silent sync with Google Drive on startup if token exists
+            if (localStorage.getItem('neon_planner_gdrive_access_token')) {
+                setTimeout(() => syncWithGoogleDrive(true), 800);
+            }
         }
 
         // Initialize when storage proxy is ready
@@ -1183,6 +1455,29 @@ $$"></textarea>
         // Window unload hook to ensure last edit is saved
         window.addEventListener('beforeunload', () => {
             saveState();
+        });
+
+        // Listen for external storage changes (e.g. from main planner syncing from Drive)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'mathAppNodes' && e.newValue) {
+                try {
+                    const updated = JSON.parse(e.newValue);
+                    if (Array.isArray(updated) && updated.length > 0) {
+                        nodes = updated;
+                        renderTree();
+                        if (activeFileId) {
+                            const cur = nodes.find(n => n.id === activeFileId);
+                            if (cur) {
+                                const ed = document.getElementById('editor');
+                                if (ed && ed.value !== cur.content) {
+                                    ed.value = cur.content || '';
+                                    updatePreview();
+                                }
+                            }
+                        }
+                    }
+                } catch(err) {}
+            }
         });
 
         function applyEditorViewMode(mode) {
@@ -1208,6 +1503,9 @@ $$"></textarea>
             btn.innerHTML = '<span style="color: #4ade80; font-weight: bold;">✓ 저장완료</span>';
             showToast('✓ 모든 수식이 안전하게 저장되었습니다!');
             setTimeout(() => { btn.innerHTML = originalHTML; }, 1800);
+
+            // Trigger silent cloud sync
+            syncWithGoogleDrive(true);
         }
 
         function applyFontSize(size) {
@@ -1256,7 +1554,7 @@ $$"></textarea>
         let modalNodeType = null; 
         let targetNodeId = null; 
 
-        function saveState() {
+        function saveState(skipCloudTrigger = false) {
             if (activeFileId) {
                 const file = nodes.find(n => n.id === activeFileId);
                 if (file) {
@@ -1270,6 +1568,17 @@ $$"></textarea>
                 localStorage.setItem('mathAppNodes', JSON.stringify(nodes));
                 if (activeFileId) {
                     localStorage.setItem('mathAppLastActiveFileId', activeFileId);
+                }
+                const newMod = Date.now().toString();
+                localStorage.setItem('neon_planner_last_modified', newMod);
+
+                // Notify main planner if opened via window.open
+                if (!skipCloudTrigger && window.opener && !window.opener.closed) {
+                    try {
+                        if (typeof window.opener.triggerGDriveAutoSync === 'function') {
+                            window.opener.triggerGDriveAutoSync();
+                        }
+                    } catch(e) {}
                 }
             } catch(e) {
                 console.error("[saveState] Storage error:", e);
@@ -1485,6 +1794,8 @@ $$"></textarea>
         }
 
         let renderTimeout = null;
+        let autoSaveTimeout = null;
+
         function openFile(id) {
             activeFileId = id;
             localStorage.setItem('mathAppLastActiveFileId', id);
@@ -1518,6 +1829,12 @@ $$"></textarea>
             
             clearTimeout(renderTimeout);
             renderTimeout = setTimeout(updatePreview, 120);
+
+            // Debounce auto cloud sync (after 3 seconds of typing idle)
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                syncWithGoogleDrive(true);
+            }, 3000);
         }
 
         // --- Robust Math Tokenization & Markdown Parsing ---
